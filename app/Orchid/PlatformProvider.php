@@ -38,7 +38,8 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make('Administration')
                 ->icon('bs.briefcase')
                 ->title('Administration')
-                ->list([
+                ->list([Menu::make('Institutions')
+                    ->route('platform.administration.institutions'),
                     Menu::make('Districts')
                         ->route('platform.administration.districts'),
                     Menu::make('Years')

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Orchid\Screens\Administration\District\DistrictListScreen;
+use App\Orchid\Screens\Administration\Institution\InstitutionListScreen;
 use App\Orchid\Screens\Administration\Years\YearListScreen;
 use App\Orchid\Screens\Examples\ExampleActionsScreen;
 use App\Orchid\Screens\Examples\ExampleCardsScreen;
@@ -106,5 +107,6 @@ Route::screen('/examples/cards', ExampleCardsScreen::class)->name('platform.exam
 //Route::screen('idea', Idea::class, 'platform.screens.idea');
 
 
+Route::screen('institutions', InstitutionListScreen::class)->name('platform.administration.institutions');
 Route::screen('districts', DistrictListScreen::class)->name('platform.administration.districts');
 Route::screen('years', YearListScreen::class)->name('platform.administration.years');
