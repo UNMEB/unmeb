@@ -140,7 +140,7 @@ class InstitutionListScreen extends Screen
                     ->title('Institution Name')
                     ->placeholder('Enter institution name'),
 
-                Select::make('district')
+                Select::make('institution.district')
                     ->title('District')
                     ->fromModel(District::class, 'name'),
 

@@ -38,14 +38,39 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make('Administration')
                 ->icon('bs.briefcase')
                 ->title('Administration')
-                ->list([Menu::make('Institutions')
-                    ->route('platform.administration.institutions'),
-                    Menu::make('Districts')
-                        ->route('platform.administration.districts'),
-                    Menu::make('Years')
-                        ->route('platform.administration.years'),
+            ->list([
+                Menu::make('Districts')
+                    ->route('platform.administration.districts'),
+
+                Menu::make('Institutions')
+                ->route('platform.administration.institutions'),
+
+                Menu::make('Programs')
+                ->route('platform.administration.courses'),
+
+                Menu::make('Papers')
+                ->route('platform.administration.papers'),
+
+
+
+                Menu::make('Years')
+                ->route('platform.administration.years'),
                 ]),
 
+
+            Menu::make('Manage Staff')
+            ->icon('bs.people')
+                ->route('platform.administration.staff'),
+
+            Menu::make('Manage Students')
+            ->icon('bs.people')
+                ->route('platform.administration.student'),
+
+            Menu::make('Surcharges & Fees')
+            ->list([
+                Menu::make('Surcharges')->route('platform.administration.surcharge.list'),
+                Menu::make('Surcharge Fees')->route('platform.administration.surcharge.fees')
+            ]),
 
 
             Menu::make('Get Started')

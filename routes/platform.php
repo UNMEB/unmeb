@@ -2,9 +2,15 @@
 
 declare(strict_types=1);
 
+use App\Orchid\Screens\Administration\Course\CourseListScreen;
 use App\Orchid\Screens\Administration\District\DistrictListScreen;
+use App\Orchid\Screens\Administration\Fee\FeeListScreen;
 use App\Orchid\Screens\Administration\Institution\InstitutionListScreen;
+use App\Orchid\Screens\Administration\Paper\PaperListScreen;
+use App\Orchid\Screens\Administration\Surcharge\SurchargeFeeListScreen;
+use App\Orchid\Screens\Administration\Surcharge\SurchargeListScreen;
 use App\Orchid\Screens\Administration\Years\YearListScreen;
+use App\Orchid\Screens\AssessmentScreen;
 use App\Orchid\Screens\Examples\ExampleActionsScreen;
 use App\Orchid\Screens\Examples\ExampleCardsScreen;
 use App\Orchid\Screens\Examples\ExampleChartsScreen;
@@ -17,6 +23,8 @@ use App\Orchid\Screens\Examples\ExampleTextEditorsScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
+use App\Orchid\Screens\Staff\StaffListScreen;
+use App\Orchid\Screens\Student\StudentListScreen;
 use App\Orchid\Screens\User\UserEditScreen;
 use App\Orchid\Screens\User\UserListScreen;
 use App\Orchid\Screens\User\UserProfileScreen;
@@ -107,6 +115,15 @@ Route::screen('/examples/cards', ExampleCardsScreen::class)->name('platform.exam
 //Route::screen('idea', Idea::class, 'platform.screens.idea');
 
 
-Route::screen('institutions', InstitutionListScreen::class)->name('platform.administration.institutions');
+Route::screen('staff', StaffListScreen::class)->name('platform.administration.staff');
+Route::screen('student', StudentListScreen::class)->name('platform.administration.student');
+
 Route::screen('districts', DistrictListScreen::class)->name('platform.administration.districts');
+Route::screen('institutions', InstitutionListScreen::class)->name('platform.administration.institutions');
+Route::screen('courses', CourseListScreen::class)->name('platform.administration.courses');
+Route::screen('papers', PaperListScreen::class)->name('platform.administration.papers');
+Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.administration.surcharge.list');
+Route::screen('surcharge/fees', SurchargeFeeListScreen::class)->name('platform.administration.surcharge.fees');
 Route::screen('years', YearListScreen::class)->name('platform.administration.years');
+
+Route::screen('assessment', AssessmentScreen::class)->name('platform.assessment.continuous');

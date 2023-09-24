@@ -1,30 +1,25 @@
 <?php
 
-namespace App\Orchid\Screens\Administration\Years;
+namespace App\Orchid\Screens\Administration\Course;
 
-use App\Exports\YearsExport;
-use App\Imports\YearsImport;
-use App\Models\Year;
+use App\Exports\CourseExport;
+use App\Imports\CourseImport;
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Input;
-use Orchid\Screen\Fields\Upload;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
-use Orchid\Support\Facades\Layout;
-use Orchid\Attachment\File;
-use Orchid\Screen\Actions\Button;
-use Orchid\Screen\Actions\DropDown;
-use Orchid\Screen\Actions\Link;
-use Orchid\Screen\Components\Cells\DateTimeSplit;
-use Orchid\Screen\Fields\Select;
 use Orchid\Support\Facades\Alert;
-use Orchid\Support\Facades\Toast;
+use Orchid\Support\Facades\Layout;
 
-class YearListScreen extends Screen
+class CourseListScreen extends Screen
 {
     /**
      * Fetch data to be displayed on the screen.
@@ -33,8 +28,9 @@ class YearListScreen extends Screen
      */
     public function query(): iterable
     {
+        $courses = Course::latest()->get();
         return [
-            'years' => Year::latest()->get()
+            'courses' => $courses
         ];
     }
 
@@ -45,7 +41,7 @@ class YearListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Manage Years';
+        return 'Manage Courses';
     }
 
     /**
@@ -56,12 +52,12 @@ class YearListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make('Add Year')
-                ->modal('createYearModal')
+            ModalToggle::make('Add Course')
+                ->modal('createCourseModal')
                 ->method('create')
                 ->icon('plus'),
-            ModalToggle::make('Import Years')
-                ->modal('uploadYearsModal')
+            ModalToggle::make('Import Courses')
+                ->modal('uploadCoursesModal')
                 ->method('upload')
                 ->icon('upload'),
             Button::make('Export Data')
@@ -78,19 +74,14 @@ class YearListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            Layout::table('years', [
+            Layout::table('courses', [
                 TD::make('id', 'ID')
-                    ->width('100'),
-                TD::make('name', _('Year Name')),
+                    ->width('75'),
+                TD::make('code', _('Course Code')),
 
-                TD::make('flag', _('Year Flag'))
-                    ->render(function ($year) {
-                        if ($year->flag === 1) {
-                            return __('Active'); // You can replace 'Yes' with your custom label
-                        } else {
-                            return __('Inactive'); // You can replace 'No' with your custom label
-                        }
-                    }),
+                TD::make('name', _('Course Name')),
+
+                TD::make('duration', _('Course Duration')),
 
                 TD::make('created_at', __('Created On'))
                     ->usingComponent(DateTimeSplit::class)
@@ -106,71 +97,79 @@ class YearListScreen extends Screen
                     ->width(200)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
-                    ->render(function (Year $year) {
-                        $editButton = ModalToggle::make('Edit Year')
-                            ->modal('editYearModal')
-                            ->modalTitle('Edit Year ' . $year->name)
+                    ->render(function (Course $course) {
+                        $editButton = ModalToggle::make('Edit Course')
+                            ->modal('editCourseModal')
+                            ->modalTitle('Edit Course ' . $course->name)
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
-                                'year' => $year->id,
+                                'course' => $course->id,
                             ])
                             ->render();
 
                         $deleteButton = Button::make('Delete')
-                            ->confirm('Are you sure you want to delete this year?')
+                            ->confirm('Are you sure you want to delete this course?')
                             ->method('delete', [
-                                'id' => $year->id
+                                'id' => $course->id
                             ])
                             ->render();
 
                         return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
                     })
+
+
             ]),
-            Layout::modal('createYearModal', Layout::rows([
-                Input::make('year.name')
-                    ->title('Year Name')
-                    ->placeholder('Enter year name')
-                    ->help('The name of the year e.g 2012')
+            Layout::modal('createCourseModal', Layout::rows([
+
+                Input::make('course.name')
+                    ->title('Course Name')
+                    ->placeholder('Enter course name'),
+
+                Input::make('course.code')
+                    ->title('Course Code')
+                    ->placeholder('Enter course code'),
+
+                Input::make('course.duration')
+                    ->type('number')
+                    ->title('Course Duration')
+                    ->placeholder('Enter course duration'),
+
             ]))
-                ->title('Create Year')
-                ->applyButton('Create Year'),
+                ->title('Create Course')
+                ->applyButton('Create Course'),
 
-            Layout::modal('editYearModal', Layout::rows([
-                Input::make('year.name')
-                    ->type('text')
-                    ->title('Year Name')
-                    ->help('Year e.g 2012')
-                    ->horizontal(),
+            Layout::modal('editCourseModal', Layout::rows([
+                Input::make('course.name')
+                    ->title('Course Name')
+                    ->placeholder('Enter course name'),
 
-                Select::make('year.flag')
-                    ->options([
-                        1  => 'Active',
-                        0  => 'Inactive',
-                    ])
-                    ->title('Flag')
-                    ->help('Status for Active/Inactive year flag')
-                    ->horizontal()
-                    ->empty('No select')
-            ]))->async('asyncGetYear'),
+                Input::make('course.code')
+                    ->title('Course Code')
+                    ->placeholder('Enter course code'),
 
-            Layout::modal('uploadYearsModal', Layout::rows([
+                Input::make('course.duration')
+                    ->type('number')
+                    ->title('Course Duration')
+                    ->placeholder('Enter course duration'),
+            ]))->async('asyncGetCourse'),
+
+            Layout::modal('uploadCoursesModal', Layout::rows([
                 Input::make('file')
                     ->type('file')
-                    ->title('Import Years'),
+                    ->title('Import Courses'),
             ]))
-                ->title('Upload Years')
-                ->applyButton('Upload Years'),
-
+                ->title('Upload Courses')
+                ->applyButton('Upload Courses'),
         ];
     }
 
     /**
      * @return array
      */
-    public function asyncGetYear(Year $year): iterable
+    public function asyncGetCourse(Course $course): iterable
     {
         return [
-            'year' => $year,
+            'course' => $course,
         ];
     }
 
@@ -182,14 +181,18 @@ class YearListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'year.name' => 'required|numeric'
+            'course.name' => 'required',
+            'course.code' => 'required',
+            'course.duration' => 'required',
         ]);
 
-        $year = new Year();
-        $year->name = $request->input('year.name');
-        $year->save();
+        $course = new Course();
+        $course->name = $request->input('course.name');
+        $course->code = $request->input('course.code');
+        $course->duration = $request->input('course.duration');
+        $course->save();
 
-        Alert::success("Year was created");
+        Alert::success("Course was created");
     }
 
     /**
@@ -197,15 +200,17 @@ class YearListScreen extends Screen
      *
      * @return void
      */
-    public function edit(Request $request, Year $year): void
+    public function edit(Request $request, Course $course): void
     {
         $request->validate([
-            'year.name'
+            'course.name' => 'required',
+            'course.code' => 'required',
+            'course.duration' => 'required'
         ]);
 
-        $year->fill($request->input('year'))->save();
+        $course->fill($request->input('course'))->save();
 
-        Alert::info(__('Year was updated.'));
+        Alert::success(__('Course was updated.'));
     }
 
     /**
@@ -215,9 +220,9 @@ class YearListScreen extends Screen
      */
     public function delete(Request $request): void
     {
-        Year::findOrFail($request->get('id'))->delete();
+        Course::findOrFail($request->get('id'))->delete();
 
-        Alert::success("Year was deleted.");
+        Alert::success("Course was deleted.");
     }
 
 
@@ -255,13 +260,13 @@ class YearListScreen extends Screen
             $filePath = $uploadedFile->path();
 
             // Import the data using your custom importer
-            Excel::import(new YearsImport, $filePath);
+            Excel::import(new CourseImport, $filePath);
 
             // Display a success message using SweetAlert
-            Alert::success("Year data imported successfully");
+            Alert::success("Course data imported successfully");
 
             // Data import was successful
-            return redirect()->back()->with('success', 'Years data imported successfully.');
+            return redirect()->back()->with('success', 'Courses data imported successfully.');
         } catch (\Exception $e) {
             // Handle any exceptions that may occur during import
             Alert::error($e->getMessage());
@@ -277,6 +282,6 @@ class YearListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return Excel::download(new YearsExport, 'years.csv', ExcelExcel::CSV);
+        return Excel::download(new CourseExport, 'courses.csv', ExcelExcel::CSV);
     }
 }
