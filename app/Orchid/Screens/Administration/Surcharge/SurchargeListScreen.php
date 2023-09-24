@@ -2,9 +2,14 @@
 
 namespace App\Orchid\Screens\Administration\Surcharge;
 
+use App\Exports\SurchargeExport;
+use App\Imports\SurchargeImport;
 use App\Models\Surcharge;
 use App\Models\SurchargeFee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Excel as ExcelExcel;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
@@ -56,8 +61,13 @@ class SurchargeListScreen extends Screen
                 ->modal('createSurchargeModal')
                 ->method('create')
                 ->icon('plus'),
-
-            ModalToggle::make('Import Surcharge'),
+            ModalToggle::make('Import Surcharges')
+            ->modal('uploadSurchargesModal')
+            ->method('upload')
+            ->icon('upload'),
+            Button::make('Export Data')
+            ->method('download')
+            ->rawClick(false)
         ];
     }
 
@@ -135,6 +145,14 @@ class SurchargeListScreen extends Screen
                 ->title('Update Surcharge')
                 ->applyButton('Update Surcharge')
                 ->async('asyncGetSurcharge'),
+
+            Layout::modal('uploadSurchargesModal', Layout::rows([
+                Input::make('file')
+                    ->type('file')
+                    ->title('Import Surcharges'),
+            ]))
+                ->title('Upload Surcharges')
+                ->applyButton('Upload Surcharges'),
         ];
     }
 
@@ -163,7 +181,7 @@ class SurchargeListScreen extends Screen
         $surcharge->name = $request->input('surcharge.name');
         $surcharge->save();
 
-        Alert::success("Year was created");
+        Alert::success("Surcharge was created");
     }
 
     /**
@@ -179,7 +197,7 @@ class SurchargeListScreen extends Screen
 
         $surcharge->fill($request->input('surcharge'))->save();
 
-        Alert::success(__('Year was updated.'));
+        Alert::success(__('Surcharge was updated.'));
     }
 
     /**
@@ -191,6 +209,65 @@ class SurchargeListScreen extends Screen
     {
         Surcharge::findOrFail($request->get('id'))->delete();
 
-        Alert::success("Year was deleted.");
+        Alert::success("Surcharge was deleted.");
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function upload(Request $request)
+    {
+        // Define custom error messages for validation
+        $customMessages = [
+            'file.required' => 'Please select a file to upload.',
+            'file.file' => 'The uploaded file is not valid.',
+            'file.mimes' => 'The file must be a CSV file.',
+            'file.max' => 'The file size must not exceed 64MB.',
+        ];
+
+        // Validate the request data using the defined rules and custom messages
+        $validator = Validator::make($request->all(), [
+            'file' => 'required|file|mimes:csv|max:64000', // 64MB in kilobytes
+            // Add any other validation rules you need for other fields
+        ], $customMessages);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        // Retrieve the uploaded file from the request
+        $uploadedFile = $request->file('file');
+
+        // Use Laravel Excel to import the data using your custom importer
+        try {
+            // Get the path of the uploaded file
+            $filePath = $uploadedFile->path();
+
+            // Import the data using your custom importer
+            Excel::import(new SurchargeImport, $filePath);
+
+            // Display a success message using SweetAlert
+            Alert::success("Surcharge data imported successfully");
+
+            // Data import was successful
+            return redirect()->back()->with('success', 'Surcharges data imported successfully.');
+        } catch (\Exception $e) {
+            // Handle any exceptions that may occur during import
+            Alert::error($e->getMessage());
+
+            return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function download(Request $request)
+    {
+        return Excel::download(new SurchargeExport, 'surcharges.csv', ExcelExcel::CSV);
     }
 }

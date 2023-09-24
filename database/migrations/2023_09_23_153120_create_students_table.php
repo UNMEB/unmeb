@@ -19,7 +19,6 @@ return new class extends Migration
             $table->string('surname');
             $table->string('firstname');
             $table->string('othername');
-            $table->string('passport');
             $table->enum('gender', ['MALE', 'FEMALE', 'OTHER']);
             $table->date('dob')->nullable();
             $table->foreignId('district_id')->constrained();

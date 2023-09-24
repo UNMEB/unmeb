@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Components\Cells\Currency;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Screen;
@@ -76,6 +77,12 @@ class SurchargeFeeListScreen extends Screen
                 TD::make('course', _('Course'))->render(function (SurchargeFee $surchargeFee) {
                     return $surchargeFee->course->name;
                 }),
+
+                TD::make('fee', 'Course Fee')
+                ->width('150')
+                    ->usingComponent(Currency::class, before: 'Ush')
+                    ->align(TD::ALIGN_RIGHT)
+                    ->sort(),
 
                 TD::make('created_at', __('Created On'))
                     ->usingComponent(DateTimeSplit::class)
