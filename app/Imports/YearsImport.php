@@ -15,7 +15,7 @@ class YearsImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        return new Year([
+        return new Year(['id' => $row['id'],
             "name" => $row["name"],
             "flag" => $row["flag"]
         ]);

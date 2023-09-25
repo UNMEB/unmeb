@@ -23,7 +23,7 @@ class ExamIncompleteScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamIncompleteScreen';
+        return 'Incomplete Exam Registrations';
     }
 
     /**

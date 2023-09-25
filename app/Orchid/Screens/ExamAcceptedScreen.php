@@ -2,7 +2,11 @@
 
 namespace App\Orchid\Screens;
 
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Screen;
+use Orchid\Screen\TD;
+use Orchid\Support\Color;
+use Orchid\Support\Facades\Layout;
 
 class ExamAcceptedScreen extends Screen
 {
@@ -23,7 +27,7 @@ class ExamAcceptedScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamAcceptedScreen';
+        return 'Accepted Student Exam Registrations';
     }
 
     /**
@@ -33,7 +37,12 @@ class ExamAcceptedScreen extends Screen
      */
     public function commandBar(): iterable
     {
-        return [];
+        return [
+            Button::make('Export Data')
+            ->icon('export')
+            ->method('export')
+            ->type(Color::LINK)
+        ];
     }
 
     /**
@@ -43,6 +52,10 @@ class ExamAcceptedScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [];
+        return [
+            Layout::table('accepted_registrations', [
+                TD::make('id', 'ID')
+            ])
+        ];
     }
 }

@@ -23,7 +23,7 @@ class ExamVerifyScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamVerifyScreen';
+        return 'Verify Student Exam Registrations';
     }
 
     /**

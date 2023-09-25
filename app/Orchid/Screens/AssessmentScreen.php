@@ -60,10 +60,17 @@ class AssessmentScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make("select_institution")
-                ->modal('selectInstitutionModal')
-                ->method('change')
-                ->modalTitle('Select Institution')
+            ModalToggle::make("theory_assessment")
+                ->modal('theoryAssessmentModal')
+                ->method('theoryAssessmen')
+                ->modalTitle('Add Theory Assessment Mark')
+                ->icon('plus'),
+
+            ModalToggle::make("practical_assessment")
+                ->modal('practicalAssessmentModal')
+                ->method('practicalAssessment')
+                ->modalTitle('Add Practical Assessment Mark')
+                ->icon('plus'),
 
         ];
     }

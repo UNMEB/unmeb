@@ -13,6 +13,7 @@ class Paper extends Model
     use HasFactory, AsSource, Filterable, Attachable;
 
     protected $fillable = [
+        'id',
         'name',
         'year',
         'paper',

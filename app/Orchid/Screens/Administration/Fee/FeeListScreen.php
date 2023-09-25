@@ -27,7 +27,7 @@ class FeeListScreen extends Screen
     public function query(): iterable
     {
         $query = Surcharge::latest()
-            ->get();
+            ->paginate();
 
         return [
             'surcharges' => $query

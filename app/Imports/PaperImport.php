@@ -15,7 +15,7 @@ class PaperImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        return new Paper([
+        return new Paper(['id' => $row['id'],
             'name' => $row['name'],
             'year' => $row['year'],
             'paper' => $row['paper'],

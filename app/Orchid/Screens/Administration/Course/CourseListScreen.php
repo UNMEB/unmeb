@@ -5,7 +5,6 @@ namespace App\Orchid\Screens\Administration\Course;
 use App\Exports\CourseExport;
 use App\Imports\CourseImport;
 use App\Models\Course;
-use App\Models\InstitutionCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
@@ -29,8 +28,7 @@ class CourseListScreen extends Screen
      */
     public function query(): iterable
     {
-        $courses = Course::latest()->get();
-        $institutionCourses = InstitutionCourse::with('courses', 'institution')->get();
+        $courses = Course::paginate();
         return [
             'courses' => $courses
         ];

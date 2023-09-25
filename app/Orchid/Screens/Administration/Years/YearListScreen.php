@@ -34,7 +34,7 @@ class YearListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'years' => Year::latest()->get()
+            'years' => Year::paginate()
         ];
     }
 

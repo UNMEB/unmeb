@@ -26,7 +26,7 @@ class SurchargeFeeListScreen extends Screen
     public function query(): iterable
     {
         $query = SurchargeFee::with(['course', 'surcharge'])
-            ->get();
+        ->paginate();
 
         return [
             'surcharge_fees' => $query

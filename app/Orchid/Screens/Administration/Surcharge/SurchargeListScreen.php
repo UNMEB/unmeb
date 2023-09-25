@@ -31,7 +31,7 @@ class SurchargeListScreen extends Screen
      */
     public function query(): iterable
     {
-        $query = Surcharge::latest()
+        $query = Surcharge::paginate()
             ->get();
 
         return [

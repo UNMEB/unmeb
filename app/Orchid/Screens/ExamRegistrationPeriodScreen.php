@@ -23,7 +23,7 @@ class ExamRegistrationPeriodScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamRegistrationPeriodScreen';
+        return 'Exam Registration Periods';
     }
 
     /**

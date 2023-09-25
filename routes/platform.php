@@ -124,8 +124,14 @@ Route::screen('roles', RoleListScreen::class)
 // Platform > Administration > Districts
 
 Route::screen('districts', DistrictListScreen::class)->name('platform.administration.districts');
+
 Route::screen('institutions', InstitutionListScreen::class)
     ->name('platform.administration.institutions');
+
+Route::screen('institutions/{institution}/assign', InstitutionCourseAssignScreen::class)
+    ->name('platform.administration.institutions.assign');
+
+
 Route::screen('courses', CourseListScreen::class)->name('platform.administration.courses');
 Route::screen('papers', PaperListScreen::class)->name('platform.administration.papers');
 Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.administration.surcharge.list');

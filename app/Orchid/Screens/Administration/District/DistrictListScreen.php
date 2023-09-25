@@ -30,7 +30,7 @@ class DistrictListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'districts' => District::latest()->get()
+            'districts' => District::paginate()
         ];
     }
 

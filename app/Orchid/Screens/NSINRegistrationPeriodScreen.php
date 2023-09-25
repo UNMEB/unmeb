@@ -23,7 +23,7 @@ class NSINRegistrationPeriodScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'NSINRegistrationPeriodScreen';
+        return 'NSIN Registration Periods';
     }
 
     /**

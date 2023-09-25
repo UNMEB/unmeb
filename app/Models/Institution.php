@@ -31,4 +31,9 @@ class Institution extends Model
     {
         return $this->hasMany(User::class, 'institution_id');
     }
+
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class);
+    }
 }

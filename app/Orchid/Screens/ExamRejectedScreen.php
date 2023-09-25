@@ -2,6 +2,8 @@
 
 namespace App\Orchid\Screens;
 
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
 
 class ExamRejectedScreen extends Screen
@@ -23,7 +25,7 @@ class ExamRejectedScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamRejectedScreen';
+        return 'Rejected Student Exam Registrations';
     }
 
     /**
@@ -33,7 +35,11 @@ class ExamRejectedScreen extends Screen
      */
     public function commandBar(): iterable
     {
-        return [];
+        return [
+            Button::make('Export Data')
+            ->icon('export')
+            ->method('export')
+        ];
     }
 
     /**

@@ -160,7 +160,27 @@ class PlatformProvider extends OrchidServiceProvider
                 ->route('platform.reports.attempt.year3.semester2'),
                 Menu::make('Third Attempt Year 3 Semester 3')
                 ->route('platform.reports.attempt.year3.semester3'),
-            ])
+                ])->divider(),
+
+            Menu::make('Manage Staff')
+            ->icon('bs.people')
+                ->route('platform.administration.staff')
+                ->title('User Management'),
+
+            Menu::make('Manage Students')
+            ->icon('bs.people')
+                ->route('platform.administration.student'),
+
+            Menu::make(__('System Users'))
+            ->icon('bs.people')
+                ->route('platform.systems.users')
+                ->permission('platform.systems.users'),
+
+            Menu::make(__('Roles & Permissions'))
+            ->icon('bs.shield')
+                ->route('platform.systems.roles')
+                ->permission('platform.systems.roles')
+                ->divider(),
         ];
     }
 

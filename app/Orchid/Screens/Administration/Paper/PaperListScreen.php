@@ -29,7 +29,7 @@ class PaperListScreen extends Screen
      */
     public function query(): iterable
     {
-        $papers = Paper::latest()->get();
+        $papers = Paper::paginate();
         return [
             'papers' => $papers
         ];

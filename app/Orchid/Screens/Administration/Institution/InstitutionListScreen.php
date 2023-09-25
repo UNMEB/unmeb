@@ -32,7 +32,9 @@ class InstitutionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $institutions = Institution::with('district')->get();
+        $institutions = Institution::with('district')
+        ->defaultSort('id', 'desc')
+        ->paginate();
 
         return [
             'institutions' => $institutions

@@ -23,7 +23,7 @@ class ExamPaymentScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamPaymentScreen';
+        return 'Student Exam Payments';
     }
 
     /**
