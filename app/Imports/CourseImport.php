@@ -16,9 +16,10 @@ class CourseImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         return new Course([
+            'id' => $row['id'],
             'name' => $row['name'],
             'code' => $row['code'],
-            'duration' => $row['duration']
+            'duration' => $row['duration'],
         ]);
     }
 }

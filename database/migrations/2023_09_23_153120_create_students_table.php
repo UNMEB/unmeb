@@ -14,21 +14,24 @@ return new class extends Migration
         Schema::create('students', function (Blueprint $table) {
             $table->id();
             $table->string('nsin')
-                ->nullable()
-                ->unique();
-            $table->string('surname');
-            $table->string('firstname');
-            $table->string('othername');
-            $table->enum('gender', ['MALE', 'FEMALE', 'OTHER']);
+                ->nullable();
+            $table->string('surname')->nullable();
+            $table->string('firstname')->nullable();
+            $table->string('othername')->nullable();
+            $table->enum('gender', ['Male', 'Female', 'Other'])->nullable();
             $table->date('dob')->nullable();
-            $table->foreignId('district_id')->constrained();
+            $table->foreignId('district_id')
+            ->nullable()
+            ->constrained();
             $table->string('country')->nullable();
             $table->string('address')->nullable();
             $table->string('telephone')->nullable();
             $table->string('email')->nullable();
             $table->string('photo')->nullable();
             $table->string('national_id')->nullable();
-            $table->integer('old_student')->default(0);
+            $table->integer('old_student')
+            ->nullable()
+            ->default(0);
 
             $table->timestamps();
         });

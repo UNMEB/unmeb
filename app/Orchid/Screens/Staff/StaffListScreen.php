@@ -2,12 +2,14 @@
 
 namespace App\Orchid\Screens\Staff;
 
+use App\Exports\StaffExport;
 use App\Imports\StaffImport;
 use App\Models\District;
 use App\Models\Institution;
 use App\Models\Staff;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
@@ -33,7 +35,7 @@ class StaffListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'staff' => Staff::with('institution')->latest()->get()
+            'staff' => Staff::with(['institution'])->latest()->get()
         ];
     }
 
@@ -226,6 +228,24 @@ class StaffListScreen extends Screen
                 ->title('Upload Staff')
                 ->applyButton('Upload Staff'),
 
+            Layout::modal('uploadStaffModal', Layout::rows([
+                Input::make('file')
+                ->type('file')
+                ->title('Import Staff'),
+            ]))
+                ->title('Upload Staff')
+                ->applyButton('Upload Staff'),
+
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function asyncGetStaff(Staff $staff): iterable
+    {
+        return [
+            'staff' => $staff,
         ];
     }
 
@@ -280,7 +300,7 @@ class StaffListScreen extends Screen
         $staff->institution_id = $request->input('staff.institution_id');
         $staff->save();
 
-        Alert::success("Year was created");
+        Alert::success("Staff was created");
     }
 
     /**
@@ -320,15 +340,25 @@ class StaffListScreen extends Screen
             Excel::import(new StaffImport, $filePath);
 
             // Display a success message using SweetAlert
-            Alert::success("Year data imported successfully");
+            Alert::success("Staff data imported successfully");
 
             // Data import was successful
-            return redirect()->back()->with('success', 'Years data imported successfully.');
+            return redirect()->back()->with('success', 'Staff data imported successfully.');
         } catch (\Exception $e) {
             // Handle any exceptions that may occur during import
             Alert::error($e->getMessage());
 
             return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function download(Request $request)
+    {
+        return Excel::download(new StaffExport, 'staff.csv', ExcelExcel::CSV);
     }
 }

@@ -6,13 +6,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\FileHelpers;
 use Orchid\Attachment\Attachable;
+use Orchid\Filters\Filterable;
 use Orchid\Screen\AsSource;
 
 class Student extends Model
 {
-    use HasFactory, AsSource, FileHelpers, Attachable;
+    use HasFactory, AsSource, Filterable, Attachable;
 
-    protected $fillable = ['surname', 'othername', 'firstname', 'dob', 'phone', 'email'];
+    protected $fillable = [
+        'nsin',
+        'surname',
+        'firstname',
+        'othername',
+        'gender',
+        'dob',
+        'district_id',
+        'telephone',
+        'email',
+        'old_student'
+    ];
 
     public function practicalAssessmentMarks()
     {

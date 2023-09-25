@@ -20,7 +20,17 @@ use App\Orchid\Screens\Examples\ExampleGridScreen;
 use App\Orchid\Screens\Examples\ExampleLayoutsScreen;
 use App\Orchid\Screens\Examples\ExampleScreen;
 use App\Orchid\Screens\Examples\ExampleTextEditorsScreen;
+use App\Orchid\Screens\ExamRegistrationPeriodScreen;
+use App\Orchid\Screens\InstitutionCourseAssignScreen;
+use App\Orchid\Screens\NSINAcceptedScreen;
+use App\Orchid\Screens\NSINIncompleteScreen;
+use App\Orchid\Screens\NSINRegistrationPeriodScreen;
+use App\Orchid\Screens\NSINRejectedReasonsScreen;
+use App\Orchid\Screens\NSINRejectedScreen;
+use App\Orchid\Screens\NSINVerifyBookScreen;
+use App\Orchid\Screens\NSINVerifyScreen;
 use App\Orchid\Screens\PlatformScreen;
+use App\Orchid\Screens\Registration\NSIN\NSINPaymentScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
 use App\Orchid\Screens\Staff\StaffListScreen;
@@ -119,7 +129,29 @@ Route::screen('staff', StaffListScreen::class)->name('platform.administration.st
 Route::screen('student', StudentListScreen::class)->name('platform.administration.student');
 
 Route::screen('districts', DistrictListScreen::class)->name('platform.administration.districts');
-Route::screen('institutions', InstitutionListScreen::class)->name('platform.administration.institutions');
+
+// Route::screen('institutions', InstitutionListScreen::class)->name('platform.administration.institutions');
+// Route::screen('institution/assign', InstitutionCourseAssignScreen::class)->name('platform.administration.institutions');
+
+
+Route::screen('registration/nsin/payments', NSINPaymentScreen::class)->name('platform.registration.nsin.payments');
+Route::screen('registration/nsin/incomplete', NSINIncompleteScreen::class)->name('platform.registration.nsin.incomplete');
+Route::screen('registration/nsin/verify', NSINVerifyScreen::class)->name('platform.registration.nsin.verify');
+Route::screen('registration/nsin/accepted', NSINAcceptedScreen::class)->name('platform.registration.nsin.accepted');
+Route::screen('registration/nsin/rejected', NSINRejectedScreen::class)->name('platform.registration.nsin.rejected');
+Route::screen('registration/nsin/reasons', NSINRejectedReasonsScreen::class)->name('platform.registration.nsin.reasons');
+Route::screen('registration/nsin/verify_books', NSINVerifyBookScreen::class)->name('platform.registration.nsin.verify_books');
+
+
+Route::screen('registration/periods/nsin', NSINRegistrationPeriodScreen::class)->name('platform.registration.period.nsin');
+Route::screen('registration/periods/exam', ExamRegistrationPeriodScreen::class)->name('platform.registration.period.exam');
+
+Route::screen('institutions/{institution}/assign', InstitutionCourseAssignScreen::class)
+    ->name('platform.administration.institutions.assign');
+
+Route::screen('institutions', InstitutionListScreen::class)
+    ->name('platform.administration.institutions');
+
 Route::screen('courses', CourseListScreen::class)->name('platform.administration.courses');
 Route::screen('papers', PaperListScreen::class)->name('platform.administration.papers');
 Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.administration.surcharge.list');

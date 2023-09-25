@@ -16,7 +16,8 @@ class DistrictImport implements ToModel, WithHeadingRow
     public function model(array $row)
     {
         return new District([
-            'name' => $row['name']
+            'id' => $row['id'],
+            'name' => $row['name'],
         ]);
     }
 }

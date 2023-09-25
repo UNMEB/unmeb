@@ -33,7 +33,6 @@ class StaffImport implements ToModel, WithHeadingRow
             'branch' => $row['branch'],
             'acc_no' => $row['acc_no'],
             'acc_name' => $row['acc_name'],
-            'receipt' => $row['receipt'],
         ]);
     }
 }

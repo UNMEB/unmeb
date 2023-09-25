@@ -4,6 +4,8 @@ namespace App\Orchid\Screens\Student;
 
 use App\Exports\StudentExport;
 use App\Imports\StudentImport;
+use App\Jobs\NotifyUserOfCompletedImport;
+use App\Jobs\StudentImportJob;
 use App\Models\District;
 use App\Models\Student;
 use Illuminate\Http\Request;
@@ -33,7 +35,9 @@ class StudentListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'students' => Student::with('district')->latest()->get()
+            'students' => Student::with('district')
+                ->defaultSort('id', 'desc')
+                ->paginate()
         ];
     }
 
@@ -80,13 +84,28 @@ class StudentListScreen extends Screen
             Layout::table('students', [
                 TD::make('id', 'ID')
                     ->width('100'),
-                TD::make('surname', _('Surname')),
+                TD::make('photo', 'Photo')
+                    ->width('100')
+                    ->render(function (Student $student) {
+                        // Get the first attachment for the student
+                        $attachment = $student->attachment()->first();
+
+                        // Check if an attachment exists
+                        if ($attachment) {
+                            // Display the student's image with a maximum width of 100px
+                            return "<img src='" . $attachment->url() . "' alt='" . $student->name . "' style='max-width: 50px;'>";
+                        }
+
+                        // If no attachment is found, return a placeholder avatar image from the public directory
+                        $placeholderUrl = asset('placeholder/avatar.png'); // Adjust the path to your placeholder image
+                        return "<img src='" . $placeholderUrl . "' alt='Placeholder Avatar' style='max-width: 50px;'>";
+                    }),
                 TD::make('firstname', _('First Name')),
                 TD::make('othername', _('Other Name')),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date Of Birth'),
                 TD::make('district_id', 'District')->render(function (Student $student) {
-                    return $student->district->name;
+                    return optional($student->district)->name;
                 }),
                 TD::make('country', 'Country'),
                 TD::make('address', 'Address'),
@@ -105,11 +124,13 @@ class StudentListScreen extends Screen
                 TD::make('created_at', __('Created On'))
                     ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
+                    ->defaultHidden()
                     ->sort(),
 
                 TD::make('updated_at', __('Last Updated'))
                     ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
+                    ->defaultHidden()
                     ->sort(),
 
                 TD::make(__('Actions'))
@@ -243,6 +264,16 @@ class StudentListScreen extends Screen
     }
 
     /**
+     * Get the number of models to return per page
+     *
+     * @return int
+     */
+    public static function perPage(): int
+    {
+        return 30;
+    }
+
+    /**
      * @return array
      */
     public function asyncGetStudent(Student $student): iterable
@@ -327,25 +358,23 @@ class StudentListScreen extends Screen
         // Retrieve the uploaded file from the request
         $uploadedFile = $request->file('file');
 
-        // Use Laravel Excel to import the data using your custom importer
-        try {
-            // Get the path of the uploaded file
-            $filePath = $uploadedFile->path();
+        // Generate a unique filename for the uploaded file
+        $filename = time() . '_' . $uploadedFile->getClientOriginalName();
 
-            // Import the data using your custom importer
-            Excel::import(new StudentImport, $filePath);
+        // Get the public path where the file will be stored
+        $publicPath = public_path('storage/' . $filename);
 
-            // Display a success message using SweetAlert
-            Alert::success("Student data imported successfully");
+        // Store the file in the public directory
+        $uploadedFile->storeAs('public', $filename);
 
-            // Data import was successful
-            return redirect()->back()->with('success', 'Students data imported successfully.');
-        } catch (\Exception $e) {
-            // Handle any exceptions that may occur during import
-            Alert::error($e->getMessage());
+        // Start the StudentImportJob here
+        dispatch(new StudentImportJob($publicPath));
 
-            return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
-        }
+        // Display a success message using SweetAlert
+        Alert::success("Student data imported successfully");
+
+        // Data import was successful
+        return redirect()->back()->with('success', 'Students data imported successfully.');
     }
 
     /**

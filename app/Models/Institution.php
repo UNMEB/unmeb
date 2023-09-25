@@ -26,4 +26,9 @@ class Institution extends Model
     {
         return $this->belongsTo(District::class);
     }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'institution_id');
+    }
 }

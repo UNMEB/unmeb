@@ -4,13 +4,16 @@ namespace App\Orchid\Screens\Administration\Institution;
 
 use App\Exports\InstitutionExport;
 use App\Imports\InstitutionImport;
+use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
+use App\Models\InstitutionCourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Input;
@@ -54,6 +57,12 @@ class InstitutionListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
+
+            ModalToggle::make('Assign course')
+                ->icon('plus')
+                ->method('assign')
+                ->modal('assignCourse'),
+
             ModalToggle::make('Add Institution')
                 ->modal('createInstitutionModal')
                 ->method('create')
@@ -95,39 +104,22 @@ class InstitutionListScreen extends Screen
 
                 TD::make('phone', _('Phone Number')),
 
-                TD::make('created_at', __('Created On'))
-                    ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT)
-                    ->sort(),
+                // TD::make('created_at', __('Created On'))
+                //     ->usingComponent(DateTimeSplit::class)
+                //     ->align(TD::ALIGN_RIGHT)
+                //     ->sort(),
 
-                TD::make('updated_at', __('Last Updated'))
-                    ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT)
-                    ->sort(),
+                // TD::make('updated_at', __('Last Updated'))
+                //     ->usingComponent(DateTimeSplit::class)
+                //     ->align(TD::ALIGN_RIGHT)
+                //     ->sort(),
 
-                TD::make(__('Actions'))
+                TD::make(__('Assign'))
                     ->width(200)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
-                    ->render(function (Institution $institution) {
-                        $editButton = ModalToggle::make('Edit Institution')
-                            ->modal('editInstitutionModal')
-                            ->modalTitle('Edit Institution ' . $institution->name)
-                            ->method('edit') // You can define your edit method here
-                            ->asyncParameters([
-                                'institution' => $institution->id,
-                            ])
-                            ->render();
-
-                        $deleteButton = Button::make('Delete')
-                            ->confirm('Are you sure you want to delete this institution?')
-                            ->method('delete', [
-                                'id' => $institution->id
-                            ])
-                            ->render();
-
-                        return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
-                    })
+                    ->render(fn (Institution $institution) => Link::make('Assign Courses')
+                        ->route('platform.administration.institutions.assign', $institution->id)),
 
 
             ]),
@@ -319,5 +311,14 @@ class InstitutionListScreen extends Screen
     public function download(Request $request)
     {
         return Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function assign(Request $request)
+    {
     }
 }
