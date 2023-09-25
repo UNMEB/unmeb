@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('institution_courses', function (Blueprint $table) {
+        Schema::create('case_record_books', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('institution_id')->constrained();
             $table->foreignId('course_id')->constrained();
-            $table->integer('flag')->default(0);
+            $table->decimal('case_fee', 10, 2);
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('institution_courses');
+        Schema::dropIfExists('case_record_books');
     }
 };

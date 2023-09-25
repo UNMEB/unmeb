@@ -11,10 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('institution_courses', function (Blueprint $table) {
+        Schema::create('registration_period_nsins', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('institution_id')->constrained();
-            $table->foreignId('course_id')->constrained();
+            $table->foreignId('year_id')->constrained();
+            $table->string('month');
             $table->integer('flag')->default(0);
             $table->timestamps();
         });
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('institution_courses');
+        Schema::dropIfExists('registration_period_nsins');
     }
 };
