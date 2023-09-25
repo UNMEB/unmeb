@@ -23,7 +23,7 @@ class NSINVerifyScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'NSINVerifyScreen';
+        return 'Verify NSIN Student Registrations';
     }
 
     /**

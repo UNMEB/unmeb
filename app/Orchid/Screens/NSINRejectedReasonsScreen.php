@@ -23,7 +23,7 @@ class NSINRejectedReasonsScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'NSINRejectedReasonsScreen';
+        return 'NSIN Registration Rejection Reasons';
     }
 
     /**

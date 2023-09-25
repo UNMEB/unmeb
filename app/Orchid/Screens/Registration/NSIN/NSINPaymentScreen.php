@@ -23,7 +23,7 @@ class NSINPaymentScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'NSINPaymentScreen';
+        return 'Student Registration NSIN Payments';
     }
 
     /**

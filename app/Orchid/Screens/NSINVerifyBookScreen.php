@@ -23,7 +23,7 @@ class NSINVerifyBookScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'NSINVerifyBookScreen';
+        return 'Verify Log book And Research Guideline Payments';
     }
 
     /**

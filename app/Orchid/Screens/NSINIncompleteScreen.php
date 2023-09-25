@@ -23,7 +23,7 @@ class NSINIncompleteScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'NSINIncompleteScreen';
+        return 'Incomplete NSIN Registrations';
     }
 
     /**
