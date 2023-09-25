@@ -11,6 +11,9 @@ use App\Orchid\Screens\Administration\Surcharge\SurchargeFeeListScreen;
 use App\Orchid\Screens\Administration\Surcharge\SurchargeListScreen;
 use App\Orchid\Screens\Administration\Years\YearListScreen;
 use App\Orchid\Screens\AssessmentScreen;
+use App\Orchid\Screens\ExamAcceptedScreen;
+use App\Orchid\Screens\ExamIncompleteScreen;
+use App\Orchid\Screens\ExamPaymentScreen;
 use App\Orchid\Screens\Examples\ExampleActionsScreen;
 use App\Orchid\Screens\Examples\ExampleCardsScreen;
 use App\Orchid\Screens\Examples\ExampleChartsScreen;
@@ -21,6 +24,9 @@ use App\Orchid\Screens\Examples\ExampleLayoutsScreen;
 use App\Orchid\Screens\Examples\ExampleScreen;
 use App\Orchid\Screens\Examples\ExampleTextEditorsScreen;
 use App\Orchid\Screens\ExamRegistrationPeriodScreen;
+use App\Orchid\Screens\ExamRejectedReasonScreen;
+use App\Orchid\Screens\ExamRejectedScreen;
+use App\Orchid\Screens\ExamVerifyScreen;
 use App\Orchid\Screens\InstitutionCourseAssignScreen;
 use App\Orchid\Screens\NSINAcceptedScreen;
 use App\Orchid\Screens\NSINIncompleteScreen;
@@ -31,6 +37,16 @@ use App\Orchid\Screens\NSINVerifyBookScreen;
 use App\Orchid\Screens\NSINVerifyScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Registration\NSIN\NSINPaymentScreen;
+use App\Orchid\Screens\Reports\Attempt\AtemptYear1Semester2Screen;
+use App\Orchid\Screens\Reports\Attempt\AtemptYear1Semester3Screen;
+use App\Orchid\Screens\Reports\Attempt\AtemptYear2Semester2Screen;
+use App\Orchid\Screens\Reports\Attempt\AtemptYear2Semester3Screen;
+use App\Orchid\Screens\Reports\Attempt\AtemptYear3Semester2Screen;
+use App\Orchid\Screens\Reports\Attempt\AtemptYear3Semester3Screen;
+use App\Orchid\Screens\Reports\PackingList\PackingListYear1Semester1;
+use App\Orchid\Screens\Reports\PackingList\PackingListYear1Semester1Screen;
+use App\Orchid\Screens\Reports\PackingList\PackingListYear2Semester1Screen;
+use App\Orchid\Screens\Reports\PackingList\PackingListYear3Semester1Screen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
 use App\Orchid\Screens\Staff\StaffListScreen;
@@ -56,7 +72,7 @@ use Tabuna\Breadcrumbs\Trail;
 Route::screen('/main', PlatformScreen::class)
     ->name('platform.main');
 
-// Platform > Profile
+    // Platform > Profile
 Route::screen('profile', UserProfileScreen::class)
     ->name('platform.profile')
     ->breadcrumbs(fn (Trail $trail) => $trail
@@ -105,35 +121,19 @@ Route::screen('roles', RoleListScreen::class)
         ->parent('platform.index')
         ->push(__('Roles'), route('platform.systems.roles')));
 
-// Example...
-Route::screen('example', ExampleScreen::class)
-    ->name('platform.example')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.index')
-        ->push('Example Screen'));
-
-Route::screen('/examples/form/fields', ExampleFieldsScreen::class)->name('platform.example.fields');
-Route::screen('/examples/form/advanced', ExampleFieldsAdvancedScreen::class)->name('platform.example.advanced');
-Route::screen('/examples/form/editors', ExampleTextEditorsScreen::class)->name('platform.example.editors');
-Route::screen('/examples/form/actions', ExampleActionsScreen::class)->name('platform.example.actions');
-
-Route::screen('/examples/layouts', ExampleLayoutsScreen::class)->name('platform.example.layouts');
-Route::screen('/examples/grid', ExampleGridScreen::class)->name('platform.example.grid');
-Route::screen('/examples/charts', ExampleChartsScreen::class)->name('platform.example.charts');
-Route::screen('/examples/cards', ExampleCardsScreen::class)->name('platform.example.cards');
-
-//Route::screen('idea', Idea::class, 'platform.screens.idea');
-
-
-Route::screen('staff', StaffListScreen::class)->name('platform.administration.staff');
-Route::screen('student', StudentListScreen::class)->name('platform.administration.student');
+// Platform > Administration > Districts
 
 Route::screen('districts', DistrictListScreen::class)->name('platform.administration.districts');
+Route::screen('institutions', InstitutionListScreen::class)
+    ->name('platform.administration.institutions');
+Route::screen('courses', CourseListScreen::class)->name('platform.administration.courses');
+Route::screen('papers', PaperListScreen::class)->name('platform.administration.papers');
+Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.administration.surcharge.list');
+Route::screen('surcharge/fees', SurchargeFeeListScreen::class)->name('platform.administration.surcharge.fees');
+Route::screen('years', YearListScreen::class)->name('platform.administration.years');
+Route::screen('assessment', AssessmentScreen::class)->name('platform.assessment.continuous');
 
-// Route::screen('institutions', InstitutionListScreen::class)->name('platform.administration.institutions');
-// Route::screen('institution/assign', InstitutionCourseAssignScreen::class)->name('platform.administration.institutions');
-
-
+// Platform > Registration > NSIN
 Route::screen('registration/nsin/payments', NSINPaymentScreen::class)->name('platform.registration.nsin.payments');
 Route::screen('registration/nsin/incomplete', NSINIncompleteScreen::class)->name('platform.registration.nsin.incomplete');
 Route::screen('registration/nsin/verify', NSINVerifyScreen::class)->name('platform.registration.nsin.verify');
@@ -142,20 +142,33 @@ Route::screen('registration/nsin/rejected', NSINRejectedScreen::class)->name('pl
 Route::screen('registration/nsin/reasons', NSINRejectedReasonsScreen::class)->name('platform.registration.nsin.reasons');
 Route::screen('registration/nsin/verify_books', NSINVerifyBookScreen::class)->name('platform.registration.nsin.verify_books');
 
+// Platform > Registration > Exam
+Route::screen('registration/exam/payments', ExamPaymentScreen::class)->name('platform.registration.exam.payments');
+Route::screen('registration/exam/incomplete', ExamIncompleteScreen::class)->name('platform.registration.exam.incomplete');
+Route::screen('registration/exam/verify', ExamVerifyScreen::class)->name('platform.registration.exam.verify');
+Route::screen('registration/exam/accepted', ExamAcceptedScreen::class)->name('platform.registration.exam.accepted');
+Route::screen('registration/exam/rejected', ExamRejectedScreen::class)->name('platform.registration.exam.rejected');
+Route::screen('registration/exam/reasons', ExamRejectedReasonScreen::class)->name('platform.registration.exam.reasons');
 
+
+// Platform > Registration Periods
 Route::screen('registration/periods/nsin', NSINRegistrationPeriodScreen::class)->name('platform.registration.period.nsin');
 Route::screen('registration/periods/exam', ExamRegistrationPeriodScreen::class)->name('platform.registration.period.exam');
 
-Route::screen('institutions/{institution}/assign', InstitutionCourseAssignScreen::class)
-    ->name('platform.administration.institutions.assign');
 
-Route::screen('institutions', InstitutionListScreen::class)
-    ->name('platform.administration.institutions');
+// User Managemen
+Route::screen('staff', StaffListScreen::class)->name('platform.administration.staff');
+Route::screen('student', StudentListScreen::class)->name('platform.administration.student');
 
-Route::screen('courses', CourseListScreen::class)->name('platform.administration.courses');
-Route::screen('papers', PaperListScreen::class)->name('platform.administration.papers');
-Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.administration.surcharge.list');
-Route::screen('surcharge/fees', SurchargeFeeListScreen::class)->name('platform.administration.surcharge.fees');
-Route::screen('years', YearListScreen::class)->name('platform.administration.years');
+// Platform > Reports > Year 1
+Route::screen('reports/year1/semester1/packing', PackingListYear1Semester1Screen::class)->name('platform.reports.packing.year1.semester1');
+Route::screen('reports/year1/semester2/attempt2', AtemptYear1Semester2Screen::class)->name('platform.reports.attempt.year1.semester2');
+Route::screen('reports/year1/semester3/attempt3', AtemptYear1Semester3Screen::class)->name('platform.reports.attempt.year1.semester3');
 
-Route::screen('assessment', AssessmentScreen::class)->name('platform.assessment.continuous');
+Route::screen('reports/year2/semester1/packing', PackingListYear2Semester1Screen::class)->name('platform.reports.packing.year2.semester1');
+Route::screen('reports/year2/semester2/attempt2', AtemptYear2Semester2Screen::class)->name('platform.reports.attempt.year2.semester2');
+Route::screen('reports/year2/semester3/attempt3', AtemptYear2Semester3Screen::class)->name('platform.reports.attempt.year2.semester3');
+
+Route::screen('reports/year3/semester1/packing', PackingListYear3Semester1Screen::class)->name('platform.reports.packing.year3.semester1');
+Route::screen('reports/year3/semester2/attempt2', AtemptYear3Semester2Screen::class)->name('platform.reports.attempt.year3.semester2');
+Route::screen('reports/year3/semester3/attempt3', AtemptYear3Semester3Screen::class)->name('platform.reports.attempt.year3.semester3');

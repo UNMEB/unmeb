@@ -35,145 +35,123 @@ class PlatformProvider extends OrchidServiceProvider
     {
         return [
 
+
             Menu::make('Administration')
                 ->icon('bs.briefcase')
-            ->title('Navigation')
-            ->list([
+                ->title('Navigation')
+                ->list([
 
+                    Menu::make('Districts')
+                        ->route('platform.administration.districts'),
 
+                    Menu::make('Institutions')
+                        ->route('platform.administration.institutions'),
 
+                    Menu::make('Programs')
+                        ->route('platform.administration.courses'),
 
-                Menu::make('Districts')
-                    ->route('platform.administration.districts'),
+                    Menu::make('Papers')
+                        ->route('platform.administration.papers'),
 
-                Menu::make('Institutions')
-                ->route('platform.administration.institutions'),
-
-                Menu::make('Programs')
-                ->route('platform.administration.courses'),
-
-                Menu::make('Papers')
-                ->route('platform.administration.papers'),
-
-                Menu::make('Years')
-                    ->route('platform.administration.years'),
-            ]),
-
-            Menu::make('Continuous Assessment')
-            ->route('platform.assessment.continuous'),
-
-            Menu::make('Surcharges & Fees')
-            ->icon('bs.archive')
-            ->list([
-                Menu::make('Surcharges')->route('platform.administration.surcharge.list'),
-                Menu::make('Surcharge Fees')->route('platform.administration.surcharge.fees')
-            ])->divider(),
+                    Menu::make('Years')
+                        ->route('platform.administration.years'),
+                ])->divider(),
 
             Menu::make('NSIN Registration')
-            ->icon('bs.wallet')
-            ->list([
-                Menu::make('NSIN Payments')
-                ->route('platform.registration.nsin.payments'),
+                ->icon('bs.wallet')
+                ->list([
+                    Menu::make('NSIN Payments')
+                        ->route('platform.registration.nsin.payments'),
 
-                Menu::make('Incomplete Registration')
-                ->route('platform.registration.nsin.incomplete'),
+                    Menu::make('Incomplete Registration')
+                        ->route('platform.registration.nsin.incomplete'),
 
-                Menu::make('Verify Registration')
-                ->route('platform.registration.nsin.verify'),
+                    Menu::make('Verify Registration')
+                        ->route('platform.registration.nsin.verify'),
 
-                Menu::make('Accepted Registration')
-                ->route('platform.registration.nsin.accepted'),
+                    Menu::make('Accepted Registration')
+                        ->route('platform.registration.nsin.accepted'),
 
-                Menu::make('Rejected Registration')
-                ->route('platform.registration.nsin.rejected'),
+                    Menu::make('Rejected Registration')
+                        ->route('platform.registration.nsin.rejected'),
 
-                Menu::make('NSIN Rejection Reasons')
-                ->route('platform.registration.nsin.reasons'),
+                    Menu::make('NSIN Rejection Reasons')
+                        ->route('platform.registration.nsin.reasons'),
 
-                Menu::make('Verify Book Payments')
-                ->route('platform.registration.nsin.verify_books'),
-            ])
-            ->title('Registration'),
-
-            Menu::make('Exam Registration')
-            ->icon('bs.ticket')
-            ->list([
-                Menu::make('Exam Payments')
-                ->route('platform.registration.period.nsin'),
-            ]),
-
-            Menu::make('Registration Periods')
-            ->icon('bs.clock')
-            ->list([
-                Menu::make('NSIN Registration Period')
-                ->route('platform.registration.period.nsin'),
-                Menu::make('Exam Registration Period')
-                ->route('platform.registration.period.exam'),
-            ])->divider(),
-
-            Menu::make('Manage Staff')
-            ->icon('bs.people')
-                ->route('platform.administration.staff')
-                ->title('User Management'),
-
-            Menu::make('Manage Students')
-            ->icon('bs.people')
-                ->route('platform.administration.student'),
-
-            Menu::make(__('System Users'))
-            ->icon('bs.people')
-                ->route('platform.systems.users')
-                ->permission('platform.systems.users'),
-
-            Menu::make(__('Roles & Permissions'))
-            ->icon('bs.shield')
-                ->route('platform.systems.roles')
-                ->permission('platform.systems.roles')
+                    Menu::make('Verify Book Payments')
+                        ->route('platform.registration.nsin.verify_books'),
+                ])
+                ->title('NSIN Registration')
                 ->divider(),
 
-            // Menu::make('Documentation')
-            // ->title('Docs')
-            //     ->icon('bs.box-arrow-up-right')
-            //     ->url('https://orchid.software/en/docs')
-            //     ->target('_blank'),
+            Menu::make('Exam Registration')
+                ->icon('bs.wallet')
+                ->list([
+                    Menu::make('Exam Payments')
+                        ->route('platform.registration.exam.payments'),
 
-            // Menu::make('Changelog')
-            //     ->icon('bs.box-arrow-up-right')
-            //     ->url('https://github.com/orchidsoftware/platform/blob/master/CHANGELOG.md')
-            //     ->target('_blank')
-            //     ->badge(fn () => Dashboard::version(), Color::DARK),
+                    Menu::make('Incomplete Registration')
+                        ->route('platform.registration.exam.incomplete'),
 
-            Menu::make('Get Started')
-                ->icon('bs.book')
-                ->title('Navigation')
-                ->route(config('platform.index')),
+                    Menu::make('Verify Registration')
+                        ->route('platform.registration.exam.verify'),
 
-            Menu::make('Sample Screen')
-                ->icon('bs.collection')
-                ->route('platform.example')
-                ->badge(fn () => 6),
+                    Menu::make('Accepted Registration')
+                        ->route('platform.registration.exam.accepted'),
 
-            Menu::make('Form Elements')
-                ->icon('bs.card-list')
-                ->route('platform.example.fields')
-                ->active('*/examples/form/*'),
+                    Menu::make('Rejected Registration')
+                        ->route('platform.registration.exam.rejected'),
 
-            Menu::make('Overview Layouts')
-                ->icon('bs.window-sidebar')
-                ->route('platform.example.layouts'),
+                    Menu::make('Exam Rejection Reasons')
+                        ->route('platform.registration.exam.reasons'),
+                ])
+                ->title('NSIN Registration')
+                ->divider(),
 
-            Menu::make('Grid System')
-                ->icon('bs.columns-gap')
-                ->route('platform.example.grid'),
 
-            Menu::make('Charts')
-                ->icon('bs.bar-chart')
-                ->route('platform.example.charts'),
+            Menu::make('Continuous Assessment')
+                ->icon('bs.archive')
+                ->route('platform.assessment.continuous'),
 
-            Menu::make('Cards')
-                ->icon('bs.card-text')
-                ->route('platform.example.cards')
-            ->divider(),
+            Menu::make('Surcharges & Fees')
+                ->icon('bs.archive')
+                ->list([
+                    Menu::make('Surcharges')->route('platform.administration.surcharge.list'),
+                    Menu::make('Surcharge Fees')->route('platform.administration.surcharge.fees')
+                ])->divider(),
+
+
+            Menu::make('Reports')
+                ->title('Reports')
+                ->icon('archive')
+                ->list([
+                // Year 1
+                Menu::make('Packing List Year 1 Semester 1')
+                    ->title('Year 1 Reports')
+                    ->route('platform.reports.packing.year1.semester1'),
+                Menu::make('Second Attempt Year 1 Semester 2')
+                    ->route('platform.reports.attempt.year1.semester2'),
+                Menu::make('Third Attempt Year 1 Semester 3')
+                    ->route('platform.reports.attempt.year1.semester3'),
+
+                // Year 2
+                Menu::make('Packing List Year 2 Semester 1')
+                ->title('Year 2 Reports')
+                    ->route('platform.reports.packing.year2.semester1'),
+                Menu::make('Second Attempt Year 2 Semester 2')
+                ->route('platform.reports.attempt.year2.semester2'),
+                Menu::make('Third Attempt Year 2 Semester 3')
+                ->route('platform.reports.attempt.year2.semester3'),
+
+                // Year 3
+                Menu::make('Packing List Year 3 Semester 1')
+                ->title('Year 3 Reports')
+                    ->route('platform.reports.packing.year3.semester1'),
+                Menu::make('Second Attempt Year 3 Semester 2')
+                ->route('platform.reports.attempt.year3.semester2'),
+                Menu::make('Third Attempt Year 3 Semester 3')
+                ->route('platform.reports.attempt.year3.semester3'),
+            ])
         ];
     }
 

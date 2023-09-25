@@ -37,11 +37,8 @@ class AssessmentScreen extends Screen
     {
 
         return [
-            'theory_assessment' =>  [
-                new Repository([
-                    'id' => 1,
-                ])
-            ]
+            'theory_assessment' =>  [],
+            'practical_assessment' => [],
         ];
     }
 
@@ -86,10 +83,21 @@ class AssessmentScreen extends Screen
                     ->empty('No Selection')
             ])),
 
-            Layout::table('theory_assessment', [
-                TD::make('id', 'ID'),
+            Layout::tabs([
+
+                'Theory Assessment' => Layout::table('theory_assessment', [
+                    TD::make('id', 'ID'),
+                ]),
+
+                'Practical Assessment' => Layout::table('practical_assessment', [
+                    TD::make('id', 'ID'),
+                ]),
+
+                'Assessment Report' => Layout::table('practical_assessment', [
+                    TD::make('id', 'ID'),
+                ]),
+
             ])
-            ->title('Theory Assessment')
         ];
     }
 
