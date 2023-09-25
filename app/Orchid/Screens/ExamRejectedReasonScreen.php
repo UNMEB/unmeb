@@ -13,6 +13,7 @@ class ExamRejectedReasonScreen extends Screen
      */
     public function query(): iterable
     {
+
         return [];
     }
 
@@ -23,7 +24,7 @@ class ExamRejectedReasonScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'ExamRejectedReasonScreen';
+        return 'Exam Registration Rejection Reasons';
     }
 
     /**

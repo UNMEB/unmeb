@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('registration_periods', function (Blueprint $table) {
             $table->id();
-            $table->date('start_date');
-            $table->date('end_date');
-            $table->string('academic_year');
+            $table->date('start_date')->nullable();
+            $table->date('end_date')->nullable();
+            $table->string('academic_year')->nullable();
             $table->integer('flag')->default(0);
             $table->timestamps();
         });
