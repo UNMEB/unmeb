@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('verify')->default(0);
             $table->integer('approved')->default(0);
             $table->foreignId('surcharge_id')->constrained();
+            $table->dateTime('date_time')->nullable();
             $table->timestamps();
         });
     }

@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('student_paper_contributions', function (Blueprint $table) {
             $table->id();
+
             $table->timestamps();
         });
     }

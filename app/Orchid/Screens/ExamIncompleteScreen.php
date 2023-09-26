@@ -2,7 +2,11 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Registration;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
+use Orchid\Support\Facades\Layout;
 
 class ExamIncompleteScreen extends Screen
 {
@@ -13,6 +17,12 @@ class ExamIncompleteScreen extends Screen
      */
     public function query(): iterable
     {
+        $query = Registration::with(['institution', 'registrationPeriod', 'course', 'surcharge', 'surchargeFee'])
+        ->where('completed', 0)
+        ->whereHas('registrationPeriod', function ($query) {
+            $query->where('flag', 1);
+        });
+
         return [];
     }
 
@@ -33,7 +43,12 @@ class ExamIncompleteScreen extends Screen
      */
     public function commandBar(): iterable
     {
-        return [];
+        return [
+            ModalToggle::make('Import Data'),
+            Button::make('Export Data')
+            ->icon('export')
+            ->method('export')
+        ];
     }
 
     /**
@@ -43,6 +58,8 @@ class ExamIncompleteScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [];
+        return [
+            Layout::table('registrations', [])
+        ];
     }
 }

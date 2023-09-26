@@ -108,6 +108,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->title('NSIN Registration')
                 ->divider(),
 
+
             Menu::make('Registration Periods')
             ->icon('bs.clock')
             ->list([
@@ -116,6 +117,11 @@ class PlatformProvider extends OrchidServiceProvider
                 Menu::make('Exam Registration Period')
                 ->route('platform.registration.period.exam'),
             ])->divider(),
+
+
+            Menu::make('Comments')
+                ->icon('chat')
+                ->route('platform.comments'),
 
 
             Menu::make('Continuous Assessment')

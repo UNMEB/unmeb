@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Registration;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
@@ -15,6 +16,14 @@ class ExamRejectedScreen extends Screen
      */
     public function query(): iterable
     {
+        $registrations = Registration::with(['institution', 'course', 'registrationPeriod'])
+        ->where('completed', 1)
+        ->where('approved', 1)
+        ->whereHas('registrationPeriod', function ($query) {
+            $query->where('flag', 1);
+        })
+            ->get()->unique('registration_id');
+
         return [];
     }
 

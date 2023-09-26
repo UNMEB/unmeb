@@ -18,4 +18,31 @@ class Course extends Model
         'code',
         'duration'
     ];
+
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class, 'course_id');
+    }
+
+    public function nsinRegistrations()
+    {
+        return $this->hasMany(NsinRegistration::class);
+    }
+
+    public function surchargeFees()
+    {
+        return $this->hasMany(SurchargeFee::class, 'course_id');
+    }
+
+    public function studentsRegistrationNsin()
+    {
+        return $this->hasManyThrough(StudentRegistrationNsin::class, Nsinregistration::class, 'course_id', 'nsinregistration_id');
+    }
+
+    public function papers()
+    {
+        return $this->belongsToMany(Paper::class, 'course_paper', 'course_id', 'paper_id')
+        ->where('course_paper.flag', 1)
+        ->where('papers.year_of_study', 'Year 1 semester 1');
+    }
 }

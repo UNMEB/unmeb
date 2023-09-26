@@ -11,6 +11,7 @@ use App\Orchid\Screens\Administration\Surcharge\SurchargeFeeListScreen;
 use App\Orchid\Screens\Administration\Surcharge\SurchargeListScreen;
 use App\Orchid\Screens\Administration\Years\YearListScreen;
 use App\Orchid\Screens\AssessmentScreen;
+use App\Orchid\Screens\CommentListScreen;
 use App\Orchid\Screens\ExamAcceptedScreen;
 use App\Orchid\Screens\ExamIncompleteScreen;
 use App\Orchid\Screens\ExamPaymentScreen;
@@ -138,6 +139,7 @@ Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.admi
 Route::screen('surcharge/fees', SurchargeFeeListScreen::class)->name('platform.administration.surcharge.fees');
 Route::screen('years', YearListScreen::class)->name('platform.administration.years');
 Route::screen('assessment', AssessmentScreen::class)->name('platform.assessment.continuous');
+Route::screen('comments', CommentListScreen::class)->name('platform.comments');
 
 // Platform > Registration > NSIN
 Route::screen('registration/nsin/payments', NSINPaymentScreen::class)->name('platform.registration.nsin.payments');

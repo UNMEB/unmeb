@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_id')->constrained();
-            $table->decimal('case_fee', 10, 2);
+            $table->foreignId('user_id');
+            $table->text('comment');
+            $table->string('email')->nullable();
+            $table->date('date_submitted')->nullable();
             $table->timestamps();
         });
     }

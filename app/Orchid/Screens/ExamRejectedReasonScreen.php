@@ -2,7 +2,13 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Course;
+use App\Models\Institution;
+use App\Models\RegistrationPeriod;
+use Illuminate\Support\Facades\DB;
 use Orchid\Screen\Screen;
+use Orchid\Screen\TD;
+use Orchid\Support\Facades\Layout;
 
 class ExamRejectedReasonScreen extends Screen
 {
@@ -13,8 +19,20 @@ class ExamRejectedReasonScreen extends Screen
      */
     public function query(): iterable
     {
+        $result = DB::table('student_registrations as sr')
+        ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+        ->join('institutions as i', 'i.id', '=', 'r.institution_id')
+        ->join('courses as c', 'c.id', '=', 'r.course_id')
+        ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+        ->select(DB::raw('COUNT(sr.remarks) as no'), 'sr.remarks')
+        ->where('sr.flag', '=', 0)
+        ->where('rp.flag', '=', 1)
+        ->groupBy('sr.remarks')
+        ->get();
 
-        return [];
+        return [
+            'reasons' => []
+        ];
     }
 
     /**
@@ -44,6 +62,12 @@ class ExamRejectedReasonScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [];
+        return [
+            Layout::table('reasons', [
+                TD::make('id', 'ID'),
+                TD::make('reason', 'reason'),
+                TD::make('no', 'Number'),
+            ])
+        ];
     }
 }

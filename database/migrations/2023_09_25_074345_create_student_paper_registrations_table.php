@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::create('student_paper_registrations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_registration_id')->constrained();
-            $table->foreignId('course_paper_id')->constrained();
             $table->timestamps();
         });
     }

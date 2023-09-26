@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('practical_assessment_marks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained();
-            $table->foreignId('course_paper_id')->constrained();
+            $table->foreignId('paper_id')->constrained();
             $table->decimal('practical_test', 5, 2);
             $table->decimal('clinical_practice', 5, 2);
             $table->decimal('logbook_assessment', 5, 2);

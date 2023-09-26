@@ -25,6 +25,7 @@ return new class extends Migration
             $table->integer('nsin')->default(0);
             $table->integer('nsin_verify')->default(0);
             $table->integer('old')->default(0);
+            $table->dateTime('date_time')->nullable();
             $table->timestamps();
         });
     }

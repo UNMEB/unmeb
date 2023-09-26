@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Registration;
 use Orchid\Screen\Screen;
 
 class ExamPaymentScreen extends Screen
@@ -13,6 +14,10 @@ class ExamPaymentScreen extends Screen
      */
     public function query(): iterable
     {
+        $query = Registration::with(['course', 'institution', 'registrationPeriod'])
+        ->whereHas('registrationPeriod', function ($query) {
+            $query->where('flag', 1);
+        });
         return [];
     }
 

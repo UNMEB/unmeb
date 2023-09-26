@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('theory_assessment_marks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained();
-            $table->foreignId('course_paper_id')->constrained();
+            $table->foreignId('paper_id')->constrained();
             $table->decimal('assignment_1', 5, 2);
             $table->decimal('assignment_2', 5, 2);
             $table->decimal('total_assignment_mark', 5, 2);

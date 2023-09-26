@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\NsinRegistration;
 use Orchid\Screen\Screen;
 
 class NSINRejectedScreen extends Screen
@@ -13,6 +14,26 @@ class NSINRejectedScreen extends Screen
      */
     public function query(): iterable
     {
+        $query = NsinRegistration::with([
+            'institution',
+            'course',
+            'year',
+            'studentRegistrationNsin' => function ($query) {
+                $query->selectRaw('nsinregistration_id,
+            SUM(CASE WHEN s.gender = "Female" AND students_registration_nsin.verify = 0 THEN 1 ELSE 0 END) as rejected_females,
+            SUM(CASE WHEN s.gender = "Male" AND students_registration_nsin.verify = 0 THEN 1 ELSE 0 END) as rejected_males,
+            SUM(CASE WHEN s.gender = "Female" THEN 1 ELSE 0 END) as registered_females,
+            SUM(CASE WHEN s.gender = "Male" THEN 1 ELSE 0 END) as registered_males')
+                ->join('students AS s', 's.student_id', '=', 'students_registration_nsin.student_id')
+                ->groupBy('nsinregistration_id');
+            }
+        ])
+            ->where('completed', 1)
+            ->where('nsin_verify', 0)
+            ->whereHas('registrationPeriodnsin', function ($query) {
+                $query->where('flag', 1);
+            });
+
         return [];
     }
 

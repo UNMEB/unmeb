@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('registration_reports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('course_paper_id')->constrained();
+            $table->foreignId('course_id')->constrained();
+            $table->foreignId('paper_id')->constrained();
             $table->foreignId('registration_id')->constrained();
             $table->foreignId('registration_period_id')->constrained();
             $table->foreignId('institution_id')->constrained();
