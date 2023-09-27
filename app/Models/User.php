@@ -15,6 +15,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
+        'username',
         'name',
         'email',
         'password',
@@ -50,6 +51,7 @@ class User extends Authenticatable
     protected $allowedFilters = [
            'id'         => Where::class,
            'name'       => Like::class,
+        'username'  => Like::class,
            'email'      => Like::class,
            'updated_at' => WhereDateStartEnd::class,
            'created_at' => WhereDateStartEnd::class,
@@ -63,6 +65,7 @@ class User extends Authenticatable
     protected $allowedSorts = [
         'id',
         'name',
+        'username',
         'email',
         'updated_at',
         'created_at',

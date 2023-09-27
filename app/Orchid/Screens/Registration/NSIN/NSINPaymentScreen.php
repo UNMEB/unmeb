@@ -3,7 +3,9 @@
 namespace App\Orchid\Screens\Registration\NSIN;
 
 use App\Models\NsinRegistration;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\Currency;
@@ -12,6 +14,7 @@ use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Color;
+use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
 class NSINPaymentScreen extends Screen
@@ -25,7 +28,7 @@ class NSINPaymentScreen extends Screen
     {
         $payments = Nsinregistration::where('old', 1)
         ->with(['course', 'institution', 'year'])
-        ->get();;
+        ->paginate();
 
         return [
             'payments' => $payments
@@ -83,10 +86,19 @@ class NSINPaymentScreen extends Screen
                 })
             ]),
 
-            Layout::modal('updatePaymentModal', Layout::rows([
+            Layout::modal('updatePaymentModal', Layout::rows(
+
+                [
+                    //
+                    Input::make('payment.institution.id')
+                    ->hidden(),
+
+                    Input::make('payment.course.id')
+                    ->hidden(),
+
                 Input::make('payment.institution.name')
                 ->title('Institution Name')
-                ->disabled(),
+                        ->readonly(),
 
                 Input::make('payment.course.name')
                 ->title('Course Name')
@@ -117,5 +129,24 @@ class NSINPaymentScreen extends Screen
         return [
             'payment' => $payment,
         ];
+    }
+
+    public function updatePayment(Request $request, NsinRegistration $payment): void
+    {
+        $request->validate([
+            'payment.month' => [
+                'required',
+                Rule::in(['January', 'May', 'July', 'November']),
+            ],
+            'payment.amount' => 'required|numeric',
+        ]);
+
+        // Update the payment information
+        $payment->update([
+            'month' => $request->input('payment.month'),
+            'amount' => $request->input('payment.amount'),
+        ]);
+
+        Alert::success('NSIN Payment Updated');
     }
 }

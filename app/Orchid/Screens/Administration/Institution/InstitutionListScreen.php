@@ -96,9 +96,7 @@ class InstitutionListScreen extends Screen
                 TD::make('name', _('Name'))
                     ->width(300),
 
-                TD::make('district', _('District'))->render(function (Institution $institution) {
-                    return '<p>' . $institution->district->name . '</p>';
-                }),
+                TD::make('location', _('Location')),
 
                 TD::make('type', _('Type')),
 

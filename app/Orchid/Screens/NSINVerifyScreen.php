@@ -4,6 +4,7 @@ namespace App\Orchid\Screens;
 
 use App\Models\NsinRegistration;
 use Orchid\Screen\Screen;
+use Orchid\Support\Facades\Layout;
 
 class NSINVerifyScreen extends Screen
 {
@@ -56,6 +57,8 @@ class NSINVerifyScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [];
+        return [
+            Layout::table('', [])
+        ];
     }
 }

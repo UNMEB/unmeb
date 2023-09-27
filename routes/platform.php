@@ -30,6 +30,7 @@ use App\Orchid\Screens\ExamRejectedScreen;
 use App\Orchid\Screens\ExamVerifyScreen;
 use App\Orchid\Screens\InstitutionCourseAssignScreen;
 use App\Orchid\Screens\NSINAcceptedScreen;
+use App\Orchid\Screens\NSINIncompleteDetailScreen;
 use App\Orchid\Screens\NSINIncompleteScreen;
 use App\Orchid\Screens\NSINRegistrationPeriodScreen;
 use App\Orchid\Screens\NSINRejectedReasonsScreen;
@@ -143,6 +144,9 @@ Route::screen('comments', CommentListScreen::class)->name('platform.comments');
 
 // Platform > Registration > NSIN
 Route::screen('registration/nsin/payments', NSINPaymentScreen::class)->name('platform.registration.nsin.payments');
+
+
+Route::screen('registration/nsin/incomplete/{registration}/details', NSINIncompleteDetailScreen::class)->name('platform.registration.nsin.incomplete.details');
 Route::screen('registration/nsin/incomplete', NSINIncompleteScreen::class)->name('platform.registration.nsin.incomplete');
 Route::screen('registration/nsin/verify', NSINVerifyScreen::class)->name('platform.registration.nsin.verify');
 Route::screen('registration/nsin/accepted', NSINAcceptedScreen::class)->name('platform.registration.nsin.accepted');

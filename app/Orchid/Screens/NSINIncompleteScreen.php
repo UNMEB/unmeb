@@ -3,8 +3,14 @@
 namespace App\Orchid\Screens;
 
 use App\Models\NsinRegistration;
+use App\Models\StudentRegistration;
+use App\Models\StudentRegistrationNsin;
 use Illuminate\Support\Facades\DB;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Screen;
+use Orchid\Screen\TD;
+use Orchid\Support\Facades\Layout;
 
 class NSINIncompleteScreen extends Screen
 {
@@ -15,23 +21,37 @@ class NSINIncompleteScreen extends Screen
      */
     public function query(): iterable
     {
-        $query = NsinRegistration::query()
-            ->select([
-                'r.*',
-                'c.course_name',
-                'i.institution_name',
-                'y.year',
-                DB::raw("(FLOOR(r.amount / 20000)) as students_to_register"),
-                DB::raw("(SELECT COUNT(*) FROM students_registration_nsin WHERE nsinregistration_id = r.nsinregistration_id) as registered_students")
-            ])
-            ->from('nsinregistration as r')
-            ->join('institutions as i', 'r.institution_id', '=', 'i.institution_id')
-            ->join('courses as c', 'r.course_id', '=', 'c.course_id')
-            ->join('years as y', 'r.year_id', '=', 'y.year_id')
+        $query = $results = Nsinregistration::query()
+            ->select('r.*')
+            ->from('nsin_registrations AS r')
+            ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
+            ->join('courses AS c', 'r.course_id', '=', 'c.id')
+            ->join('years AS y', 'r.year_id', '=', 'y.id')
             ->where('r.completed', 0)
-            ->where('r.old', 0);
+        ->where('r.old', 0)
+        ->paginate();
 
-        return [];
+        $query->getCollection()->transform(function ($row) {
+            $nsinregistration_id = $row->id;
+
+            $row->registered_students = StudentRegistrationNsin::query()
+                ->where('nsin_registration_id', $nsinregistration_id)
+                ->count();
+
+            // dd($row->toJson());
+
+            $fee = 20000;
+            $row->total_students = floor($row->amount / $fee);
+
+            return $row;
+        });
+
+        // dd($query->toJson());
+
+
+        return [
+            'registrations' => $query
+        ];
     }
 
     /**
@@ -61,6 +81,20 @@ class NSINIncompleteScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [];
+        return [
+            Layout::table('registrations', [
+                TD::make('id', 'ID'),
+                TD::make('institution', 'Institution')->render(fn ($data) => optional($data->institution)->name),
+                TD::make('course', 'Course')->render(fn ($data) => $data->course->name),
+                TD::make('month', 'Month'),
+                TD::make('year', 'Year')->render(fn (NsinRegistration $data) => $data->year->name),
+                TD::make('registered_students', 'Number Registered'),
+                TD::make('total_students', 'Number to Register '),
+                TD::make('actions', 'Actions')->render(fn ($data) => Link::make(__('Edit'))
+                ->route('platform.registration.nsin.incomplete.details', $data->id)
+                    ->icon('bs.pencil'))
+
+            ])
+        ];
     }
 }

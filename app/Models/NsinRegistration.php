@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Orchid\Filters\Filterable;
 use Orchid\Screen\AsSource;
 
 class NsinRegistration extends Model
 {
-    use HasFactory, AsSource;
+    use HasFactory, AsSource, Filterable;
 
     protected $fillable = [
         'institution_id',
@@ -45,9 +46,9 @@ class NsinRegistration extends Model
         return $this->belongsTo(RegistrationPeriodNsin::class);
     }
 
-    public function studentRegistrationNsin()
+    public function studentsRegistrationNsin()
     {
-        return $this->hasOne(StudentRegistrationNsin::class);
+        return $this->hasMany(StudentRegistrationNsin::class);
     }
 
 
