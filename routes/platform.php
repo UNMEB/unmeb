@@ -142,6 +142,7 @@ Route::screen('years', YearListScreen::class)->name('platform.administration.yea
 Route::screen('assessment', AssessmentScreen::class)->name('platform.assessment.continuous');
 Route::screen('comments', CommentListScreen::class)->name('platform.comments');
 
+
 // Platform > Registration > NSIN
 Route::screen('registration/nsin/payments', NSINPaymentScreen::class)->name('platform.registration.nsin.payments');
 

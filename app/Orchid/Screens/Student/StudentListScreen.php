@@ -8,10 +8,13 @@ use App\Jobs\NotifyUserOfCompletedImport;
 use App\Jobs\StudentImportJob;
 use App\Models\District;
 use App\Models\Student;
+use App\Orchid\Layouts\RegisterStudentFormListener;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
+use Orchid\Attachment\File;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -59,10 +62,16 @@ class StudentListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make('Add Student')
+            ModalToggle::make('Add New Student')
                 ->modal('createStudentModal')
                 ->method('create')
                 ->icon('plus'),
+
+            ModalToggle::make('Register Student')
+            ->modal('registerStudentModal')
+            ->method('register')
+                ->icon('plus'),
+
             ModalToggle::make('Import Students')
                 ->modal('uploadStudentsModal')
                 ->method('upload')
@@ -99,9 +108,10 @@ class StudentListScreen extends Screen
                         // If no attachment is found, return a placeholder avatar image from the public directory
                         $placeholderUrl = asset('placeholder/avatar.png'); // Adjust the path to your placeholder image
                         return "<img src='" . $placeholderUrl . "' alt='Placeholder Avatar' style='max-width: 50px;'>";
+
                     }),
-                TD::make('firstname', _('First Name')),
-                TD::make('othername', _('Other Name')),
+                TD::make('nsin', _('NSIN')),
+                TD::make('name', _('Name'))->render(fn ($data) => $data->fullName),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date Of Birth'),
                 TD::make('district_id', 'District')->render(function (Student $student) {
@@ -210,25 +220,13 @@ class StudentListScreen extends Screen
                         ->placeholder('Enter email address'),
                 ]),
 
-                Group::make([
-                    Input::make('student.photo')
-                        ->title('Provide Passport Photo')
-                        ->type('file')
-                        ->name('student.photo')
-                        ->placeholder('Enter student passport photo'),
+                Input::make('student.passport')
+                ->title('Provide Passport Photo')
+                ->type('file')
+                ->name('student.passport')
+                ->placeholder('Enter student passport photo'),
 
-                    Input::make('student.national_id')
-                        ->title('National ID')
-                        ->type('file')
-                        ->name('student.national_id')
-                        ->help('Attach Stident national ID'),
 
-                    Input::make('student.passport')
-                        ->title('Passport')
-                        ->type('file')
-                        ->name('student.passport')
-                        ->help('Attach student passport'),
-                ]),
             ]))
                 ->size(Modal::SIZE_LG)
                 ->title('Create Student')
@@ -260,6 +258,11 @@ class StudentListScreen extends Screen
                 ->title('Upload Students')
                 ->applyButton('Upload Students'),
 
+
+            Layout::modal('registerStudentModal',  RegisterStudentFormListener::class),
+
+
+
         ];
     }
 
@@ -290,16 +293,57 @@ class StudentListScreen extends Screen
      */
     public function create(Request $request)
     {
-        $request->validate([
-            'student.name' => 'required|numeric'
+        $request->validate(['student.surname' => 'required',
+            'student.othername' => 'required',
+            'student.firstname' => 'required',
+            'student.gender' => 'required',
+            'student.dob' => 'required',
+            'student.passport' => 'required|file',
+            'student.telephone' => 'required',
+            'student.email' => 'required',
+            'student.district_id' => 'required',
+            'student.nsin' => 'required'
         ]);
 
+        // Check if a file was uploaded
+        if ($request->hasFile('student.passport')) {
+            // Get the uploaded file
+            $uploadedFile = $request->file('student.passport');
+
+            // Define the directory to store uploaded files
+            $photoDirectory = public_path('photos');
+
+            // Generate a unique filename for the photo
+            $photoFilename = uniqid() . '.' . $uploadedFile->getClientOriginalExtension();
+
+            // Move the uploaded file to the destination directory
+            $uploadedFile->move($photoDirectory, $photoFilename);
+
+            // Save the file path to the database
+            $photoPath = $photoDirectory . '/' . $photoFilename;
+
+        // Create a new Student record and set its attributes
         $student = new Student();
+            $student->firstname = $request->input('student.firstname');
+            $student->surname = $request->input('student.surname');
+            $student->othername = $request->input('student.othername');
+            $student->nsin = $request->input('student.nsin');
+            $student->dob = $request->input('student.dob');
+            $student->gender = $request->input('student.gender');
+            $student->district_id = $request->input('student.district_id');
+            $student->telephone = $request->input('student.telephone');
+            $student->email = $request->input('student.email');
         $student->name = $request->input('student.name');
+            $student->photo = $photoFilename; // Store the filename in the database
         $student->save();
 
         Alert::success("Student was created");
+        } else {
+            // Handle the case where no file was uploaded
+            Alert::error("Passport photo is required");
+        }
     }
+
 
     /**
      * @param \Illuminate\Http\Request $request

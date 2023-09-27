@@ -3,6 +3,7 @@
 namespace App\Orchid\Screens;
 
 use App\Models\Registration;
+use App\Models\StudentRegistration;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
@@ -25,9 +26,58 @@ class ExamIncompleteScreen extends Screen
         ->join('surcharges as s', 'registrations.surcharge_id', '=', 's.id')
         ->join('surcharge_fees as sf', 's.id', '=', 'sf.surcharge_id')
         ->where('registrations.completed', 0)
-        ->where('rp.flag', 1);
+        ->where('rp.flag', 1)
+        ->paginate();
 
-        // dd($query->first()->toJson());
+        $query->getCollection()->transform(function (Registration $row) {
+            $registration = Registration::find($row->id);
+
+            $totalPapers = StudentRegistration::where('registration_id', $registration->id)
+                ->join('student_paper_registration as spr', 'student_registrations.id', '=', 'spr.student_registration_id')
+                ->count('spr.course_paper_id');
+
+            // $fee = StudentRegistration::where('registration_id', $registration->id)
+            //     ->join('courses as c', 'registrations.course_id', '=', 'c.id')
+            //     ->join('surcharges as su', 'registrations.surcharge_id', '=', 'su.id')
+            //     ->join('surcharge_fees as sf', 'su.id', '=', 'sf.surcharge_id')
+            //     ->where('su.flag', 1)
+            //     ->when($row->trial === 'First', function ($query) {
+            //         return $query->where('registrations.trial', 'First');
+            //     })
+            //     ->sum('sf.course_fee');
+
+            $fee = StudentRegistration::where('registration_id', $registration->id)
+                ->join('registrations as r', 'student_registrations.registration_id', '=', 'r.id') // Join the registrations table
+                ->join('courses as c', 'r.course_id', '=', 'c.id')
+                ->join('surcharges as su', 'r.surcharge_id', '=', 'su.id')
+                ->join('surcharge_fees as sf', 'su.id', '=', 'sf.surcharge_id')
+                ->where('su.flag', 1)
+                ->when($row->trial === 'First', function ($query) {
+                    return $query->where('registrations.trial', 'First');
+                })
+                ->sum('sf.course_fee');
+
+            $totalAmount = $totalPapers * 50000;
+            $fee += $totalAmount;
+            $bal = $registration->amount - $fee;
+
+            return [
+                'registration_id' => $registration->id,
+                'total' => StudentRegistration::where('registration_id', $registration->id)
+                    ->join('courses as c', 'registrations.course_id', '=', 'c.id')
+                    ->join('surcharges as su', 'registrations.surcharge_id', '=', 'su.id')
+                    ->join('surcharge_fees as sf', 'su.id', '=', 'sf.surcharge_id')
+                    ->where('su.flag', 1)
+                    ->count('student_registrations.student_id'),
+                'fee' => $fee,
+                'bal' => $bal,
+                'total_papers' => $totalPapers,
+                'total_amount' => $totalAmount,
+            ];
+        });
+
+        dd($query);
+
 
         return ['records' => $query->paginate()];
     }
