@@ -9,6 +9,7 @@ use Orchid\Filters\Filterable;
 use Orchid\Screen\AsSource;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
@@ -54,7 +55,7 @@ class Student extends Model
         return $this->hasMany(StudentRegistration::class);
     }
 
-    public function examRegistrations()
+    public function examRegistrations(): HasMany
     {
         return $this->hasMany(ExamRegistration::class);
     }

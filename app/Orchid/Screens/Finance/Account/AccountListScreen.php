@@ -52,10 +52,7 @@ class AccountListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make('Deposit Funds')
-            ->modal('depositFundsModal')
-            ->method('deposit')
-            ->icon('wallet'),
+
         ];
     }
 
@@ -67,37 +64,6 @@ class AccountListScreen extends Screen
     public function layout(): iterable
     {
         return [
-
-            Layout::modal('depositFundsModal', Layout::rows([Relation::make('institution_id')
-                    ->fromModel(Institution::class, 'name')
-                    ->chunk(20)
-                    ->title('Select Institution')
-                    ->placeholder('Select an institution')
-                    ->canSee($this->currentUser()->inRole('system-admin')),
-
-                Input::make('amount')
-                    ->required()
-                    ->title('Enter amount to deposit')
-                    ->mask([
-                        'alias' => 'currency',
-                        'prefix' => 'Ush ',
-                        'groupSeparator' => ',',
-                        'digitsOptional' => true,
-                    ])
-                    ->help('Enter the exact amount paid to bank'),
-
-                Select::make('method')
-                    ->title('Select payment method')
-                    ->options([
-                        'bank' => 'Bank Payment',
-                        'mobile_money' => 'Mobile Money'
-                    ])
-                    ->empty('None Selected'),
-            ]))
-                ->title('Deposit Funds')
-                ->applyButton('Deposit Funds'),
-
-
             Layout::table('accounts', [
                 TD::make('id', 'ID'),
                 TD::make('institution', 'Institution')->render(function (Account $account) {
@@ -143,41 +109,6 @@ class AccountListScreen extends Screen
         ];
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return void
-     */
-    public function deposit(Request $request)
-    {
-        $institution = null;
-
-        if ($this->currentUser()->inRole('system-admin')) {
-            $institution = Institution::find($request->input('institution_id'));
-        } else {
-            $institution =  $this->currentUser()->institution;
-        }
-
-        $accountId = $institution->account->id;
-
-        $amount = $request->input('amount');
-        $method = $request->input('method');
-
-        $transaction = new Transaction([
-            'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
-            'method' => $method,
-            'account_id' => $accountId,
-            'type' => 'credit',
-            'institution_id' => $institution->id,
-            'deposited_by' => $this->currentUser()->name
-        ]);
-
-        $transaction->save();
-
-        Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
-
-        return back();
-    }
 
     public function currentUser(): User
     {

@@ -171,9 +171,28 @@ class ExamRegistrationListScreen extends Screen
         foreach ($studentIds as $studentId) {
             $student = Student::find($studentId);
 
-            $studentExamRegistrations = $student->examRegistrations()->where('exam_registration_period_id', $examRegistrationPeriodId)->get();
+            $studentExamRegistrations = $student->examRegistrations()->where([
+                'exam_registration_period_id' => $examRegistrationPeriodId,
+                'institution_id' => $institutionId,
+                'course_id' => $courseId,
+            ])->get();
 
-            dd($studentExamRegistrations);
+            $previousAttempts = count($studentExamRegistrations);
+
+            if ($previousAttempts == 0) {
+                // Initial Attempt
+
+                $registrationCharge =  SurchargeFee::join('surcharges', 'surcharge_fees.surcharge_id', '=', 'surcharges.id')
+                ->select('surcharge_fees.surcharge_id', 'surcharges.name AS surcharge_name', 'surcharge_fees.course_fee')
+                ->where('surcharge_fees.course_id', $courseId)
+                ->where('surcharges.is_active', 1)
+                ->first()
+                    ->course_fee;
+            } else if ($previousAttempts == 1) {
+                // Second Attempt
+            } else {
+                // Third Attempt
+            }
         }
     }
 
