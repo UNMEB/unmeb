@@ -4,9 +4,10 @@ namespace App\Imports;
 
 use App\Models\Paper;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class PaperImport implements ToModel, WithHeadingRow
+class PaperImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     /**
      * @param array $row
@@ -15,12 +16,18 @@ class PaperImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        return new Paper(['id' => $row['id'],
+        return new Paper([
+            'id' => $row['id'],
             'name' => $row['name'],
-            'year' => $row['year'],
-            'paper' => $row['paper'],
+            'study_period' => $row['study_period'],
             'abbrev' => $row['abbrev'],
-            'code' => $row['code']
+            'code' => $row['code'],
+            'paper' => $row['paper']
         ]);
+    }
+
+    public function chunkSize(): int
+    {
+        return 500;
     }
 }

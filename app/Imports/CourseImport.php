@@ -4,9 +4,10 @@ namespace App\Imports;
 
 use App\Models\Course;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class CourseImport implements ToModel, WithHeadingRow
+class CourseImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     /**
      * @param array $row
@@ -21,5 +22,10 @@ class CourseImport implements ToModel, WithHeadingRow
             'code' => $row['code'],
             'duration' => $row['duration'],
         ]);
+    }
+
+    public function chunkSize(): int
+    {
+        return 100;
     }
 }

@@ -19,7 +19,7 @@ class SurchargeFeeImport implements ToModel, WithHeadingRow
             'id' => $row['id'],
             'surcharge_id' => $row['surcharge_id'],
             'course_id' => $row['course_id'],
-            'fee' => $row['fee']
+            'course_fee' => $row['course_fee']
         ]);
     }
 }

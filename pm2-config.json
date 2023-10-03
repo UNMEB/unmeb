@@ -1,0 +1,12 @@
+{
+    "apps": [
+        {
+            "name": "unmeb-worker",
+            "script": "php",
+            "args": "artisan queue:work",
+            "autorestart": true,
+            "watch": false,
+            "max_memory_restart": "500M"
+        }
+    ]
+}

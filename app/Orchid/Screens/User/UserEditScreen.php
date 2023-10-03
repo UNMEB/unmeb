@@ -6,6 +6,7 @@ namespace App\Orchid\Screens\User;
 
 use App\Orchid\Layouts\Role\RolePermissionLayout;
 use App\Orchid\Layouts\User\UserEditLayout;
+use App\Orchid\Layouts\User\UserInstitutionLayout;
 use App\Orchid\Layouts\User\UserPasswordLayout;
 use App\Orchid\Layouts\User\UserRoleLayout;
 use Illuminate\Database\Eloquent\Builder;
@@ -98,6 +99,17 @@ class UserEditScreen extends Screen
     public function layout(): iterable
     {
         return [
+
+            Layout::block(UserInstitutionLayout::class)
+                ->title('User\'s Institution')
+                ->description('The institution this user is attached to')
+                ->commands(
+                    Button::make('Save')
+                        ->type(Color::BASIC)
+                        ->icon('bs.check-circle')
+                        ->canSee($this->user->exists)
+                        ->method('save')
+                ),
 
             Layout::block(UserEditLayout::class)
                 ->title(__('Profile Information'))

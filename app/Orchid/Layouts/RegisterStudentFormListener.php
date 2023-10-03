@@ -3,9 +3,12 @@
 namespace App\Orchid\Layouts;
 
 use App\Models\Institution;
-use App\Models\RegistrationPeriod;
+use App\Models\Student;
+use App\Models\StudentRegistrationPeriod;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Layouts\Listener;
 use Orchid\Screen\Repository;
@@ -13,7 +16,12 @@ use Orchid\Support\Facades\Layout;
 
 class RegisterStudentFormListener extends Listener
 {
+
     public $courses = [];
+    public $papers = [];
+    public $selectedInstitutionId = null;
+    public $accountBalance = 0;
+
 
     /**
      * List of field names for which values will be listened.
@@ -21,7 +29,8 @@ class RegisterStudentFormListener extends Listener
      * @var string[]
      */
     protected $targets = [
-        'institution_field',
+        'institution_id',
+        'course_id',
     ];
 
     /**
@@ -31,17 +40,49 @@ class RegisterStudentFormListener extends Listener
      */
     protected function layouts(): iterable
     {
+
+
+        // Retrieve the data from your database query
+        $registrationPeriods = StudentRegistrationPeriod::where('is_active', '=', '1')
+            ->with('year')
+            ->select(['id', 'year_id', 'month'])
+            ->get();
+
+        // Create the options array for the Select field
+        $yearOptions = [];
+
+        foreach ($registrationPeriods as $registrationPeriod) {
+            $yearOptions[$registrationPeriod->id] = $registrationPeriod->month . ' / ' . $registrationPeriod->year->name;
+        }
+
+
         return [
             Layout::rows([
-                Select::make('institution_field')
+                // Select Registration Period
+                Select::make('student_registration_period_id')
+                    ->options($yearOptions)
+                    ->empty('No select')
+                    ->title('Select Registration Period Year'),
+
+                // Select Institution
+                Relation::make('institution_id')
                     ->title('Select Institution')
-                    ->fromModel(Institution::class, 'name')
-                    ->emptyValue('Select an institution'),
+                    ->placeholder('Select an institution')
+                ->fromModel(Institution::class, 'name')
+                ->applyScope('forInstitution'),
 
-                Select::make('course_field')
-                    ->title('Program of study')
-                    ->options($this->courses)
+                Select::make('course_id')
+                ->title('Select Course')
+                ->placeholder('Select a course')
+                ->options($this->courses)
+                ->canSee(count($this->courses) > 0),
 
+                Relation::make('student_ids.')
+                    ->fromModel(Student::class, 'id')
+                    ->applyScope('forInstitution')
+                    ->title('Select students to register for NSIN')
+                    ->multiple()
+                    ->displayAppend('fullName'),
             ])
         ];
     }
@@ -56,23 +97,19 @@ class RegisterStudentFormListener extends Listener
      */
     public function handle(Repository $repository, Request $request): Repository
     {
-        // Get the selected institution ID from the request
-        $institutionId = $request->input('institution_field');
+        $institutionId = $request->input('institution_id');
 
-        // Get registration periods
-        $registrationPeriods = RegistrationPeriod::where('flag', 1)->get();
+        $institutionCourses = Institution::find($institutionId)->courses;
+        $this->courses = $institutionCourses->pluck('name', 'id');
 
-        // dd($registrationPeriods);
+        return $repository
+            ->set('institution_id', $request->input('institution_id'))
+        ->set('course_id', $request->input('course_id'))
+        ->set('student_registration_period_id', $request->input('student_registration_period_id'));
+    }
 
-        // // Fetch the courses assigned to the selected institution using the pivot table
-        $courses = Institution::find($institutionId)->courses->pluck('name', 'id');
-
-        // // Convert the courses to an array
-        $courseOptions = $courses->toArray();
-
-        // // Update the course select field options with the fetched courses
-        $this->courses = $courseOptions;
-
-        return $repository;
+    public function currentUser(): User
+    {
+        return auth()->user();
     }
 }

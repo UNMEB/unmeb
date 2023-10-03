@@ -2,56 +2,36 @@
 
 declare(strict_types=1);
 
+use App\Orchid\Screens\Administration\Course\AssignPaperListScreen;
 use App\Orchid\Screens\Administration\Course\CourseListScreen;
+use App\Orchid\Screens\Administration\Course\CoursePaperListScreen;
+use App\Orchid\Screens\DemoReportScreen;
 use App\Orchid\Screens\Administration\District\DistrictListScreen;
-use App\Orchid\Screens\Administration\Fee\FeeListScreen;
+use App\Orchid\Screens\Administration\Institution\AssignCourseListScreen;
+use App\Orchid\Screens\Administration\Institution\InstitutionCourseList;
 use App\Orchid\Screens\Administration\Institution\InstitutionListScreen;
 use App\Orchid\Screens\Administration\Paper\PaperListScreen;
-use App\Orchid\Screens\Administration\Surcharge\SurchargeFeeListScreen;
-use App\Orchid\Screens\Administration\Surcharge\SurchargeListScreen;
-use App\Orchid\Screens\Administration\Years\YearListScreen;
-use App\Orchid\Screens\AssessmentScreen;
-use App\Orchid\Screens\CommentListScreen;
-use App\Orchid\Screens\ExamAcceptedScreen;
-use App\Orchid\Screens\ExamIncompleteScreen;
-use App\Orchid\Screens\ExamPaymentScreen;
-use App\Orchid\Screens\Examples\ExampleActionsScreen;
-use App\Orchid\Screens\Examples\ExampleCardsScreen;
-use App\Orchid\Screens\Examples\ExampleChartsScreen;
-use App\Orchid\Screens\Examples\ExampleFieldsAdvancedScreen;
-use App\Orchid\Screens\Examples\ExampleFieldsScreen;
-use App\Orchid\Screens\Examples\ExampleGridScreen;
-use App\Orchid\Screens\Examples\ExampleLayoutsScreen;
-use App\Orchid\Screens\Examples\ExampleScreen;
-use App\Orchid\Screens\Examples\ExampleTextEditorsScreen;
-use App\Orchid\Screens\ExamRegistrationPeriodScreen;
-use App\Orchid\Screens\ExamRejectedReasonScreen;
-use App\Orchid\Screens\ExamRejectedScreen;
-use App\Orchid\Screens\ExamVerifyScreen;
-use App\Orchid\Screens\InstitutionCourseAssignScreen;
-use App\Orchid\Screens\NSINAcceptedScreen;
-use App\Orchid\Screens\NSINIncompleteDetailScreen;
-use App\Orchid\Screens\NSINIncompleteScreen;
-use App\Orchid\Screens\NSINRegistrationPeriodScreen;
-use App\Orchid\Screens\NSINRejectedReasonsScreen;
-use App\Orchid\Screens\NSINRejectedScreen;
-use App\Orchid\Screens\NSINVerifyBookScreen;
-use App\Orchid\Screens\NSINVerifyScreen;
+use App\Orchid\Screens\Administration\Year\YearListScreen;
+use App\Orchid\Screens\Assessment\PracticalAssessmentList;
+use App\Orchid\Screens\Assessment\TheoryAssessmentList;
+use App\Orchid\Screens\Biometric\AttendanceLogScreen;
+use App\Orchid\Screens\Biometric\AttendanceReportScreen;
+use App\Orchid\Screens\Biometric\EnrollmentListScreen;
+use App\Orchid\Screens\ContinuousAssessmentScreen;
+use App\Orchid\Screens\Finance\Account\AccountListScreen;
+use App\Orchid\Screens\Finance\Account\CreditListScreen;
+use App\Orchid\Screens\Finance\Account\InstitutionTransactionListScreen;
+use App\Orchid\Screens\Finance\Account\PendingTransactionListScreen;
+use App\Orchid\Screens\Finance\Account\TransactionListScreen;
 use App\Orchid\Screens\PlatformScreen;
-use App\Orchid\Screens\Registration\NSIN\NSINPaymentScreen;
-use App\Orchid\Screens\Reports\Attempt\AtemptYear1Semester2Screen;
-use App\Orchid\Screens\Reports\Attempt\AtemptYear1Semester3Screen;
-use App\Orchid\Screens\Reports\Attempt\AtemptYear2Semester2Screen;
-use App\Orchid\Screens\Reports\Attempt\AtemptYear2Semester3Screen;
-use App\Orchid\Screens\Reports\Attempt\AtemptYear3Semester2Screen;
-use App\Orchid\Screens\Reports\Attempt\AtemptYear3Semester3Screen;
-use App\Orchid\Screens\Reports\PackingList\PackingListYear1Semester1;
-use App\Orchid\Screens\Reports\PackingList\PackingListYear1Semester1Screen;
-use App\Orchid\Screens\Reports\PackingList\PackingListYear2Semester1Screen;
-use App\Orchid\Screens\Reports\PackingList\PackingListYear3Semester1Screen;
+use App\Orchid\Screens\Registration\Exam\ApproveExamRegistrationListScreen;
+use App\Orchid\Screens\Registration\Exam\ExamRegistrationListScreen;
+use App\Orchid\Screens\Registration\Periods\ExamRegistrationPeriodListScreen;
+use App\Orchid\Screens\Registration\Periods\StudentRegistrationPeriodListScreen;
+use App\Orchid\Screens\Registration\Student\ApproveStudentRegistrationListScreen;
+use App\Orchid\Screens\Registration\Student\StudentRegistrationListScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
-use App\Orchid\Screens\Staff\StaffListScreen;
 use App\Orchid\Screens\Student\StudentListScreen;
 use App\Orchid\Screens\User\UserEditScreen;
 use App\Orchid\Screens\User\UserListScreen;
@@ -71,10 +51,10 @@ use Tabuna\Breadcrumbs\Trail;
 */
 
 // Main
-Route::screen('/main', PlatformScreen::class)
-    ->name('platform.main');
+Route::screen('/dashboard', PlatformScreen::class)
+->name('platform.dashboard');
 
-    // Platform > Profile
+// Platform > Profile
 Route::screen('profile', UserProfileScreen::class)
     ->name('platform.profile')
     ->breadcrumbs(fn (Trail $trail) => $trail
@@ -123,65 +103,158 @@ Route::screen('roles', RoleListScreen::class)
         ->parent('platform.index')
         ->push(__('Roles'), route('platform.systems.roles')));
 
-// Platform > Administration > Districts
+// Platform > System > Administration > Years
+Route::screen('years', YearListScreen::class)
+    ->name('platform.systems.administration.years')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+->push(__('Years'), route('platform.systems.administration.years')));
 
-Route::screen('districts', DistrictListScreen::class)->name('platform.administration.districts');
+// Platform > System > Administration > Districts
+Route::screen('districts', DistrictListScreen::class)
+    ->name('platform.systems.administration.districts')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Institutions'), route('platform.systems.administration.districts')));
 
+// Platform > System > Administration > Institution > Assign
+Route::screen('institutions/{institution}/assign', AssignCourseListScreen::class)
+    ->name('platform.systems.administration.institutions.assign')
+    ->breadcrumbs(fn (Trail $trail, $institution) => $trail
+        ->parent('platform.systems.administration.institutions')
+        ->push($institution->name, route('platform.systems.administration.institutions.assign', $institution)));
+
+// Platform > System > Administration > Institution > Courses
+Route::screen('institutions/{institution}/courses', InstitutionCourseList::class)
+    ->name('platform.systems.administration.institutions.courses')
+    ->breadcrumbs(fn (Trail $trail, $institution) => $trail
+        ->parent('platform.systems.administration.institutions')
+        ->push($institution->name, route('platform.systems.administration.institutions.courses', $institution)));
+
+// Platform > System > Administration > Institutions
 Route::screen('institutions', InstitutionListScreen::class)
-    ->name('platform.administration.institutions');
+->name('platform.systems.administration.institutions')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Institutions'), route('platform.systems.administration.institutions')));
 
-Route::screen('institutions/{institution}/assign', InstitutionCourseAssignScreen::class)
-    ->name('platform.administration.institutions.assign');
+// Platform > System > Administration > Courses > Assign
+Route::screen('courses/{course}/assign', AssignPaperListScreen::class)
+    ->name('platform.systems.administration.courses.assign')
+    ->breadcrumbs(fn (Trail $trail, $course) => $trail
+        ->parent('platform.systems.administration.courses')
+        ->push($course->name, route('platform.systems.administration.courses.assign', $course)));
 
+// Platform > System > Administration > Course > Papers
+Route::screen('courses/{course}/papers', CoursePaperListScreen::class)
+    ->name('platform.systems.administration.courses.papers')
+    ->breadcrumbs(fn (Trail $trail, $course) => $trail
+        ->parent('platform.systems.administration.courses')
+        ->push($course->name, route('platform.systems.administration.courses.papers', $course)));
 
-Route::screen('courses', CourseListScreen::class)->name('platform.administration.courses');
-Route::screen('papers', PaperListScreen::class)->name('platform.administration.papers');
-Route::screen('surcharge/list', SurchargeListScreen::class)->name('platform.administration.surcharge.list');
-Route::screen('surcharge/fees', SurchargeFeeListScreen::class)->name('platform.administration.surcharge.fees');
-Route::screen('years', YearListScreen::class)->name('platform.administration.years');
-Route::screen('assessment', AssessmentScreen::class)->name('platform.assessment.continuous');
-Route::screen('comments', CommentListScreen::class)->name('platform.comments');
-
-
-// Platform > Registration > NSIN
-Route::screen('registration/nsin/payments', NSINPaymentScreen::class)->name('platform.registration.nsin.payments');
-
-
-Route::screen('registration/nsin/incomplete/{registration}/details', NSINIncompleteDetailScreen::class)->name('platform.registration.nsin.incomplete.details');
-Route::screen('registration/nsin/incomplete', NSINIncompleteScreen::class)->name('platform.registration.nsin.incomplete');
-Route::screen('registration/nsin/verify', NSINVerifyScreen::class)->name('platform.registration.nsin.verify');
-Route::screen('registration/nsin/accepted', NSINAcceptedScreen::class)->name('platform.registration.nsin.accepted');
-Route::screen('registration/nsin/rejected', NSINRejectedScreen::class)->name('platform.registration.nsin.rejected');
-Route::screen('registration/nsin/reasons', NSINRejectedReasonsScreen::class)->name('platform.registration.nsin.reasons');
-Route::screen('registration/nsin/verify_books', NSINVerifyBookScreen::class)->name('platform.registration.nsin.verify_books');
-
-// Platform > Registration > Exam
-Route::screen('registration/exam/payments', ExamPaymentScreen::class)->name('platform.registration.exam.payments');
-Route::screen('registration/exam/incomplete', ExamIncompleteScreen::class)->name('platform.registration.exam.incomplete');
-Route::screen('registration/exam/verify', ExamVerifyScreen::class)->name('platform.registration.exam.verify');
-Route::screen('registration/exam/accepted', ExamAcceptedScreen::class)->name('platform.registration.exam.accepted');
-Route::screen('registration/exam/rejected', ExamRejectedScreen::class)->name('platform.registration.exam.rejected');
-Route::screen('registration/exam/reasons', ExamRejectedReasonScreen::class)->name('platform.registration.exam.reasons');
+// Platform > System > Administration > Courses
+Route::screen('courses', CourseListScreen::class)
+    ->name('platform.systems.administration.courses')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Courses'), route('platform.systems.administration.courses')));
 
 
-// Platform > Registration Periods
-Route::screen('registration/periods/nsin', NSINRegistrationPeriodScreen::class)->name('platform.registration.period.nsin');
-Route::screen('registration/periods/exam', ExamRegistrationPeriodScreen::class)->name('platform.registration.period.exam');
+// Platform > System > Administration > Papers
+Route::screen('papers', PaperListScreen::class)
+    ->name('platform.systems.administration.papers')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Papers'), route('platform.systems.administration.papers')));
 
 
-// User Managemen
-Route::screen('staff', StaffListScreen::class)->name('platform.administration.staff');
-Route::screen('student', StudentListScreen::class)->name('platform.administration.student');
+// Platform > System > Registration > Students > Approve
+Route::screen('registration/students/approve', ApproveStudentRegistrationListScreen::class)
+    ->name('platform.systems.registration.students.approve');
 
-// Platform > Reports > Year 1
-Route::screen('reports/year1/semester1/packing', PackingListYear1Semester1Screen::class)->name('platform.reports.packing.year1.semester1');
-Route::screen('reports/year1/semester2/attempt2', AtemptYear1Semester2Screen::class)->name('platform.reports.attempt.year1.semester2');
-Route::screen('reports/year1/semester3/attempt3', AtemptYear1Semester3Screen::class)->name('platform.reports.attempt.year1.semester3');
+// Platform > System > Registration > Students
+Route::screen('registration/students', StudentRegistrationListScreen::class)
+    ->name('platform.systems.registration.students');
 
-Route::screen('reports/year2/semester1/packing', PackingListYear2Semester1Screen::class)->name('platform.reports.packing.year2.semester1');
-Route::screen('reports/year2/semester2/attempt2', AtemptYear2Semester2Screen::class)->name('platform.reports.attempt.year2.semester2');
-Route::screen('reports/year2/semester3/attempt3', AtemptYear2Semester3Screen::class)->name('platform.reports.attempt.year2.semester3');
 
-Route::screen('reports/year3/semester1/packing', PackingListYear3Semester1Screen::class)->name('platform.reports.packing.year3.semester1');
-Route::screen('reports/year3/semester2/attempt2', AtemptYear3Semester2Screen::class)->name('platform.reports.attempt.year3.semester2');
-Route::screen('reports/year3/semester3/attempt3', AtemptYear3Semester3Screen::class)->name('platform.reports.attempt.year3.semester3');
+// Platform > System > Registration > Exams
+Route::screen('registration/exams/approve', ApproveExamRegistrationListScreen::class)
+    ->name('platform.systems.registration.exams.approve');
+
+// Platform > System > Registration > Exams
+Route::screen('registration/exams', ExamRegistrationListScreen::class)
+    ->name('platform.systems.registration.exams');
+
+        // Platform > System > Registration > Periods > Student
+Route::screen('registration/periods/students', StudentRegistrationPeriodListScreen::class)
+    ->name('platform.systems.registration.periods.students')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Student Registration Periods'), route('platform.systems.registration.periods.students')));
+
+// Platform > System > Registration > Periods > Exam
+Route::screen('registration/periods/exams', ExamRegistrationPeriodListScreen::class)
+    ->name('platform.systems.registration.periods.exams')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+->push(__('Exam Registration Periods'), route('platform.systems.registration.periods.exams')));
+
+
+// Platform > System > Finance > Accounts
+Route::screen('finance/accounts', AccountListScreen::class)
+    ->name('platform.systems.finance.accounts')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Accounts'), route('platform.systems.finance.accounts')));
+
+Route::screen('finance/transactions/pending', PendingTransactionListScreen::class)
+    ->name('platform.systems.finance.pending')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+->push(__('Pending Transactions'), route('platform.systems.finance.pending')));
+
+Route::screen('finance/transactions', TransactionListScreen::class)
+    ->name('platform.systems.finance.complete')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+->push(__('Institution Transactions'), route('platform.systems.finance.complete')));
+
+
+// Platform > System > Finance > Accounts
+Route::screen('accounts/{institution}/transactions', InstitutionTransactionListScreen::class)
+    ->name('platform.systems.finance.institution.transactions')
+    ->breadcrumbs(fn (Trail $trail, $institution) => $trail
+        ->parent('platform.systems.finance.accounts')
+        ->push($institution->name, route('platform.systems.finance.institution.transactions', $institution)));
+
+// Platform > System > Reports
+Route::screen('reports', DemoReportScreen::class);
+
+
+// Platform > System > Continuous Assessment > Theory
+Route::screen('continuous-assessment/theory', TheoryAssessmentList::class)
+    ->name('platform.systems.continuous-assessment.theory')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Theory Assessment'), route('platform.systems.continuous-assessment.theory')));
+
+
+// Platform > System > Continuous Assessment > Practical
+Route::screen('continuous-assessment/practical', PracticalAssessmentList::class)
+    ->name('platform.systems.continuous-assessment.practical')
+    ->breadcrumbs(fn (Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Practical Assessment'), route('platform.systems.continuous-assessment.practical')));
+
+
+// Platform > System > Biometric > Access Log
+Route::screen('biometric/enrollment', EnrollmentListScreen::class)
+    ->name('platform.system.biometrics.enrollment');
+
+        // Platform > System > Biometric > Access Log
+Route::screen('biometric/access', AttendanceLogScreen::class)
+->name('platform.system.biometrics.access');
+
+// Platform > System > Biometric > Access Log
+Route::screen('biometric/report', AttendanceReportScreen::class)
+->name('platform.system.biometrics.report');

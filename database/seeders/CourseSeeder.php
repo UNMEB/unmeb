@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Imports\CourseImport;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CourseSeeder extends Seeder
 {
@@ -12,6 +14,8 @@ class CourseSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $courses = public_path('imports/courses.csv');
+        Excel::import(new CourseImport, $courses);
+
     }
 }

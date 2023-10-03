@@ -10,8 +10,10 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
@@ -94,27 +96,17 @@ class CourseListScreen extends Screen
                     ->sort(),
 
                 TD::make(__('Actions'))
-                    ->width(200)
+                    ->width(280)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (Course $course) {
-                        $editButton = ModalToggle::make('Edit Course')
-                            ->modal('editCourseModal')
-                            ->modalTitle('Edit Course ' . $course->name)
-                            ->method('edit') // You can define your edit method here
-                            ->asyncParameters([
-                                'course' => $course->id,
-                            ])
-                            ->render();
+                    return Group::make([
+                        Link::make('Course Papers')
+                            ->route('platform.systems.administration.courses.papers', $course->id),
+                        Link::make('Assign Papers')
+                            ->route('platform.systems.administration.courses.assign', $course->id),
 
-                        $deleteButton = Button::make('Delete')
-                            ->confirm('Are you sure you want to delete this course?')
-                            ->method('delete', [
-                                'id' => $course->id
-                            ])
-                            ->render();
-
-                        return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
+                    ]);
                     })
 
 

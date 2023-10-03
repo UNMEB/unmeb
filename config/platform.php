@@ -95,11 +95,11 @@ return [
      | redirected to this page when they enter the dashboard or click on the
      | dashboard's logo or links.
      |
-     | Example: 'platform.main'
+     | Example: 'platform.dashboard'
      |
      */
 
-    'index' => 'platform.main',
+    'index' => 'platform.dashboard',
 
     /*
      |--------------------------------------------------------------------------

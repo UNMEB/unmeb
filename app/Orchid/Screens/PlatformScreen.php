@@ -4,12 +4,17 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
-use Orchid\Screen\Actions\Button;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 
+use Illuminate\Support\Str;
+use Orchid\Screen\Actions\ModalToggle;
+
 class PlatformScreen extends Screen
 {
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -17,7 +22,17 @@ class PlatformScreen extends Screen
      */
     public function query(): iterable
     {
-        return [];
+        $institution = $this->currentUser()->institution;
+        $accountBalance = 0;
+        if ($institution) {
+            $accountBalance = (float) $institution->account->balance;
+        }
+
+        return [
+            'stats' => [
+                'balance' => 'Ush ' . number_format($accountBalance, 2),
+            ]
+        ];
     }
 
     /**
@@ -25,7 +40,7 @@ class PlatformScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'UNMEB';
+        return $this->currentUser()->institution()->exists() ? $this->currentUser()->institution->short_name . ' Dashboard' : 'Admin Dashboard';
     }
 
     /**
@@ -33,7 +48,7 @@ class PlatformScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Uganda Nurses and Midwives Examination Board';
+        return $this->currentUser()->institution()->exists()  ? 'Welcome to ' . $this->currentUser()->institution->name . ' dashboard' : 'Welcome to admin dashboard';
     }
 
     /**
@@ -43,11 +58,7 @@ class PlatformScreen extends Screen
      */
     public function commandBar(): iterable
     {
-        return [
-            Button::make('Assign Courses'),
-            Button::make('Assign Papers'),
-
-        ];
+        return [];
     }
 
     /**
@@ -58,7 +69,14 @@ class PlatformScreen extends Screen
     public function layout(): iterable
     {
         return [
-
+            Layout::metrics([
+                'Account Balance' => 'stats.balance'
+            ])->canSee($this->currentUser()->hasAccess('platform.systems.institution.account_balance'))
         ];
+    }
+
+    public function currentUser(): User
+    {
+        return Auth()->user();
     }
 }

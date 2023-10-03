@@ -162,7 +162,7 @@ class DistrictListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'district.name' => 'required|numeric'
+            'district.name' => 'required'
         ]);
 
         $district = new District();

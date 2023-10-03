@@ -2,34 +2,32 @@
 
 namespace App\Imports;
 
-use App\Models\RegistrationPeriod;
-use Carbon\Carbon;
-use Maatwebsite\Excel\Concerns\ToModel;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Concerns\ToCollection;
+use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
-class ExamRegistrationImport implements ToModel, WithHeadingRow, WithChunkReading
+class ExamRegistrationImport implements ToCollection, WithHeadingRow, WithChunkReading, WithBatchInserts
 {
     /**
-     * @param array $row
-     *
-     * @return \Illuminate\Database\Eloquent\Model|null
+     * @param Collection $collection
      */
-    public function model(array $row)
+    public function collection(Collection $collection)
     {
-        $startDate = !empty($row['start_date']) ? Carbon::createFromFormat('m/d/Y', $row['start_date'])->format('Y-m-d') : null;
-        $endDate = !empty($row['end_date']) ? Carbon::createFromFormat('m/d/Y', $row['end_date'])->format('Y-m-d') : null;
-
-        return new RegistrationPeriod([
-            'id' => $row['id'],
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'academic_year' => $row['academic_year']
-        ]);
+        foreach ($collection as $row) {
+            DB::table('exam_registrations')->insert($row->toArray());
+        }
     }
 
     public function chunkSize(): int
     {
-        return 500;
+        return 1000;
+    }
+
+    public function batchSize(): int
+    {
+        return 1000;
     }
 }

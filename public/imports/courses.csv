@@ -1,0 +1,19 @@
+id,name,code,duration
+1,Certificate in Comprehensive Nursing,CCN,3
+2,Certificate in Mental Health Nursing,CMHN,3
+3,Certificate in Midwifery,CM,3
+4,Certificate in Nursing,CN,3
+5,Diploma in Comprehensive Nursing,DCN,3
+6,Diploma in Mental Health Nursing,DMHN,3
+7,Diploma in Midwifery,DMD,3
+8,Diploma in Nursing,DND,3
+9,Diploma in Paediatrics Nursing and Child Health,DPCHN,3
+10,Diploma in Nursing -Extension,DNE,3
+11,Diploma in Midwifery -Extension,DME,3
+12,Diploma in Comprehensive Nursing -Extension,DCNE,3
+13,Diploma in Peadiatric Nursing -Extension,DPCHNE,3
+14,Diploma in Mental Health Nursing -Extension,DMHNE,3
+15,Diploma in Midwifery  E-Learning,DMEL,3
+16,Diploma in Public Health Nursing ,DPHN,3
+17,Diploma in Palliative Care Nursing,DPCN,1
+18,Advanced Diploma in Palliative Care Nursing,ADPCN,1

@@ -2,14 +2,14 @@
 
 namespace App\Imports;
 
-use App\Models\District;
+use App\Models\Account;
 use App\Models\Institution;
 use Maatwebsite\Excel\Concerns\ToModel;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-
 use Illuminate\Support\Str;
 
-class InstitutionImport implements ToModel, WithHeadingRow
+class InstitutionImport implements ToModel, WithHeadingRow, WithChunkReading
 {
     /**
      * @param array $row
@@ -18,24 +18,29 @@ class InstitutionImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        // dd($row);
-
-        $location = Str::upper($row['location']);
-
-        $district = District::firstOrCreate([
-            'name' => $location
-        ]);
-
-
-
-        return new Institution([
-            'name' => $row['name'],
-            'short_name' => $row['short_name'],
-            'district_id' => $district->id,
+        $institution = new Institution([
+            'id' => $row['id'],
+            'name' => Str::title(Str::lower($row['name'])),
+            'short_name' => Str::upper($row['short_name']),
+            'location' => Str::title(Str::lower($row['location'])),
             'type' => $row['type'],
             'code' => $row['code'],
-            'phone' => $row['phone'],
+            'phone_no' => $row['phone_no'],
             'box_no' => $row['box_no'],
         ]);
+
+        $institution->save();
+
+        $account = new Account();
+        $account->institution_id = $institution->id;
+        $account->balance = 0;
+        $account->save();
+
+        return $institution;
+    }
+
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }

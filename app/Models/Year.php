@@ -4,17 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Orchid\Attachment\Attachable;
-use Orchid\Filters\Filterable;
 use Orchid\Screen\AsSource;
 
 class Year extends Model
 {
-    use HasFactory, AsSource, Filterable, Attachable;
+    use HasFactory, AsSource;
 
-    protected $fillable = [
+    protected $filable = [
         'id',
         'name',
-        'flag'
+        'is_active'
     ];
+
+    public function studentRegistrations()
+    {
+        return $this->hasMany(StudentRegistration::class);
+    }
 }

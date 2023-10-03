@@ -9,16 +9,16 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 class SurchargeImport implements ToModel, WithHeadingRow
 {
     /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
+     * @param array $row
+     *
+     * @return \Illuminate\Database\Eloquent\Model|null
+     */
     public function model(array $row)
     {
         return new Surcharge([
             'id' => $row['id'],
             'name' => $row['name'],
-            'flag' => $row['flag'],
+            'is_active' => $row['is_active']
         ]);
     }
 }

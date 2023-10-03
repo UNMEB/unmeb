@@ -1,0 +1,205 @@
+<?php
+
+namespace App\Orchid\Screens\Finance\Account;
+
+use App\Models\Institution;
+use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Http\Request;
+use NumberFormatter;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Screen;
+use Orchid\Screen\TD;
+use Orchid\Support\Facades\Layout;
+use PDF;
+
+use Rmunate\Utilities\SpellNumber;
+
+use Illuminate\Support\Str;
+use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
+use Orchid\Support\Facades\Alert;
+
+class TransactionListScreen extends Screen
+{
+    /**
+     * Fetch data to be displayed on the screen.
+     *
+     * @return array
+     */
+    public function query(): iterable
+    {
+        $transactions = Transaction::with('institution', 'account')->where('is_approved', 1)->get();
+        return [
+            'transactions' => $transactions
+        ];
+    }
+
+    /**
+     * The name of the screen displayed in the header.
+     *
+     * @return string|null
+     */
+    public function name(): ?string
+    {
+        return 'Transactions';
+    }
+
+    /**
+     * The screen's action buttons.
+     *
+     * @return \Orchid\Screen\Action[]
+     */
+    public function commandBar(): iterable
+    {
+        return [
+            ModalToggle::make('Deposit Funds')
+                ->modal('depositFundsModal')
+                ->method('deposit')
+                ->icon('wallet'),
+        ];
+    }
+
+    /**
+     * The screen's layout elements.
+     *
+     * @return \Orchid\Screen\Layout[]|string[]
+     */
+    public function layout(): iterable
+    {
+        return [
+
+            Layout::modal('depositFundsModal', Layout::rows([
+                Relation::make('institution_id')
+                    ->fromModel(Institution::class, 'name')
+                    ->chunk(20)
+                    ->title('Select Institution')
+                    ->placeholder('Select an institution')
+                    ->canSee($this->currentUser()->inRole('system-admin')),
+
+                Input::make('amount')
+                    ->required()
+                    ->title('Enter amount to deposit')
+                    ->mask([
+                        'alias' => 'currency',
+                        'prefix' => 'Ush ',
+                        'groupSeparator' => ',',
+                        'digitsOptional' => true,
+                    ])
+                    ->help('Enter the exact amount paid to bank'),
+
+                Select::make('method')
+                    ->title('Select payment method')
+                    ->options([
+                        'bank' => 'Bank Payment',
+                        'mobile_money' => 'Mobile Money'
+                    ])
+                    ->empty('None Selected'),
+            ]))
+                ->title('Deposit Funds')
+                ->applyButton('Deposit Funds'),
+            Layout::table('transactions', [
+                TD::make('id', 'Transaction ID'),
+                TD::make('account_id', 'Institution')->render(function (Transaction $data) {
+                    return $data->institution->name;
+                }),
+                TD::make('type', 'Transaction Type')->render(function ($data) {
+                    return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
+                }),
+                TD::make('method', 'Transaction Method')->render(function ($data) {
+                    return $data->method == 'bank' ? 'Bank Transfer/Payment' : 'Mobile Money';
+                }),
+                TD::make('amount', 'Amount')->render(function ($data) {
+                    return 'Ush ' . number_format($data->amount);
+                }),
+                TD::make('is_approved', 'Approval Status')->render(function ($data) {
+                    return $data->is_approved == 1 ? 'Approved' : 'Pending';
+                }),
+                TD::make('approved_by', 'Approved By')->render(function (Transaction $data) {
+                    return $data->is_approved == 1 ? $data->approvedBy->name : 'Not Approved';
+                }),
+                TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {
+                    return Button::make('Print Receipt')
+                        ->method('print', [
+                            'id' => $data->id
+                        ])
+                        ->rawClick(false);
+                })
+            ])
+        ];
+    }
+
+    public function print(Request $request, $id)
+    {
+        $transaction = Transaction::find($id);
+
+        // Amount
+        $amount = $transaction->amount;
+
+        // Amount in words
+        $amountInWords = (new NumberFormatter('en_US', NumberFormatter::SPELLOUT))->format($amount);
+
+
+        // Html for address
+        $address = " Plot 157 Ssebowa Road,Kiwatule, Nakawa division, <br />
+
+        Kampala –Uganda (East Africa). <br />
+
+        P.O. Box 3513, Kampala (Uganda).";
+
+        $receiptData = [
+            'amount' => 'Ush ' . number_format($amount),
+            'amountInWords' => Str::title($amountInWords),
+            'address'   => $address,
+            'approvedBy' => $transaction->approvedBy->name,
+            'institution' => $transaction->institution->name,
+        ];
+
+        $pdf = PDF::loadView('receipt', $receiptData);
+
+        return $pdf->download('receipt.pdf');
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function deposit(Request $request)
+    {
+        $institution = null;
+
+        if ($this->currentUser()->inRole('system-admin')) {
+            $institution = Institution::find($request->input('institution_id'));
+        } else {
+            $institution =  $this->currentUser()->institution;
+        }
+
+        $accountId = $institution->account->id;
+
+        $amount = $request->input('amount');
+        $method = $request->input('method');
+
+        $transaction = new Transaction([
+            'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
+            'method' => $method,
+            'account_id' => $accountId,
+            'type' => 'credit',
+            'institution_id' => $institution->id,
+            'deposited_by' => $this->currentUser()->name
+        ]);
+
+        $transaction->save();
+
+        Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
+
+        return back();
+    }
+
+    public function currentUser(): User
+    {
+        return auth()->user();
+    }
+}

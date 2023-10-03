@@ -130,28 +130,45 @@ class PaperListScreen extends Screen
                     ->title('Paper Name')
                     ->placeholder('Enter paper name'),
 
-                Input::make('paper.year')
+                Select::make('paper.study_period')
                     ->title('Year of Study')
-                    ->placeholder('Enter year of study'),
+                    ->options([
+                        'Year 1 Semester 1' => 'Year 1 Semester 1',
+                        'Year 1 Semester 2' => 'Year 1 Semester 2',
+                        'Year 2 Semester 1' => 'Year 1 Semester 1',
+                        'Year 2 Semester 2' => 'Year 1 Semester 2',
+                        'Year 3 Semester 1' => 'Year 1 Semester 1',
+                        'Year 3 Semester 2' => 'Year 1 Semester 2',
+                    ])
+                    ->empty('None Selected'),
 
                 Select::make('paper.paper')
                     ->options([
-                        'Paper I',
-                        'Paper II',
-                        'Paper III',
-                        'Paper IV',
-                        'Paper V',
+                        'Paper I' => 'Paper I',
+                        'Paper II' => 'Paper II',
+                        'Paper III' => 'Paper III',
+                        'Paper IV' => 'Paper IV',
+                        'Paper V' => 'Paper V',
+                        'Paper VI' => 'Paper VI'
                     ])
                     ->title('Paper')
-                    ->placeholder('Select paper'),
+                    ->empty('None Selected'),
 
-                Input::make('paper.abbrev')
-                    ->title('Year of Study')
-                    ->placeholder('Enter abbreviation'),
+                Select::make('paper.abbrev')
+                    ->options([
+                        'P1' => 'P1',
+                        'P2' => 'P2',
+                        'P3' => 'P3',
+                        'P4' => 'P4',
+                        'P5' => 'P5',
+                        'P6' => 'P6'
+                    ])
+                    ->title('Paper Abbreviation')
+                    ->empty('None Selected'),
 
                 Input::make('paper.code')
                     ->title('Paper Code')
-                    ->placeholder('Enter paper code'),
+                    ->placeholder('Enter paper code .e.g CN111'),
 
             ]))
                 ->title('Create Paper')
@@ -162,29 +179,44 @@ class PaperListScreen extends Screen
                     ->title('Paper Name')
                     ->placeholder('Enter paper name'),
 
-                Input::make('paper.year')
+                Select::make('paper.study_period')
                     ->title('Year of Study')
-                    ->placeholder('Enter year of study'),
+                    ->options([
+                        'Year 1 Semester 1' => 'Year 1 Semester 1',
+                        'Year 1 Semester 2' => 'Year 1 Semester 2',
+                        'Year 2 Semester 1' => 'Year 1 Semester 1',
+                        'Year 2 Semester 2' => 'Year 1 Semester 2',
+                        'Year 3 Semester 1' => 'Year 1 Semester 1',
+                        'Year 3 Semester 2' => 'Year 1 Semester 2',
+                    ]),
 
                 Select::make('paper.paper')
                     ->options([
-                        'Paper I',
-                        'Paper II',
-                        'Paper III',
-                        'Paper IV',
-                        'Paper V',
-                        'Paper VI'
+                        'Paper I' => 'Paper I',
+                        'Paper II' => 'Paper II',
+                        'Paper III' => 'Paper III',
+                        'Paper IV' => 'Paper IV',
+                        'Paper V' => 'Paper V',
+                        'Paper VI' => 'Paper VI'
                     ])
                     ->title('Paper')
                     ->placeholder('Select paper'),
 
-                Input::make('paper.abbrev')
-                    ->title('Year of Study')
-                    ->placeholder('Enter abbreviation'),
+                Select::make('paper.abbrev')
+                    ->options([
+                        'P1' => 'P1',
+                        'P2' => 'P2',
+                        'P3' => 'P3',
+                        'P4' => 'P4',
+                        'P5' => 'P5',
+                        'P6' => 'P6'
+                    ])
+                    ->title('Paper Abbreviation')
+                    ->placeholder('Select Abbreviation'),
 
                 Input::make('paper.code')
                     ->title('Paper Code')
-                    ->placeholder('Enter paper code'),
+                    ->placeholder('Enter paper code .e.g CN111'),
             ]))->async('asyncGetPaper'),
 
             Layout::modal('uploadPapersModal', Layout::rows([
@@ -217,7 +249,7 @@ class PaperListScreen extends Screen
         $request->validate([
             'paper.name' => 'required',
             'paper.code' => 'required',
-            'paper.year' => 'required',
+            'paper.study_period' => 'required',
             'paper.paper' => 'required',
             'paper.abbrev' => 'required',
         ]);
@@ -225,7 +257,7 @@ class PaperListScreen extends Screen
         $paper = new Paper();
         $paper->name = $request->input('paper.name');
         $paper->code = $request->input('paper.code');
-        $paper->year = $request->input('paper.year');
+        $paper->study_period = $request->input('paper.study_period');
         $paper->paper = $request->input('paper.paper');
         $paper->abbrev = $request->input('paper.abbrev');
         $paper->save();
@@ -243,7 +275,7 @@ class PaperListScreen extends Screen
         $request->validate([
             'paper.name' => 'required',
             'paper.code' => 'required',
-            'paper.year' => 'required',
+            'paper.study_period' => 'required',
             'paper.paper' => 'required',
             'paper.abbrev' => 'required',
         ]);

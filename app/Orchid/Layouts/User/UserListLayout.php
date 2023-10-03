@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Orchid\Layouts\User;
 
-use Orchid\Platform\Models\User;
+// use Orchid\Platform\Models\User;
+
+use App\Models\User;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
@@ -45,6 +47,8 @@ class UserListLayout extends Table
                     ->asyncParameters([
                         'user' => $user->id,
                     ])),
+
+            TD::make('institution', 'Institution')->render(fn (User $user) => optional($user->institution)->name),
 
             TD::make('created_at', __('Created'))
                 ->usingComponent(DateTimeSplit::class)

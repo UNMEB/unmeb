@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Imports\PaperImport;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Maatwebsite\Excel\Facades\Excel;
 
 class PaperSeeder extends Seeder
 {
@@ -12,6 +14,7 @@ class PaperSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        $papers = public_path('imports/papers.csv');
+        Excel::import(new PaperImport, $papers);
     }
 }

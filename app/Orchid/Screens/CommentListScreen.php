@@ -2,12 +2,7 @@
 
 namespace App\Orchid\Screens;
 
-use App\Models\Comment;
 use Orchid\Screen\Screen;
-use Orchid\Screen\TD;
-use Orchid\Support\Facades\Layout;
-use Illuminate\Support\Str;
-use Orchid\Screen\Components\Cells\DateTimeSplit;
 
 class CommentListScreen extends Screen
 {
@@ -18,8 +13,7 @@ class CommentListScreen extends Screen
      */
     public function query(): iterable
     {
-        $comments = Comment::paginate();
-        return ['comments' => $comments];
+        return [];
     }
 
     /**
@@ -29,7 +23,7 @@ class CommentListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Comments';
+        return 'CommentListScreen';
     }
 
     /**
@@ -49,35 +43,6 @@ class CommentListScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [
-            Layout::table('comments', [
-                TD::make('id', 'ID')
-                    ->width(100),
-
-                TD::make('comment', 'Comment')
-                    ->width(500)
-                    ->render(function ($row) {
-                        $x = Str::limit($row->comment, 200, '...');
-                        return '<p>' . $x . '</p>';
-                    }),
-
-                TD::make('user', 'User')
-                    ->render(function (Comment $comment) {
-                        return optional($comment->user)->name;
-                    }),
-
-                TD::make('email', 'Email Address'),
-
-                TD::make('created_at', 'Created')
-                    ->width('120')
-                    ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT),
-
-                TD::make('updated_at', 'Last Updated')
-                    ->width('120')
-                    ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT),
-            ])
-        ];
+        return [];
     }
 }

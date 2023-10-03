@@ -16,6 +16,7 @@ use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
@@ -32,7 +33,7 @@ class InstitutionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $institutions = Institution::with('district')
+        $institutions = Institution::latest()
         ->defaultSort('id', 'desc')
         ->paginate();
 
@@ -59,11 +60,6 @@ class InstitutionListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-
-            ModalToggle::make('Assign course')
-                ->icon('plus')
-                ->method('assign')
-                ->modal('assignCourse'),
 
             ModalToggle::make('Add Institution')
                 ->modal('createInstitutionModal')
@@ -104,22 +100,20 @@ class InstitutionListScreen extends Screen
 
                 TD::make('phone', _('Phone Number')),
 
-                // TD::make('created_at', __('Created On'))
-                //     ->usingComponent(DateTimeSplit::class)
-                //     ->align(TD::ALIGN_RIGHT)
-                //     ->sort(),
-
-                // TD::make('updated_at', __('Last Updated'))
-                //     ->usingComponent(DateTimeSplit::class)
-                //     ->align(TD::ALIGN_RIGHT)
-                //     ->sort(),
-
                 TD::make(__('Assign'))
-                    ->width(200)
+
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
-                    ->render(fn (Institution $institution) => Link::make('Assign Courses')
-                        ->route('platform.administration.institutions.assign', $institution->id)),
+                    ->width(300)
+                    ->render(function (Institution $institution) {
+                        return Group::make([
+                            Link::make('Institution Courses')
+                            ->route('platform.systems.administration.institutions.courses', $institution->id),
+                            Link::make('Assign Courses')
+                                ->route('platform.systems.administration.institutions.assign', $institution->id),
+
+                        ]);
+                    }),
 
 
             ]),
@@ -132,25 +126,25 @@ class InstitutionListScreen extends Screen
                     ->title('Institution Name')
                     ->placeholder('Enter institution name'),
 
-                Select::make('institution.district')
+                Select::make('institution.location')
                     ->title('District')
                     ->fromModel(District::class, 'name'),
 
-                Input::make('institution.name')
-                    ->title('Institution Name')
+                Input::make('institution.type')
+                ->title('Institution Type')
+                ->placeholder('Enter institution type'),
+
+                Input::make('institution.code')
+                ->title('Institution Code')
                     ->placeholder('Enter institution name'),
 
-                Input::make('institution.name')
-                    ->title('Institution Name')
-                    ->placeholder('Enter institution name'),
+                Input::make('institution.phone_no')
+                ->title('Institution Phone Number')
+                ->placeholder('Enter institution Phone Number'),
 
-                Input::make('institution.name')
-                    ->title('Institution Name')
-                    ->placeholder('Enter institution name'),
-
-                Input::make('institution.name')
-                    ->title('Institution Name')
-                    ->placeholder('Enter institution name')
+                Input::make('institution.box_no')
+                ->title('Institution P.O Box Number')
+                ->placeholder('Enter institution P.O Box'),
 
 
             ]))
@@ -164,7 +158,7 @@ class InstitutionListScreen extends Screen
                     ->help('Institution e.g 2012')
                     ->horizontal(),
 
-                Select::make('institution.flag')
+                Select::make('institution.is_active')
                     ->options([
                         1  => 'Active',
                         0  => 'Inactive',
@@ -208,17 +202,17 @@ class InstitutionListScreen extends Screen
             'institution.location' => 'required',
             'institution.type' => 'required',
             'institution.code' => 'required',
-            'institution.phone' => 'required',
+            'institution.phone_no' => 'required',
             'institution.box_no' => 'required',
         ]);
 
         $institution = new Institution();
         $institution->name = $request->input('institution.name');
         $institution->short_name = $request->input('institution.short_name');
-        $institution->district_id = $request->input('institution.district_id');
+        $institution->location = $request->input('institution.location');
         $institution->type = $request->input('institution.type');
         $institution->code = $request->input('institution.code');
-        $institution->phone = $request->input('institution.phone');
+        $institution->phone_no = $request->input('institution.phone_no');
         $institution->box_no = $request->input('institution.box_no');
         $institution->save();
 
@@ -232,8 +226,13 @@ class InstitutionListScreen extends Screen
      */
     public function edit(Request $request, Institution $institution): void
     {
-        $request->validate([
-            'institution.name'
+        $request->validate(['institution.name' => 'required',
+            'institution.short_name' => 'required',
+            'institution.location' => 'required',
+            'institution.type' => 'required',
+            'institution.code' => 'required',
+            'institution.phone_no' => 'required',
+            'institution.box_no' => 'required',
         ]);
 
         $institution->fill($request->input('institution'))->save();
