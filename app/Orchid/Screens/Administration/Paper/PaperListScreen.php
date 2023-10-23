@@ -78,15 +78,15 @@ class PaperListScreen extends Screen
             Layout::table('papers', [
                 TD::make('id', 'ID')
                     ->width('75'),
-                TD::make('code', _('Paper Code')),
+                TD::make('code', __('Paper Code')),
 
-                TD::make('name', _('Paper Name')),
+                TD::make('paper_name', __('Paper Name')),
 
-                TD::make('paper', _('Paper')),
+                TD::make('paper', __('Paper')),
 
-                TD::make('abbrev', _('Abbreviation')),
+                TD::make('abbrev', __('Abbreviation')),
 
-                TD::make('year', _('Year')),
+                TD::make('year_of_study', __('Year of Study')),
 
                 TD::make('created_at', __('Created On'))
                     ->usingComponent(DateTimeSplit::class)
@@ -125,98 +125,68 @@ class PaperListScreen extends Screen
 
             ]),
             Layout::modal('createPaperModal', Layout::rows([
-
-                Input::make('paper.name')
+                //
+                Input::make('paper.paper_name')
                     ->title('Paper Name')
                     ->placeholder('Enter paper name'),
 
-                Select::make('paper.study_period')
+                Input::make('paper.year_of_study')
                     ->title('Year of Study')
-                    ->options([
-                        'Year 1 Semester 1' => 'Year 1 Semester 1',
-                        'Year 1 Semester 2' => 'Year 1 Semester 2',
-                        'Year 2 Semester 1' => 'Year 1 Semester 1',
-                        'Year 2 Semester 2' => 'Year 1 Semester 2',
-                        'Year 3 Semester 1' => 'Year 1 Semester 1',
-                        'Year 3 Semester 2' => 'Year 1 Semester 2',
-                    ])
-                    ->empty('None Selected'),
+                    ->placeholder('Enter year of study'),
 
                 Select::make('paper.paper')
                     ->options([
-                        'Paper I' => 'Paper I',
-                        'Paper II' => 'Paper II',
-                        'Paper III' => 'Paper III',
-                        'Paper IV' => 'Paper IV',
-                        'Paper V' => 'Paper V',
-                        'Paper VI' => 'Paper VI'
+                        'Paper I',
+                        'Paper II',
+                        'Paper III',
+                        'Paper IV',
+                        'Paper V',
+                    'Paper VI',
                     ])
                     ->title('Paper')
-                    ->empty('None Selected'),
+                    ->placeholder('Select paper'),
 
-                Select::make('paper.abbrev')
-                    ->options([
-                        'P1' => 'P1',
-                        'P2' => 'P2',
-                        'P3' => 'P3',
-                        'P4' => 'P4',
-                        'P5' => 'P5',
-                        'P6' => 'P6'
-                    ])
-                    ->title('Paper Abbreviation')
-                    ->empty('None Selected'),
+                Input::make('paper.abbrev')
+                    ->title('Year of Study')
+                    ->placeholder('Enter abbreviation'),
 
                 Input::make('paper.code')
                     ->title('Paper Code')
-                    ->placeholder('Enter paper code .e.g CN111'),
+                    ->placeholder('Enter paper code'),
 
             ]))
                 ->title('Create Paper')
                 ->applyButton('Create Paper'),
 
             Layout::modal('editPaperModal', Layout::rows([
-                Input::make('paper.name')
+                //
+                Input::make('paper.paper_name')
                     ->title('Paper Name')
                     ->placeholder('Enter paper name'),
 
-                Select::make('paper.study_period')
+                Input::make('paper.year_of_study')
                     ->title('Year of Study')
-                    ->options([
-                        'Year 1 Semester 1' => 'Year 1 Semester 1',
-                        'Year 1 Semester 2' => 'Year 1 Semester 2',
-                        'Year 2 Semester 1' => 'Year 1 Semester 1',
-                        'Year 2 Semester 2' => 'Year 1 Semester 2',
-                        'Year 3 Semester 1' => 'Year 1 Semester 1',
-                        'Year 3 Semester 2' => 'Year 1 Semester 2',
-                    ]),
+                    ->placeholder('Enter year of study'),
 
                 Select::make('paper.paper')
                     ->options([
-                        'Paper I' => 'Paper I',
-                        'Paper II' => 'Paper II',
-                        'Paper III' => 'Paper III',
-                        'Paper IV' => 'Paper IV',
-                        'Paper V' => 'Paper V',
-                        'Paper VI' => 'Paper VI'
+                        'Paper I',
+                        'Paper II',
+                        'Paper III',
+                        'Paper IV',
+                        'Paper V',
+                    'Paper VI',
                     ])
                     ->title('Paper')
                     ->placeholder('Select paper'),
 
-                Select::make('paper.abbrev')
-                    ->options([
-                        'P1' => 'P1',
-                        'P2' => 'P2',
-                        'P3' => 'P3',
-                        'P4' => 'P4',
-                        'P5' => 'P5',
-                        'P6' => 'P6'
-                    ])
-                    ->title('Paper Abbreviation')
-                    ->placeholder('Select Abbreviation'),
+                Input::make('paper.abbrev')
+                    ->title('Year of Study')
+                    ->placeholder('Enter abbreviation'),
 
                 Input::make('paper.code')
                     ->title('Paper Code')
-                    ->placeholder('Enter paper code .e.g CN111'),
+                    ->placeholder('Enter paper code'),
             ]))->async('asyncGetPaper'),
 
             Layout::modal('uploadPapersModal', Layout::rows([
@@ -247,17 +217,17 @@ class PaperListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'paper.name' => 'required',
+            'paper.paper_name' => 'required',
             'paper.code' => 'required',
-            'paper.study_period' => 'required',
+            'paper.yaer_of_study' => 'required',
             'paper.paper' => 'required',
             'paper.abbrev' => 'required',
         ]);
 
         $paper = new Paper();
-        $paper->name = $request->input('paper.name');
+        $paper->name = $request->input('paper.paper_name');
         $paper->code = $request->input('paper.code');
-        $paper->study_period = $request->input('paper.study_period');
+        $paper->year = $request->input('paper.year_of_study');
         $paper->paper = $request->input('paper.paper');
         $paper->abbrev = $request->input('paper.abbrev');
         $paper->save();
@@ -273,9 +243,9 @@ class PaperListScreen extends Screen
     public function edit(Request $request, Paper $paper): void
     {
         $request->validate([
-            'paper.name' => 'required',
+            'paper.paper_name' => 'required',
             'paper.code' => 'required',
-            'paper.study_period' => 'required',
+            'paper.year_of_study' => 'required',
             'paper.paper' => 'required',
             'paper.abbrev' => 'required',
         ]);

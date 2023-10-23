@@ -2,13 +2,6 @@
 
 @section('body')
 
-<style>
-    .nav-item.active {
-        margin-top: 4px;
-        margin-bottom: 4px;
-    }
-</style>
-
 <div class="p-0 h-100">
     <div class="workspace pt-3 pt-md-4 mb-4 mb-md-0 d-flex flex-column h-100">
         @yield('workspace')

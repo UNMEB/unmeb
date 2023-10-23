@@ -6,28 +6,45 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Like;
+use Orchid\Filters\Types\Where;
 use Orchid\Screen\AsSource;
 
 class Institution extends Model
 {
     use HasFactory, AsSource, Filterable;
 
+    protected $allowedFilters = [
+        'institution_name' => Like::class,
+        'institution_type' => Like::class,
+        'institution_location' => Like::class,
+        'code' => Like::class,
+        'phone_no' => Like::class,
+    ];
+
     protected $fillable = [
-        'name',
         'short_name',
-        'location',
-        'type',
+        'institution_name',
+        'institution_type',
+        'category',
+        'institution_location',
         'code',
+        'email',
         'phone_no',
         'box_no'
     ];
 
     public function courses()
     {
-        return $this->belongsToMany(Course::class, 'institution_course', 'institution_id', 'course_id');
+        return $this->belongsToMany(Course::class, 'institution_course', 'institution_id', 'course_id')
+        ->withPivot('flag');
     }
 
-    // Institution Account
+    public function staff()
+    {
+        return $this->hasMany(Staff::class, 'institution_id');
+    }
+
     public function account()
     {
         return $this->hasOne(Account::class);
@@ -38,38 +55,30 @@ class Institution extends Model
         return $this->hasMany(User::class);
     }
 
-    /**
-     * @param Builder $query
-     *
-     * @return Builder
-     */
-    public function scopeForInstitution(Builder $query)
-    {
-        $institution = null;
-
-        if (!$this->currentUser()->inRole('system-admin')) {
-            $user = auth()->user();
-            $institution = $user->institution;
-
-            return $query->where('id', $institution->id);
-        }
-    }
-
     public function currentUser(): User
     {
         return auth()->user();
     }
 
+    public function scopeUserInstitutions($query)
+    {
+        // Get the authenticated user
+        $user = auth()->user();
 
-    // protected static function boot()
-    // {
-    //     parent::boot();
+        // Check if the user has access to 'platform.internals.all_institutions'
+        $hasAccess = $user->hasAccess('platform.internals.all_institutions');
 
-    //     if (!auth()->user()->canAccess('platform.systems.administrator')) {
-    //         static::addGlobalScope('institution', function (Builder $builder) {
-    //             $institutionId = auth()->user()->institution_id;
-    //             $builder->where('id', $institutionId);
-    //         });
-    //     }
-    // }
+        // Apply a condition to limit institutions to those associated with the user
+        if ($user && !$hasAccess) {
+            // If the user doesn't have access to all institutions, check for institution_id
+            if (!is_null($user->institution_id)) {
+                return $query->where('id', $user->institution_id);
+            }
+        }
+
+        return $query;
+    }
+
+
+
 }

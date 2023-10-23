@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Models\Course;
+use App\Models\Institution;
+use App\Models\Student;
+use App\View\Components\Chart;
+use App\View\Components\GenderDistributionByCourseChart;
+use App\View\Components\GenderDistributionChart;
+use App\View\Components\InstitutionDistributionByCategoryChart;
+use App\View\Components\InstitutionDistributionByTypeChart;
+use App\View\Components\StudentRegistrationByCourseBarChart;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\DateRange;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 
-use Illuminate\Support\Str;
-use Orchid\Screen\Actions\ModalToggle;
-
 class PlatformScreen extends Screen
 {
-
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -22,16 +31,53 @@ class PlatformScreen extends Screen
      */
     public function query(): iterable
     {
-        $institution = $this->currentUser()->institution;
-        $accountBalance = 0;
-        if ($institution) {
-            $accountBalance = (float) $institution->account->balance;
-        }
+
+        $data1 =  DB::table('student_registrations')
+            ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+            ->join('courses', 'registrations.course_id', '=', 'courses.id')
+            ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
+            ->groupBy('registrations.course_id')
+            ->orderBy('registrations.course_id', 'asc')
+            ->get();
+
+        $genderDistributionByCourse = DB::select('
+            SELECT
+                c.course_name,
+                s.gender,
+                COUNT(*) AS gender_count
+            FROM students AS s
+            JOIN nsin_student_registrations AS nsr ON s.id = nsr.student_id
+            JOIN nsin_registrations AS nr ON nsr.nsin_registration_id = nr.id
+            JOIN courses AS c ON nr.course_id = c.id
+            GROUP BY c.course_name, s.gender
+        ');
+
+        $institutionDistributionByType = DB::table('institutions')
+        ->select('institution_type', DB::raw('COUNT(*) as institution_count'))
+        ->groupBy('institution_type')
+        ->orderByDesc('institution_count')
+        ->get();
+
+        $institutionDistributionByCategory = DB::table('institutions')
+        ->select('category', DB::raw('COUNT(*) as institution_count'))
+        ->groupBy('category')
+        ->orderByDesc('institution_count')
+        ->get();
+
+
+        
 
         return [
-            'stats' => [
-                'balance' => 'Ush ' . number_format($accountBalance, 2),
-            ]
+            'metrics' => [
+                'institutions' => Institution::count(),
+                'courses' => Course::count(),
+                'students' => Student::count(),
+            ],
+
+            'student_registration_by_course' => $data1,
+            'gender_distribution_by_course' => collect($genderDistributionByCourse),
+            'institution_distribution_by_type' => collect($institutionDistributionByType),
+            'institution_distribution_by_category' => collect($institutionDistributionByCategory)
         ];
     }
 
@@ -40,7 +86,7 @@ class PlatformScreen extends Screen
      */
     public function name(): ?string
     {
-        return $this->currentUser()->institution()->exists() ? $this->currentUser()->institution->short_name . ' Dashboard' : 'Admin Dashboard';
+        return 'Uganda Nurses And Midwives Examination Board';
     }
 
     /**
@@ -48,7 +94,7 @@ class PlatformScreen extends Screen
      */
     public function description(): ?string
     {
-        return $this->currentUser()->institution()->exists()  ? 'Welcome to ' . $this->currentUser()->institution->name . ' dashboard' : 'Welcome to admin dashboard';
+        return 'View metrics, charts and various reports of Institutions, Programs, Papers, Staff, Students, and registration data.';
     }
 
     /**
@@ -70,13 +116,26 @@ class PlatformScreen extends Screen
     {
         return [
             Layout::metrics([
-                'Account Balance' => 'stats.balance'
-            ])->canSee($this->currentUser()->hasAccess('platform.systems.institution.account_balance'))
-        ];
-    }
+                'Total Institutions' => 'metrics.institutions',
+                'Total Courses' => 'metrics.courses',
+                'Total Students' => 'metrics.students'
+            ]),
+            Layout::columns([
 
-    public function currentUser(): User
-    {
-        return Auth()->user();
+                // Student Registrations By Course
+                Layout::component(StudentRegistrationByCourseBarChart::class),
+
+                // Gender Distribution By Course
+                Layout::component(GenderDistributionByCourseChart::class)
+            ]),
+            Layout::columns([
+                // Institution Distribution By Type
+                Layout::component(InstitutionDistributionByTypeChart::class),
+
+                // Institution Distribution By Category
+                Layout::component(InstitutionDistributionByCategoryChart::class)
+
+            ])
+        ];
     }
 }

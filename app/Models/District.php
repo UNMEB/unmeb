@@ -10,4 +10,8 @@ use Orchid\Screen\AsSource;
 class District extends Model
 {
     use HasFactory, AsSource, Filterable;
+
+    protected $fillable = [
+        'district_name'
+    ];
 }

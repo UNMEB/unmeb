@@ -48,7 +48,7 @@ class UserListLayout extends Table
                         'user' => $user->id,
                     ])),
 
-            TD::make('institution', 'Institution')->render(fn (User $user) => optional($user->institution)->name),
+            TD::make('institution', 'Institution')->render(fn (User $user) => optional($user->institution)->institution_name),
 
             TD::make('created_at', __('Created'))
                 ->usingComponent(DateTimeSplit::class)

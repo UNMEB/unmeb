@@ -58,7 +58,7 @@ class PendingTransactionListScreen extends Screen
             Layout::table('transactions', [
                 TD::make('id', 'Transaction ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
-                    return $data->institution->name;
+                    return $data->institution->institution_name;
                 }),
                 TD::make('type', 'Transaction Type')->render(function ($data) {
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
@@ -73,8 +73,9 @@ class PendingTransactionListScreen extends Screen
                     return $data->is_approved == 1 ? 'Approved' : 'Pending';
                 }),
                 TD::make('approved_by', 'Approved By')->render(function (Transaction $data) {
-                    return $data->is_approved == 1 ? $data->approvedBy->name : 'Not Approved';
+                    return $data->is_approved == 1 ? optional($data->approvedBy)->name : 'Not Approved';
                 }),
+                TD::make('comment', 'Comment'),
                 TD::make('actions', 'Actions')->render(function (Transaction $data) {
                     return Button::make('Approve')->type(Color::SUCCESS)
                         ->method('approve', [

@@ -2,64 +2,78 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Orchid\Attachment\Attachable;
 use Orchid\Filters\Filterable;
+use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
-
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Student extends Model
 {
-    use HasFactory, AsSource, Filterable, Attachable;
+    use HasFactory, AsSource, Filterable, Attachable, Sortable;
 
     protected $fillable = [
-        'id',
         'surname',
-        'othername',
         'firstname',
+        'othername',
+        'passport',
+        'gender',
         'dob',
         'district_id',
-        'gender',
         'country',
-        'address',
-        'nsin',
+        'location',
+        'NSIN',
         'telephone',
         'email',
         'old',
-        'registration_date',
-        'passport'
+        'date_time'
     ];
-
-    public function papers()
-    {
-        return $this->belongsToMany(Paper::class, 'course_student_paper', 'student_id', 'paper_id')->withTimestamps();
-    }
-
-    // Define a getter for the full name
-    public function getFullNameAttribute()
-    {
-        // You can customize the format of the full name based on your requirements
-        return "{$this->firstname} {$this->surname} {$this->othername}";
-    }
 
     public function district()
     {
         return $this->belongsTo(District::class);
     }
 
-    public function registrations()
+    public function getFullNameAttribute()
     {
-        return $this->hasMany(StudentRegistration::class);
+        return $this->surname . ' ' . $this->firstname . ' ' . $this->othername;
     }
 
-    public function examRegistrations(): HasMany
+    public function getAvatarAttribute()
     {
-        return $this->hasMany(ExamRegistration::class);
+        // Check if there is a passport and image exists in public path
+        if ($this->passport && file_exists(public_path('photos/' . $this->passport))) {
+            // Return img tag
+            return '<img src="' . asset('photos/' . $this->passport) .  '" width="50px">';
+        }
+
+        // Return placeholder avatar
+        return '<img src="' . asset('placeholder/avatar.png') . '" width="50px">';
     }
 
+    public function nsinStudentRegistrations(): HasMany
+    {
+        return $this->hasMany(NsinStudentRegistration::class);
+    }
+
+
+    public function nsinRegistrations()
+    {
+        return $this->hasMany(NsinRegistration::class);
+    }
+
+    public function examRegistrations()
+    {
+        return $this->hasMany(Registration::class);
+    }
+
+    public function currentUser(): User
+    {
+        return auth()->user();
+    }
 
     /**
      * Accessor for the "studentWithNsin" attribute.
@@ -71,65 +85,26 @@ class Student extends Model
         return "{$this->firstname} - {$this->surname} - ({$this->nsin})";
     }
 
-    /**
-     * @param Builder $query
-     *
-     * @return Builder
-     */
-    public function scopeForInstitution(Builder $query)
+    protected static function booted()
     {
-        $institution = null;
-
-        if (!$this->currentUser()->inRole('system-admin')) {
+        // Add a global scope to filter students based on user's institution access
+        static::addGlobalScope('institutionAccess', function (Builder $builder) {
             $user = auth()->user();
-            $institution = $user->institution;
 
-            return $query->whereHas('registrations', function ($query) use ($institution) {
-                $query->where('institution_id', $institution->id);
+            if ($user && $user->hasAccess('platform.internals.all_institutions')) {
+                // User has access to all institutions, no need to filter
+                return;
+            }
+
+            // Use the user's institution ID to filter students
+            $builder->whereHas('nsinStudentRegistrations.nsinRegistration', function ($query) use ($user) {
+                if ($user->institution) {
+                    $query->where('institution_id', $user->institution->id);
+                }
             });
-        }
-    }
-
-
-
-
-    /**
-     * @param Builder $query
-     *
-     * @return Builder
-     */
-    public function scopeForSelectedCourse(Builder $query, $institutionId)
-    {
-        $institution = Institution::find($institutionId);
-
-        return $query->whereHas('registrations', function ($query) use ($institution) {
-            $query->where('institution_id', $institution->id);
         });
     }
 
-    // /**
-    //  * The "booted" method of the model.
-    //  *
-    //  * @return void
-    //  */
-    // protected static function boot()
-    // {
-    //     parent::boot();
 
-    //     static::addGlobalScope('institution', function (Builder $builder) {
-    //         $user = auth()->user(); // Assuming you have user authentication set up.
 
-    //         // Apply the scope only if the user is authenticated and has an institution ID.
-    //         if ($user && $user->institution_id) {
-    //             $builder->whereHas('registrations', function ($query) use ($user) {
-    //                 $query->where('institution_id', $user->institution_id);
-    //             });
-    //         }
-    //     });
-    // }
-
-    public function currentUser(): User
-    {
-        return auth()->user();
-    }
 }

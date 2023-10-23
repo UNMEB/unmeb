@@ -8,7 +8,9 @@ use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
 use App\Models\InstitutionCourse;
+use App\Orchid\Layouts\Selection\InstitutionFilters;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
@@ -33,9 +35,9 @@ class InstitutionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $institutions = Institution::latest()
-        ->defaultSort('id', 'desc')
-        ->paginate();
+        $institutions = Institution::filters()
+            ->defaultSort('id', 'desc')
+            ->simplePaginate();
 
         return [
             'institutions' => $institutions
@@ -60,11 +62,11 @@ class InstitutionListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-
             ModalToggle::make('Add Institution')
                 ->modal('createInstitutionModal')
                 ->method('create')
                 ->icon('plus'),
+
             ModalToggle::make('Import Institutions')
                 ->modal('uploadInstitutionsModal')
                 ->method('upload')
@@ -83,37 +85,75 @@ class InstitutionListScreen extends Screen
     public function layout(): iterable
     {
         return [
+
+            Layout::rows([
+                Group::make([
+                    Input::make('institution_name')
+                        ->title('Filter By Name'),
+                    Input::make('code')
+                        ->title('Filter By Code'),
+                    Input::make('institution_type')
+                        ->title('Filter By Type'),
+                    Input::make('institution_location')
+                        ->title('Filter By Location'),
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title('Filter Institutions'),
+
             Layout::table('institutions', [
                 TD::make('id', 'ID')
                     ->width('75'),
-                TD::make('short_name', _('Short Code'))
+                TD::make('short_name', __('Short Code'))
                     ->width(150),
 
-                TD::make('name', _('Name'))
+                TD::make('institution_name', __('Name'))
                     ->width(300),
 
-                TD::make('location', _('Location')),
+                TD::make('institution_location', __('Location')),
 
-                TD::make('type', _('Type')),
+                TD::make('institution_type', __('Type')),
 
-                TD::make('code', _('Code')),
+                TD::make('category', __('Category')),
 
-                TD::make('phone', _('Phone Number')),
+                TD::make('code', __('Code')),
+                TD::make('email', __('Email Address')),
+                TD::make('phone_no', __('Phone Number')),
 
                 TD::make(__('Assign'))
-
+                    ->width(200)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
-                    ->width(300)
+                    ->render(fn (Institution $institution) => Link::make('Assign Programs')
+                        ->route('platform.administration.institutions.assign', $institution->id)),
+                TD::make(__('Actions'))
+                    ->alignCenter()
                     ->render(function (Institution $institution) {
                         return Group::make([
-                            Link::make('Institution Courses')
-                            ->route('platform.systems.administration.institutions.courses', $institution->id),
-                            Link::make('Assign Courses')
-                                ->route('platform.systems.administration.institutions.assign', $institution->id),
-
+                            ModalToggle::make('Edit')
+                                ->icon('fa.edit')
+                                ->method('edit')
+                                ->modal('editInstitutionModal')
+                                ->modalTitle('Edit Institution')
+                                ->asyncParameters([
+                                    'institution' => $institution->id
+                                ]),
+                            Button::make('Delete')
+                                ->confirm('Are you sure you want to delete this institution?')
+                                ->method('delete', [
+                                    'id' => $institution->id
+                                ])
                         ]);
-                    }),
+                    })
 
 
             ]),
@@ -122,51 +162,92 @@ class InstitutionListScreen extends Screen
                     ->title('Short Name')
                     ->placeholder('Enter institution short name'),
 
-                Input::make('institution.name')
+                Input::make('institution.institution_name')
                     ->title('Institution Name')
                     ->placeholder('Enter institution name'),
 
-                Select::make('institution.location')
-                    ->title('District')
-                    ->fromModel(District::class, 'name'),
+                Input::make('institution.institution_location')
+                    ->title('Location')
+                    ->placeholder('Institution Location'),
 
-                Input::make('institution.type')
-                ->title('Institution Type')
-                ->placeholder('Enter institution type'),
+                Input::make('institution.institution_type')
+                    ->title('Institution Type')
+                    ->placeholder('Enter institution type'),
+
+                Select::make('institution.category')
+                ->title('Category')
+                ->placeholder('Enter institution category')
+                ->options([
+                    'UNMEB' => 'UNMEB',
+                    'UAHEB' => 'UAHEB',
+                    'UBTEB' => 'UBTEB',
+                ])
+                ->empty('Non Selected'),
 
                 Input::make('institution.code')
-                ->title('Institution Code')
-                    ->placeholder('Enter institution name'),
+                    ->title('Institution Code')
+                    ->placeholder('Enter institution code'),
 
                 Input::make('institution.phone_no')
-                ->title('Institution Phone Number')
-                ->placeholder('Enter institution Phone Number'),
+                    ->title('Institution Phone Number')
+                    ->placeholder('Enter institution phone number'),
+
+                Input::make('institution.email')
+                ->title('Institution Email Address')
+                ->type('email')
+                ->placeholder('Enter institution email'),
 
                 Input::make('institution.box_no')
-                ->title('Institution P.O Box Number')
-                ->placeholder('Enter institution P.O Box'),
-
-
+                    ->title('Institution P.O.Box')
+                    ->placeholder('Enter P.O.Box')
             ]))
                 ->title('Create Institution')
                 ->applyButton('Create Institution'),
 
             Layout::modal('editInstitutionModal', Layout::rows([
-                Input::make('institution.name')
-                    ->type('text')
-                    ->title('Institution Name')
-                    ->help('Institution e.g 2012')
-                    ->horizontal(),
+                Input::make('institution.short_name')
+                    ->title('Short Name')
+                    ->placeholder('Enter institution short name'),
 
-                Select::make('institution.is_active')
-                    ->options([
-                        1  => 'Active',
-                        0  => 'Inactive',
-                    ])
-                    ->title('Flag')
-                    ->help('Status for Active/Inactive institution flag')
-                    ->horizontal()
-                    ->empty('No select')
+                Input::make('institution.institution_name')
+                    ->title('Institution Name')
+                    ->placeholder('Enter institution name'),
+
+                Input::make('institution.institution_location')
+                    ->title('Location')
+                    ->placeholder('Institution Location'),
+
+                Input::make('institution.institution_type')
+                    ->title('Institution Type')
+                    ->placeholder('Enter institution type'),
+
+                Select::make('institution.category')
+                ->title('Category')
+                ->placeholder('Enter institution category')
+                ->options([
+                    'UNMEB' => 'UNMEB',
+                    'UAHEB' => 'UAHEB',
+                    'UBTEB' => 'UBTEB',
+                ])
+                ->empty('Non Selected'),
+
+                Input::make('institution.code')
+                    ->title('Institution Code')
+                    ->placeholder('Enter institution code'),
+
+                Input::make('institution.phone_no')
+                    ->title('Institution Phone Number')
+                    ->placeholder('Enter institution phone number'),
+
+                Input::make('institution.email')
+                ->title('Institution Email Address')
+                ->type('email')
+                ->placeholder('Enter institution email'),
+
+                Input::make('institution.box_no')
+                    ->title('Institution P.O.Box')
+                    ->placeholder('Enter P.O.Box')
+
             ]))->async('asyncGetInstitution'),
 
             Layout::modal('uploadInstitutionsModal', Layout::rows([
@@ -197,23 +278,26 @@ class InstitutionListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'institution.name' => 'required',
+            'institution.institution_name' => 'required',
             'institution.short_name' => 'required',
-            'institution.location' => 'required',
-            'institution.type' => 'required',
+            'institution.institution_location' => 'required',
+            'institution.institution_type' => 'required',
             'institution.code' => 'required',
             'institution.phone_no' => 'required',
             'institution.box_no' => 'required',
+            'institution.email' => 'required',
         ]);
 
         $institution = new Institution();
-        $institution->name = $request->input('institution.name');
+        $institution->institution_name = $request->input('institution.institution_name');
         $institution->short_name = $request->input('institution.short_name');
-        $institution->location = $request->input('institution.location');
-        $institution->type = $request->input('institution.type');
+        $institution->institution_location = $request->input('institution.institution_location');
+        $institution->institution_type = $request->input('institution.institution_type');
         $institution->code = $request->input('institution.code');
         $institution->phone_no = $request->input('institution.phone_no');
         $institution->box_no = $request->input('institution.box_no');
+        $institution->email = $request->input('institution.email');
+        $institution->category = $request->input('institution.category');
         $institution->save();
 
         Alert::success("Institution was created");
@@ -226,12 +310,14 @@ class InstitutionListScreen extends Screen
      */
     public function edit(Request $request, Institution $institution): void
     {
-        $request->validate(['institution.name' => 'required',
+        $request->validate([
+            'institution.institution_name' => 'required',
             'institution.short_name' => 'required',
-            'institution.location' => 'required',
-            'institution.type' => 'required',
+            'institution.institution_location' => 'required',
+            'institution.institution_type' => 'required',
             'institution.code' => 'required',
             'institution.phone_no' => 'required',
+            'institution.email' => 'required',
             'institution.box_no' => 'required',
         ]);
 
@@ -309,7 +395,7 @@ class InstitutionListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
+        // return Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
     }
 
     /**
@@ -319,5 +405,52 @@ class InstitutionListScreen extends Screen
      */
     public function assign(Request $request)
     {
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function filter(Request $request)
+    {
+        // Retrieve data from the request
+        $institutionName = $request->input('institution_name');
+        $institutionCode = $request->input('code');
+        $institutionType = $request->input('institution_type');
+        $institutionLocation = $request->input('institution_location');
+
+        // Define the filter parameters
+        $filterParams = [];
+
+        // Check and add each parameter to the filterParams array
+        if (!empty($institutionName)) {
+            $filterParams['filter[institution_name]'] = $institutionName;
+        }
+        if (!empty($institutionCode)) {
+            $filterParams['filter[code]'] = $institutionCode;
+        }
+        if (!empty($institutionType)) {
+            $filterParams['filter[institution_type]'] = $institutionType;
+        }
+        if (!empty($institutionLocation)) {
+            $filterParams['filter[institution_location]'] = $institutionLocation;
+        }
+
+        // Generate the URL with the filter parameters using the "institutions" route
+        $url = route('platform.administration.institutions', $filterParams);
+
+        // Redirect to the generated URL
+        return Redirect::to($url);
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.administration.institutions');
     }
 }

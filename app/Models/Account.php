@@ -2,24 +2,23 @@
 
 namespace App\Models;
 
+use App\Traits\HasInstitution;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Orchid\Filters\Filterable;
+use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
 
 class Account extends Model
 {
-    use HasFactory, AsSource, Filterable;
+    use HasFactory, AsSource, Filterable, Sortable, HasInstitution;
+
 
     protected $fillable = [
         'institution_id',
         'balance'
     ];
-
-    public function institution()
-    {
-        return $this->belongsTo(Institution::class);
-    }
 
     public function lastTransaction()
     {

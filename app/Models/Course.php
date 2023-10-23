@@ -2,13 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Orchid\Filters\Filterable;
 use Orchid\Screen\AsSource;
 
 class Course extends Model
 {
-    use HasFactory, AsSource;
+    use HasFactory, AsSource, Filterable;
+
+    protected $fillable = [
+        'course_name',
+        'course_code',
+        'duration'
+    ];
 
     public function institutions()
     {
@@ -17,13 +25,12 @@ class Course extends Model
 
     public function papers()
     {
-        return $this->belongsToMany(Paper::class, 'course_paper', 'course_id', 'paper_id');
+        return $this->belongsToMany(Paper::class, 'course_paper', 'course_id', 'paper_id')
+        ->withPivot('flag');
     }
 
-    public function surchargeFees()
+    // Institution Courses
+    public function scopeInstitutionCourses($query): Builder
     {
-        return $this->hasMany(SurchargeFee::class, 'course_id');
     }
-
-
 }

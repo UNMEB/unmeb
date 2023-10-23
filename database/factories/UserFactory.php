@@ -3,33 +3,13 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Orchid\Platform\Models\Role;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
  */
 class UserFactory extends Factory
 {
-    /**
-     * Define the "admin" role state.
-     *
-     * @return $this
-     */
-    public function admin()
-    {
-        return $this->state(function (array $attributes) {
-            return [
-                'username'      => 'administrator',
-                'name'           => 'System Admin',
-                'email'          => 'sysadmin@unmeb.go.ug',
-                'password'       => Hash::make('7foldQibei'),
-                'remember_token' => Str::random(10),
-            ];
-        });
-    }
-
     /**
      * Define the model's default state.
      *

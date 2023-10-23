@@ -79,7 +79,7 @@ class DistrictListScreen extends Screen
                 TD::make('id', 'ID')
                     ->width('100'),
 
-                TD::make('name', _('District Name')),
+                TD::make('district_name', __('District Name')),
 
                 TD::make('created_at', __('Created On'))
                     ->usingComponent(DateTimeSplit::class)
@@ -162,7 +162,7 @@ class DistrictListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'district.name' => 'required'
+            'district.name' => 'required|numeric'
         ]);
 
         $district = new District();

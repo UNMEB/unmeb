@@ -1,5 +1,7 @@
 @push('head')
 <link href="/favicon.ico" id="favicon" rel="icon">
+@livewireStyles
+@livewireScripts
 @endpush
 
 <div class="h2 d-flex align-items-center">

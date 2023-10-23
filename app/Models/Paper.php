@@ -4,18 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Orchid\Filters\Filterable;
+use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
 
 class Paper extends Model
 {
-    use HasFactory, AsSource;
+    use HasFactory, AsSource, Filterable, Sortable;
 
     protected $fillable = [
-        'id',
-        'name',
-        'study_period',
+        'paper_name',
+        'year_of_study',
+        'paper',
         'abbrev',
         'code',
-        'paper'
     ];
+
+    public function courses()
+    {
+        return $this->belongsToMany(Course::class, 'course_paper', 'paper_id', 'course_id')
+            ->withPivot('flag');
+    }
 }

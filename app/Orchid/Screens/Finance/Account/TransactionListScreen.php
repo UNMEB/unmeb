@@ -11,7 +11,7 @@ use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
-use PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 use Rmunate\Utilities\SpellNumber;
 
@@ -55,10 +55,6 @@ class TransactionListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make('Deposit Funds')
-                ->modal('depositFundsModal')
-                ->method('deposit')
-                ->icon('wallet'),
         ];
     }
 
@@ -71,39 +67,10 @@ class TransactionListScreen extends Screen
     {
         return [
 
-            Layout::modal('depositFundsModal', Layout::rows([
-                Relation::make('institution_id')
-                    ->fromModel(Institution::class, 'name')
-                    ->chunk(20)
-                    ->title('Select Institution')
-                    ->placeholder('Select an institution')
-                    ->canSee($this->currentUser()->inRole('system-admin')),
-
-                Input::make('amount')
-                    ->required()
-                    ->title('Enter amount to deposit')
-                    ->mask([
-                        'alias' => 'currency',
-                        'prefix' => 'Ush ',
-                        'groupSeparator' => ',',
-                        'digitsOptional' => true,
-                    ])
-                    ->help('Enter the exact amount paid to bank'),
-
-                Select::make('method')
-                    ->title('Select payment method')
-                    ->options([
-                        'bank' => 'Bank Payment',
-                        'mobile_money' => 'Mobile Money'
-                    ])
-                    ->empty('None Selected'),
-            ]))
-                ->title('Deposit Funds')
-                ->applyButton('Deposit Funds'),
             Layout::table('transactions', [
                 TD::make('id', 'Transaction ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
-                    return $data->institution->name;
+                    return $data->institution->institution_name;
                 }),
                 TD::make('type', 'Transaction Type')->render(function ($data) {
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
@@ -118,8 +85,9 @@ class TransactionListScreen extends Screen
                     return $data->is_approved == 1 ? 'Approved' : 'Pending';
                 }),
                 TD::make('approved_by', 'Approved By')->render(function (Transaction $data) {
-                    return $data->is_approved == 1 ? $data->approvedBy->name : 'Not Approved';
+                    return $data->is_approved == 1 ? optional($data->approvedBy)->name : 'Not Approved';
                 }),
+                TD::make('comment', 'Comment'),
                 TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {
                     return Button::make('Print Receipt')
                         ->method('print', [
@@ -153,50 +121,16 @@ class TransactionListScreen extends Screen
             'amount' => 'Ush ' . number_format($amount),
             'amountInWords' => Str::title($amountInWords),
             'address'   => $address,
-            'approvedBy' => $transaction->approvedBy->name,
-            'institution' => $transaction->institution->name,
+            'approvedBy' => $transaction->approvedBy->name ?? 'UNMEB OSRS',
+            'institution' => $transaction->institution->institution_name,
         ];
 
-        $pdf = PDF::loadView('receipt', $receiptData);
+        $pdf = Pdf::loadView('receipt', $receiptData);
 
         return $pdf->download('receipt.pdf');
     }
 
-    /**
-     * @param \Illuminate\Http\Request $request
-     *
-     * @return void
-     */
-    public function deposit(Request $request)
-    {
-        $institution = null;
 
-        if ($this->currentUser()->inRole('system-admin')) {
-            $institution = Institution::find($request->input('institution_id'));
-        } else {
-            $institution =  $this->currentUser()->institution;
-        }
-
-        $accountId = $institution->account->id;
-
-        $amount = $request->input('amount');
-        $method = $request->input('method');
-
-        $transaction = new Transaction([
-            'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
-            'method' => $method,
-            'account_id' => $accountId,
-            'type' => 'credit',
-            'institution_id' => $institution->id,
-            'deposited_by' => $this->currentUser()->name
-        ]);
-
-        $transaction->save();
-
-        Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
-
-        return back();
-    }
 
     public function currentUser(): User
     {

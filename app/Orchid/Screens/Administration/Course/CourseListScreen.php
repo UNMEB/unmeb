@@ -43,7 +43,7 @@ class CourseListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Manage Courses';
+        return 'Manage Programs';
     }
 
     /**
@@ -54,11 +54,11 @@ class CourseListScreen extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make('Add Course')
+            ModalToggle::make('Add Program')
                 ->modal('createCourseModal')
                 ->method('create')
                 ->icon('plus'),
-            ModalToggle::make('Import Courses')
+            ModalToggle::make('Import Programs')
                 ->modal('uploadCoursesModal')
                 ->method('upload')
                 ->icon('upload'),
@@ -79,11 +79,11 @@ class CourseListScreen extends Screen
             Layout::table('courses', [
                 TD::make('id', 'ID')
                     ->width('75'),
-                TD::make('code', _('Course Code')),
+                TD::make('course_code', __('Program Code')),
 
-                TD::make('name', _('Course Name')),
+                TD::make('course_name', __('Program Name')),
 
-                TD::make('duration', _('Course Duration')),
+                TD::make('duration', __('Program Duration')),
 
                 TD::make('created_at', __('Created On'))
                     ->usingComponent(DateTimeSplit::class)
@@ -95,18 +95,35 @@ class CourseListScreen extends Screen
                     ->align(TD::ALIGN_RIGHT)
                     ->sort(),
 
+                TD::make(__('Assign Papers'))
+                    ->width(200)
+                    ->cantHide()
+                    ->align(TD::ALIGN_CENTER)
+                    ->render(fn (Course $course) => Link::make('Assign Papers')
+                        ->route('platform.administration.courses.assign', $course->id)),
+
                 TD::make(__('Actions'))
-                    ->width(280)
+                    ->width(200)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (Course $course) {
-                    return Group::make([
-                        Link::make('Course Papers')
-                            ->route('platform.systems.administration.courses.papers', $course->id),
-                        Link::make('Assign Papers')
-                            ->route('platform.systems.administration.courses.assign', $course->id),
+                    $editButton = ModalToggle::make('Edit Program')
+                            ->modal('editCourseModal')
+                        ->modalTitle('Edit Program ' . $course->name)
+                            ->method('edit') // You can define your edit method here
+                            ->asyncParameters([
+                                'course' => $course->id,
+                            ])
+                            ->render();
 
-                    ]);
+                        $deleteButton = Button::make('Delete')
+                        ->confirm('Are you sure you want to delete this program?')
+                            ->method('delete', [
+                                'id' => $course->id
+                            ])
+                            ->render();
+
+                        return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
                     })
 
 
@@ -114,44 +131,44 @@ class CourseListScreen extends Screen
             Layout::modal('createCourseModal', Layout::rows([
 
                 Input::make('course.name')
-                    ->title('Course Name')
+                    ->title('Program Name')
                     ->placeholder('Enter course name'),
 
                 Input::make('course.code')
-                    ->title('Course Code')
+                    ->title('Program Code')
                     ->placeholder('Enter course code'),
 
                 Input::make('course.duration')
                     ->type('number')
-                    ->title('Course Duration')
+                    ->title('Program Duration')
                     ->placeholder('Enter course duration'),
 
             ]))
-                ->title('Create Course')
-                ->applyButton('Create Course'),
+                ->title('Create Program')
+                ->applyButton('Create Program'),
 
             Layout::modal('editCourseModal', Layout::rows([
                 Input::make('course.name')
-                    ->title('Course Name')
+                    ->title('Program Name')
                     ->placeholder('Enter course name'),
 
                 Input::make('course.code')
-                    ->title('Course Code')
+                    ->title('Program Code')
                     ->placeholder('Enter course code'),
 
                 Input::make('course.duration')
                     ->type('number')
-                    ->title('Course Duration')
+                    ->title('Program Duration')
                     ->placeholder('Enter course duration'),
             ]))->async('asyncGetCourse'),
 
             Layout::modal('uploadCoursesModal', Layout::rows([
                 Input::make('file')
                     ->type('file')
-                    ->title('Import Courses'),
+                    ->title('Import Programs'),
             ]))
-                ->title('Upload Courses')
-                ->applyButton('Upload Courses'),
+                ->title('Upload Programs')
+                ->applyButton('Upload Programs'),
         ];
     }
 
@@ -184,7 +201,7 @@ class CourseListScreen extends Screen
         $course->duration = $request->input('course.duration');
         $course->save();
 
-        Alert::success("Course was created");
+        Alert::success("Program was created");
     }
 
     /**
@@ -202,7 +219,7 @@ class CourseListScreen extends Screen
 
         $course->fill($request->input('course'))->save();
 
-        Alert::success(__('Course was updated.'));
+        Alert::success(__('Program was updated.'));
     }
 
     /**
@@ -214,7 +231,7 @@ class CourseListScreen extends Screen
     {
         Course::findOrFail($request->get('id'))->delete();
 
-        Alert::success("Course was deleted.");
+        Alert::success("Program was deleted.");
     }
 
 
@@ -255,10 +272,10 @@ class CourseListScreen extends Screen
             Excel::import(new CourseImport, $filePath);
 
             // Display a success message using SweetAlert
-            Alert::success("Course data imported successfully");
+            Alert::success("Program data imported successfully");
 
             // Data import was successful
-            return redirect()->back()->with('success', 'Courses data imported successfully.');
+            return redirect()->back()->with('success', 'Program data imported successfully.');
         } catch (\Exception $e) {
             // Handle any exceptions that may occur during import
             Alert::error($e->getMessage());

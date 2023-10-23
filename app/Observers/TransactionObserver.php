@@ -2,60 +2,62 @@
 
 namespace App\Observers;
 
+use App\Mail\NotifyAccountsAboutPendingTransaction;
+use App\Mail\NotifyAdminsAboutPendingTransaction;
+use App\Mail\NotifyInstitutionAboutPendingTransaction;
+use App\Mail\NotifyInstitutionAboutTransactionApproved;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+use Orchid\Platform\Models\Role;
 
 class TransactionObserver
 {
 
-    /**
-     * Handle events after all transactions are committed.
-     *
-     * @var bool
-     */
-    public $afterCommit = true;
-
-    /**
-     * Handle the Transaction "created" event.
-     */
-    public function created(Transaction $transaction): void
+    public function created(Transaction $transaction)
     {
-        //
-    }
+        if ($transaction->is_approved == 0  && $transaction->type == 'credit') {
 
-    /**
-     * Handle the Transaction "updated" event.
-     */
-    public function updated(Transaction $transaction): void
-    {
-        // Check approval status
-        if ($transaction->is_approved && $transaction->type == 'credit') {
-            // Increment the account balance for the institution
-            $transaction->account->increment('balance', $transaction->amount);
+            $adminRole = Role::firstWhere('slug', 'system-admin');
+            $accountRole = Role::firstWhere('slug', 'accountant');
+
+            $adminEmails = [];
+            $accountEmails = [];
+
+            $adminUsers = $adminRole->getUsers();
+            $accountUsers = $accountRole->getUsers();
+
+            $adminEmails = $adminUsers->pluck('email')->toArray();
+            $accountEmails = $accountUsers->pluck('email')->toArray();
+
+            // Combine admin and account emails
+            $combinedEmails = array_merge($adminEmails, $accountEmails);
+
+            Mail::to('info@unmeb.go.ug')
+                ->cc($combinedEmails)
+                ->send(new NotifyAccountsAboutPendingTransaction($transaction, $accountUsers));
         }
     }
 
-    /**
-     * Handle the Transaction "deleted" event.
-     */
-    public function deleted(Transaction $transaction): void
+    public function updated(Transaction $transaction): void
     {
-        //
-    }
+        // Check approval status
+        if ($transaction->is_approved == 1 && $transaction->type == 'credit') {
+            // Increment the account balance for the institution
+            $transaction->account->increment('balance', $transaction->amount);
 
-    /**
-     * Handle the Transaction "restored" event.
-     */
-    public function restored(Transaction $transaction): void
-    {
-        //
-    }
+            // Notify all users that belong to this institution
+            $users = $transaction->institution->users;
 
-    /**
-     * Handle the Transaction "force deleted" event.
-     */
-    public function forceDeleted(Transaction $transaction): void
-    {
-        //
+            // Get all user emails
+            $userEmails = $users->pluck('email')->toArray();
+
+            $institutionEmail = $transaction->institution->email;
+
+            if ($institutionEmail) {
+                Mail::to($transaction->institution->email)->cc($userEmails)->send(new NotifyInstitutionAboutTransactionApproved($transaction));
+            }
+
+        }
     }
 }
