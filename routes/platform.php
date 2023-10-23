@@ -52,7 +52,7 @@ use App\Orchid\Screens\Registration\NSIN\ApproveNsinRegistration;
 use App\Orchid\Screens\Registration\NSIN\ApproveNsinRegistrationDetails;
 use App\Orchid\Screens\Registration\NSIN\IncompleteNsinRegistration;
 use App\Orchid\Screens\Registration\NSIN\IncompleteNsinRegistrationDetails;
-use App\Orchid\Screens\Registration\Nsin\NsinRegistrationPeriodListScreen;
+use App\Orchid\Screens\Registration\NSIN\NsinRegistrationPeriodListScreen;
 use App\Orchid\Screens\Registration\NSIN\NsinRejectionReasons;
 use App\Orchid\Screens\Registration\NSIN\RejectedNsinRegistration;
 use App\Orchid\Screens\Registration\NSIN\RejectedNsinRegistrationDetails;
