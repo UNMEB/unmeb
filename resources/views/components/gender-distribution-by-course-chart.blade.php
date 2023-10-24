@@ -4,10 +4,7 @@
 
 @push('scripts')
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
-<script src="https://code.highcharts.com/modules/exporting.js"></script>
-<script src="https://code.highcharts.com/modules/export-data.js"></script>
-<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
 
 <script>
     var data = @json($gender_distribution_by_course)

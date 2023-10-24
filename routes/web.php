@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PackingListController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -14,3 +15,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::redirect('/', '/admin/main');
+
+Route::get('/packing_list', [PackingListController::class, 'index']);

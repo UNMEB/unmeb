@@ -35,6 +35,7 @@ use App\Orchid\Screens\Finance\Account\AccountListScreen;
 use App\Orchid\Screens\Finance\Account\InstitutionTransactionListScreen;
 use App\Orchid\Screens\Finance\Account\PendingTransactionListScreen;
 use App\Orchid\Screens\Finance\Account\TransactionListScreen;
+use App\Orchid\Screens\PackingListReportScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Registration\Exam\AcceptedExamRegistration;
 use App\Orchid\Screens\Registration\Exam\AcceptedExamRegistrationDetails;
@@ -447,5 +448,5 @@ Route::screen('accounts/{institution}/transactions', InstitutionTransactionListS
         ->push($institution->institution_name, route('platform.systems.finance.institution.transactions', $institution)));
 
 // Platform  > Reports > Registration
-Route::screen('reports/registration', RegistrationReportScreen::class)
-    ->name('platform.reports.registration');
+Route::screen('reports/packing_list', PackingListReportScreen::class)
+    ->name('platform.reports.packing_list');
