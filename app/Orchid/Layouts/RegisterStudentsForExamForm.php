@@ -4,6 +4,7 @@ namespace App\Orchid\Layouts;
 
 use App\Models\Course;
 use App\Models\Institution;
+use App\Models\Paper;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use Illuminate\Http\Request;
@@ -29,6 +30,7 @@ class RegisterStudentsForExamForm extends Listener
         'course_id',
         'paper_ids',
         'student_ids',
+        'year_of_study',
         'trial'
     ];
 
@@ -55,6 +57,13 @@ class RegisterStudentsForExamForm extends Listener
                     ->empty('None Selected')
                     ->title('Select Exam Registration Period'),
 
+                // Select Institution
+                Relation::make('institution_id')
+                    ->title('Select Institution')
+                    ->fromModel(Institution::class, 'institution_name')
+                    ->applyScope('userInstitutions')
+                    ->placeholder('Select Institution'),
+
                 // Select Year of Study
                 Select::make('year_of_study')
                     ->empty('None Selected')
@@ -68,20 +77,15 @@ class RegisterStudentsForExamForm extends Listener
                         'Year 4 Semester 2' => 'Year 3 Semester 2',
                     ]),
 
-                // Select Institution
-                Relation::make('institution_id')
-                    ->title('Select Institution')
-                    ->fromModel(Institution::class, 'institution_name')
-                    ->applyScope('userInstitutions')
-                    ->placeholder('Select Institution'),
 
                 // Select Program
                 Select::make('course_id')
                     ->title('Select Program')
                     ->empty('None Selected', 0)
-                ->placeholder('Select Program')
+                    ->placeholder('Select Program')
                     ->options($this->courses)
                     ->canSee(count($this->courses) > 0),
+
 
                 // Select Paper
                 Select::make('paper_ids')
@@ -106,7 +110,9 @@ class RegisterStudentsForExamForm extends Listener
                     ->fromModel(Student::class, 'id')
                     ->title('Select students to register for NSIN')
                     ->multiple()
-                    ->displayAppend('studentWithNsin'),
+                    ->displayAppend('studentWithNsin')
+                    ->searchColumns('surname', 'othername', 'firstname')
+                    ->chunk(100),
             ])
         ];
     }
@@ -121,6 +127,7 @@ class RegisterStudentsForExamForm extends Listener
      */
     public function handle(Repository $repository, Request $request): Repository
     {
+
         $examRegistrationPeriodId = $request->get('exam_registration_period_id');
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
@@ -137,7 +144,29 @@ class RegisterStudentsForExamForm extends Listener
 
         if ($courseId != null) {
             $course = Course::find($courseId);
-            $this->papers = $course->papers->pluck('paper_name', 'id');
+        }
+
+        if ($yearOfStudy) {
+
+            $papers = Paper::select('papers.*', 'course_paper.course_id as pivot_course_id', 'course_paper.paper_id as pivot_paper_id', 'course_paper.flag as pivot_flag')
+                ->join('course_paper', 'papers.id', '=', 'course_paper.paper_id')
+                ->where('course_paper.course_id', $courseId)
+                ->where('papers.year_of_study', $yearOfStudy)
+                ->orderBy('papers.paper_name')
+                ->get();
+
+            $allPapers = [];
+
+            foreach($papers as $paper) {
+                $modifiedPaperName = $paper->paper_name. ' ( '. $paper->paper. ' - '. $paper->code. ' )';
+                
+                $allPapers[] = (object) [
+                    'id' => $paper->id,
+                    'paper_name' => $modifiedPaperName
+                ];
+            }
+
+            $this->papers = collect($allPapers)->pluck('paper_name', 'id');
         }
 
         return $repository

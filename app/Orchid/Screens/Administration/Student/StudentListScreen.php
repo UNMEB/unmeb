@@ -108,10 +108,7 @@ class StudentListScreen extends Screen
     public function layout(): iterable
     {
         return [
-
-
             Layout::table('students', [
-
                 TD::make('id', 'ID'),
                 // Show passport picture
                 TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
@@ -121,7 +118,7 @@ class StudentListScreen extends Screen
                 TD::make('district.district_name', 'District'),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
-                TD::make('NSIN', 'NSIN'),
+                TD::make('nsin', 'NSIN'),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email')->defaultHidden(),
                 TD::make('old', __('Old Student'))
@@ -154,7 +151,8 @@ class StudentListScreen extends Screen
                         ])),
             ]),
 
-            Layout::modal('registerStudentModal', RegisterStudentsForNinForm::class),
+            Layout::modal('registerStudentModal', RegisterStudentsForNinForm::class)
+                ->title('Register Students For NSIN'),
 
             Layout::modal('createStudentModal', Layout::rows([
 
@@ -374,12 +372,14 @@ class StudentListScreen extends Screen
             $existingRegistration = NsinStudentRegistration::where([
                 'nsin_registration_id' => $nsinRegistration->id,
                 'student_id' => $studentId,
+                'verify' => 0
             ])->first();
 
             if (!$existingRegistration) {
                 $nsinStudentRegistration = new NsinStudentRegistration();
                 $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                 $nsinStudentRegistration->student_id = $studentId;
+                $nsinStudentRegistration->verify = 0;
                 $nsinStudentRegistration->save();
             }
         }

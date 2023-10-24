@@ -76,7 +76,8 @@ class RegisterStudentsForNinForm extends Listener
                     ->title('Select students to register for NSIN')
                     ->multiple()
                     ->displayAppend('fullName')
-                    ->searchColumns('surname', 'othername', 'firstname', 'nsin'),
+                    ->searchColumns('surname', 'othername', 'firstname')
+                    ->chunk(100),
             ])
         ];
     }

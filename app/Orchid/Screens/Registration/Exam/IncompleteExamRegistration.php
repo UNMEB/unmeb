@@ -4,6 +4,7 @@ namespace App\Orchid\Screens\Registration\Exam;
 
 use App\Models\Account;
 use App\Models\Institution;
+use App\Models\Paper;
 use App\Models\Registration;
 use App\Models\Student;
 use App\Models\StudentRegistration;
@@ -30,7 +31,11 @@ class IncompleteExamRegistration extends Screen
     public function query(): iterable
     {
         $query = Registration::query()
-            ->select([
+            ->from('registrations as r')
+            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
+            ->join('courses as c', 'r.course_id', '=', 'c.id')
+            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->select(
                 'r.id',
                 'i.id as institution_id',
                 'i.institution_name',
@@ -39,13 +44,10 @@ class IncompleteExamRegistration extends Screen
                 'r.year_of_study',
                 'rp.reg_start_date',
                 'rp.reg_end_date',
-                DB::raw("(SELECT COUNT(*) FROM student_registrations WHERE registration_id = r.id) as registered_students")
-            ])
-            ->from('registrations as r')
-            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
-            ->join('courses as c', 'r.course_id', '=', 'c.id')
-            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->where('r.completed', 0);
+                DB::raw('(SELECT COUNT(*) FROM student_registrations WHERE registration_id = r.id) as registered_students'),
+                DB::raw('(SELECT COUNT(*) FROM student_registrations WHERE registration_id = r.id AND sr_flag = 0) as to_register')
+            )
+            ->orderBy('to_register', 'desc');
 
         return [
             'registrations' => $query->paginate()
@@ -71,9 +73,9 @@ class IncompleteExamRegistration extends Screen
     {
         return [
             ModalToggle::make('Register Students For Exams')
-            ->modalTitle('Register Student For Exams')
-            ->modal('examRegistrationModal')
-            ->method('register')
+                ->modalTitle('Register Student For Exams')
+                ->modal('examRegistrationModal')
+                ->method('register')
 
         ];
     }
@@ -96,13 +98,16 @@ class IncompleteExamRegistration extends Screen
                 TD::make('reg_start_date', 'Registration Start Date'),
                 TD::make('reg_end_date', 'Registration Start Date'),
                 TD::make('registered_students', 'Students Registered'),
+                TD::make('to_register', 'Students to Registered'),
                 TD::make('actions', 'Actions')->render(fn (Registration $data) => Link::make('Details')
-                ->class('btn btn-primary btn-sm link-primary')
-                ->route('platform.registration.exam.incomplete.details', [
-                    'institution_id' => $data->institution_id,
-                    'course_id' => $data->course_id,
-                    'registration_id' => $data->id
-                ]))
+                    ->class('btn btn-primary btn-sm link-primary')
+                    ->disabled($data->to_register == 0)
+                    ->route('platform.registration.exam.incomplete.details', [
+                        'institution_id' => $data->institution_id,
+                        'course_id' => $data->course_id,
+                        'registration_id' => $data->id
+                    ]))
+
 
             ])
         ];
@@ -131,20 +136,43 @@ class IncompleteExamRegistration extends Screen
         $accountBalance = (float) $institution->account->balance;
 
         $normalCharge = SurchargeFee::join('surcharges', 'surcharge_fees.surcharge_id', '=', 'surcharges.id')
-        ->select('surcharge_fees.surcharge_id', 'surcharges.name AS surcharge_name', 'surcharge_fees.course_fee')
-        ->where('surcharge_fees.course_id', $courseId)
-            ->where('surcharges.is_active', 1)
-            ->first()
-            ->course_fee;
+            ->select('surcharge_fees.surcharge_id', 'surcharges.surcharge_name AS surcharge_name', 'surcharge_fees.course_fee')
+            ->where('surcharge_fees.course_id', $courseId)
+            ->where('surcharges.flag', 1)
+            ->first();
+
+        // dd($normalCharge->surcharge_id);
 
         $bill = 0;
+
+        // Find the registration
+        $registration = Registration::where([
+            'institution_id' => $institutionId,
+            'course_id' => $courseId,
+            'year_of_study' => $yearOfStudy,
+            'registration_period_id' => $examRegistrationPeriodId,
+        ])->first();
+
+        if ($registration) {
+            // Increment the bill
+        } else {
+            $registration = new Registration();
+            $registration->institution_id = $institution->id;
+            $registration->course_id = $courseId;
+            $registration->amount = 0;
+            $registration->year_of_study = $yearOfStudy;
+            $registration->registration_period_id = $examRegistrationPeriodId;
+            $registration->surcharge_id = $normalCharge->surcharge_id;
+            $registration->save();
+        }
+
 
         foreach ($studentIds as $studentId) {
             $student = Student::find($studentId);
 
             // if first attempt register normally
             if ($trial == 'First') {
-                $bill += $normalCharge;
+                $bill += $normalCharge->course_fee;
             } else if ($trial == 'Second') {
                 $costToPay = ($costPerPaper + ($costPerPaper * 0.5)) * count($paperIds);
                 $bill += $costToPay;
@@ -153,7 +181,26 @@ class IncompleteExamRegistration extends Screen
                 $bill += $costToPay;
             }
 
+            // Check if the student is already registered for the same period, instituion and course
+            $existingRegistration = StudentRegistration::where([
+                'registration_id' => $registration->id,
+                'trial' => $trial,
+                'student_id' => $student->id,
+            ])->first();
 
+            if (!$existingRegistration) {
+
+                $courseCodes = Paper::whereIn('id', $paperIds)->pluck('code');
+
+                $examStudentRegistration = new StudentRegistration();
+                $examStudentRegistration->registration_id = $registration->id;
+                $examStudentRegistration->trial = $trial;
+                $examStudentRegistration->student_id = $student->id;
+                $examStudentRegistration->course_codes = $courseCodes;
+                $examStudentRegistration->no_of_papers = count($paperIds);
+                $examStudentRegistration->sr_flag = 0;
+                $examStudentRegistration->save();
+            }
         }
 
         if ($bill > $accountBalance) {
@@ -162,6 +209,11 @@ class IncompleteExamRegistration extends Screen
         }
 
         $newBalanace = $institution->account->balance - $bill;
+
+        // Increment this amount in registration
+        $registration->amount += $newBalanace;
+        $registration->save();
+
         $institution->account->update([
             'balance' => $newBalanace,
         ]);
@@ -172,10 +224,12 @@ class IncompleteExamRegistration extends Screen
             'account_id' => $institution->account->id,
             'institution_id' => $institution->id,
             'initiated_by' => auth()->user()->id,
+            'is_approved' => 1,
+            'comment'  => 'Exam Registration',
         ]);
 
         $transaction->save();
 
-        Alert::success("Students registered");
+        Alert::success('Registration successful');
     }
 }

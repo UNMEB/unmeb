@@ -114,6 +114,14 @@ class PlatformProvider extends OrchidServiceProvider
             // Manage Finance
             Menu::make(__('Finance'))
                 ->icon('bs.book')
+                ->badge(function () {
+                    $pendingTransactionCount = Transaction::where('is_approved', false)->count();
+                    if ($pendingTransactionCount > 0) {
+                        return $pendingTransactionCount;
+                    }
+
+                    return null;
+                }, Color::DANGER)
                 ->list([
 
                     // Menu for Institution Accounts
@@ -224,9 +232,15 @@ class PlatformProvider extends OrchidServiceProvider
             // Manage Continuous Assessment
             ItemPermission::group('Continuos Assessment')
                 ->addPermission('platform.assessment', 'Manage Continuous Assessment'),
-
-
             
+            // System Based Permissions
+            ItemPermission::group(__('System'))
+                ->addPermission('platform.systems.roles', __('Roles'))
+                ->addPermission('platform.systems.users', __('Users')),
+
+            // Internals
+            ItemPermission::group('Internal Access')
+                ->addPermission('platform.internals.all_institutions', 'Access all institutions data')
         ];
     }
 }

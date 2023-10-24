@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\OrderByLatest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Orchid\Screen\AsSource;
 
 class Student extends Model
 {
-    use HasFactory, AsSource, Filterable, Attachable, Sortable;
+    use HasFactory, AsSource, Filterable, Attachable, Sortable, OrderByLatest;
 
     protected $fillable = [
         'surname',

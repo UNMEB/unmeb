@@ -31,9 +31,9 @@ class TransactionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $transactions = Transaction::with('institution', 'account')->where('is_approved', 1)->get();
+        $transactions = Transaction::with('institution', 'account')->where('is_approved', 1)->latest();
         return [
-            'transactions' => $transactions
+            'transactions' => $transactions->paginate()
         ];
     }
 

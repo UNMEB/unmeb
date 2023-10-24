@@ -37,7 +37,8 @@ class IncompleteExamRegistrationDetails extends Screen
             ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
             ->where('registrations.id', $nsinRegistrationId)
-            ->where('courses.id', $courseId);
+            ->where('courses.id', $courseId)
+            ->where('student_registrations.sr_flag', 0);
 
 
         return [

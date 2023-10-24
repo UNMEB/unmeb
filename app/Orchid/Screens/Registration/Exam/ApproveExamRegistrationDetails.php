@@ -133,7 +133,7 @@ class ApproveExamRegistrationDetails extends Screen
                 Layout::rows([
                     TextArea::make('comment')
                         ->title('Reason for Rejection')
-                        ->placeholder('Start typing...')
+                        ->placeholder('Enter reason for rejection...')
                         ->help('Enter reason for rejecting the student exam registration')
                 ])
             ])

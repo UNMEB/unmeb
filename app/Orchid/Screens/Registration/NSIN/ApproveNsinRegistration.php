@@ -36,7 +36,8 @@ class ApproveNsinRegistration extends Screen
             ->join('courses as c', 'r.course_id', '=', 'c.id')
             ->join('years as y', 'r.year_id', '=', 'y.id')
             ->where('r.completed', 0)
-            ->where('r.old', 0);
+            ->where('r.old', 0)
+            ->orderBy('r.created_at', 'desc');
 
         return [
             'registrations' => $query->paginate()

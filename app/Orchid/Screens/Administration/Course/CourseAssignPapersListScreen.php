@@ -10,6 +10,7 @@ use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
+use Orchid\Support\Color;
 use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
@@ -73,9 +74,19 @@ class CourseAssignPapersListScreen extends Screen
                     TD::make('code', 'Paper Code'),
                     TD::make('year_of_study', 'Year of Study'),
                     TD::make('created_at', 'Created At')
-                    ->usingComponent(DateTimeSplit::class),
+                        ->usingComponent(DateTimeSplit::class),
                     TD::make('updated_at', 'Updated At')
-                    ->usingComponent(DateTimeSplit::class),
+                        ->usingComponent(DateTimeSplit::class),
+                    TD::make('action', 'Action')
+                        ->alignRight()
+                        ->render(function (Paper $paper) {
+                            return Button::make('Unassign')
+                                ->method('unassign', [
+                                    'paper_id' => $paper->id
+                                ])
+                                ->type(Color::DANGER)
+                                ;
+                        })
                 ]),
                 'Assign Papers' =>  Layout::table('papers_not_assigned', [
                     TD::make('id', 'ID'),
@@ -85,16 +96,17 @@ class CourseAssignPapersListScreen extends Screen
                     TD::make('code', 'Paper Code'),
                     TD::make('year_of_study', 'Year of Study'),
                     TD::make('created_at', 'Created At')
-                    ->usingComponent(DateTimeSplit::class),
+                        ->usingComponent(DateTimeSplit::class),
                     TD::make('updated_at', 'Updated At')
-                    ->usingComponent(DateTimeSplit::class),
+                        ->usingComponent(DateTimeSplit::class),
                     TD::make('action', 'Action')
-                    ->alignRight()
+                        ->alignRight()
                         ->render(function (Paper $paper) {
                             return Button::make('Assign')
-                            ->method('assign', [
-                                'paper_id' => $paper->id
-                            ]);
+                                ->method('assign', [
+                                    'paper_id' => $paper->id
+                                ])
+                                ->type(Color::PRIMARY);
                         })
                 ]),
             ])
@@ -113,6 +125,24 @@ class CourseAssignPapersListScreen extends Screen
         $course->papers()->attach($request->get('paper_id'));
 
         Alert::success(__('Paper was assigned.'));
+
+        return back();
+    }
+
+    public function unassign(Request $request)
+    {
+        // Assuming you have the course loaded, or you can load it using some logic.
+        $course = $this->course;
+
+        $paperId = $request->get('paper_id');
+
+        // Check if the paper is assigned to the course before detaching it.
+        if ($course->papers()->where('paper_id', $paperId)->exists()) {
+            $course->papers()->detach($paperId);
+            Alert::success(__('Paper was unassigned.'));
+        } else {
+            Alert::error(__('Paper is not assigned to this course.'));
+        }
 
         return back();
     }

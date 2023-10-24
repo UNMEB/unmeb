@@ -3,12 +3,14 @@
 namespace App\Orchid\Screens\Registration\NSIN;
 
 use App\Models\Institution;
+use App\Models\NsinStudentRegistration;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Orchid\Screen\Screen;
 use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\TD;
@@ -18,6 +20,11 @@ use Orchid\Support\Facades\Layout;
 
 class ApproveNsinRegistrationDetails extends Screen
 {
+
+    public $institutionId;
+    public $courseId;
+    public $nsinRegistrationId;
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -27,6 +34,10 @@ class ApproveNsinRegistrationDetails extends Screen
     {
         $data = request()->all();
 
+        $this->institutionId = $data['institution_id'];
+        $this->courseId = $data['course_id'];
+        $this->nsinRegistrationId = $data['nsin_registration_id'];
+
         $students = Student::select(
             'nsin_student_registrations.id as nsin_student_registration_id',
             'students.id AS id',
@@ -34,12 +45,16 @@ class ApproveNsinRegistrationDetails extends Screen
             'courses.course_name',
             'nsin_registrations.id AS nsin_registration_id',
             'students.*',
-            'nsin_student_registrations.verify'
+            'nsin_student_registrations.verify',
+            'nsin_student_registrations.remarks'
         )
             ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
             ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
             ->join('institutions', 'nsin_registrations.institution_id', '=', 'institutions.id')
-        ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id');
+            ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
+            ->where('institutions.id', $this->institutionId)
+            ->where('courses.id', $this->courseId)
+            ->where('nsin_registrations.id', $this->nsinRegistrationId);
 
         if (isset($data['nsin_registration_id'])) {
             $students->where('nsin_registrations.id', $data['nsin_registration_id']);
@@ -56,7 +71,6 @@ class ApproveNsinRegistrationDetails extends Screen
         return [
             'students' => $students->paginate()
         ];
-
     }
 
     /**
@@ -75,7 +89,7 @@ class ApproveNsinRegistrationDetails extends Screen
         $institutionId = $data['institution_id'] ?? null;
 
         if ($institutionId) {
-        $institution = Institution::find($institutionId);
+            $institution = Institution::find($institutionId);
             if ($institution) {
                 return 'Approve/Reject NSIN registrations for ' . Str::title($institution->institution_name);
             }
@@ -118,22 +132,30 @@ class ApproveNsinRegistrationDetails extends Screen
                 TD::make('NSIN', 'NSIN'),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email'),
+                TD::make('remarks', 'Remarks'),
                 TD::make('action', 'Actions')->render(function ($row) {
                     if ($row->verify == 0) {
                         return Button::make('Approve')
-                            ->type(Color::PRIMARY)
+                            ->type(Color::SUCCESS)
                             ->method('approve', [
-                                'id' => $row->id
+                                'id' => $row->id,
+                                'nsin_registration_id' => $this->nsinRegistrationId,
+                                'course_id' => $this->courseId,
+                                'institution_id' => $this->institutionId
                             ]);
-                    } else {
-                        return ModalToggle::make('Reject')
+                    } else if ($row->verify == 1) {
+                        return  ModalToggle::make('Reject')
                             ->modal('rejectRegistrationModal')
                             ->modalTitle('Reject NSIN Registration')
                             ->method('reject', [
-                                'id' => $row->id
+                                'id' => $row->id,
                             ])
+                            ->type(Color::DANGER)
                             ->asyncParameters([
                                 'student' => $row->id,
+                                'nsin_registration_id' => $this->nsinRegistrationId,
+                                'course_id' => $this->courseId,
+                                'institution_id' => $this->institutionId
                             ]);
                     }
                 })
@@ -142,14 +164,15 @@ class ApproveNsinRegistrationDetails extends Screen
             Layout::modal('rejectRegistrationModal', [
 
                 Layout::view('student_info', [
-                    'name' => null
+                    'name' => null,
+                    'message' => 'Reject NSIN registration for '
                 ]),
 
                 Layout::rows([
-                    TextArea::make('reason')
-                    ->title('Reason for Rejecting Student')
-                    ->placeholder('Start typing...')
-                    ->required()
+                    TextArea::make('remarks')
+                        ->title('Reason for Rejecting Student')
+                        ->placeholder('Enter reason for rejection...')
+                        ->required()
                 ])
             ])->async('asyncGetStudent')
 
@@ -168,15 +191,52 @@ class ApproveNsinRegistrationDetails extends Screen
 
     public function approve(Request $request, $id)
     {
-        // Get the student id for this student
-        $nsinStudentRegistration = Student::find($id);
+        $data = request()->all();
 
-        Alert::success('Student NSIN Registration approved');
+        $nsinStudentRegistration = NsinStudentRegistration::query()
+            ->where('nsin_registration_id', $data['nsin_registration_id'])
+            ->where('student_id', $id)
+            ->latest()
+            ->first();
+
+        if ($nsinStudentRegistration != null) {
+            $nsinStudentRegistration->update([
+                'verify' => 1
+            ]);
+
+            Alert::success('Student NSIN Registration approved');
+
+            return redirect()->back();
+        }
+
+        Alert::error("Unable to approve student at the moment");
+
+        return redirect()->back();
     }
 
     public function reject(Request $request)
     {
+        $data = request()->all();
 
-        Alert::info('Student NSIN registration rejected.');
+        $nsinStudentRegistration = NsinStudentRegistration::query()
+            ->where('nsin_registration_id', $data['nsin_registration_id'])
+            ->where('student_id', $data['student'])
+            ->latest()
+            ->first();
+
+        if ($nsinStudentRegistration != null) {
+            $nsinStudentRegistration->update([
+                'verify' => 0,
+                'remarks' => $data['remarks']
+            ]);
+
+            Alert::success('Student NSIN Registration reject action complete');
+
+            return redirect()->back();
+        }
+
+        Alert::error("Unable to complete reject action for student at the moment");
+
+        return redirect()->back();
     }
 }
