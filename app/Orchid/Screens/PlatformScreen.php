@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
+use App\Models\BiometricEnrollment;
 use App\Models\Course;
 use App\Models\Institution;
+use App\Models\NsinStudentRegistration;
+use App\Models\Staff;
 use App\Models\Student;
 use App\View\Components\Chart;
 use App\View\Components\GenderDistributionByCourseChart;
@@ -64,14 +67,21 @@ class PlatformScreen extends Screen
         ->orderByDesc('institution_count')
         ->get();
 
+        $pendingNsin = NsinStudentRegistration::where('verify', 0)->count();
+        $verifiedNsin = NsinStudentRegistration::where('verify', 1)->count();
+
 
         
 
         return [
             'metrics' => [
-                'institutions' => Institution::count(),
+                'institutions' => number_format(Institution::count()),
                 'courses' => Course::count(),
-                'students' => Student::count(),
+                'students' => number_format(Student::count()),
+                'staff' => number_format(Staff::count()),
+                'biometric_enrollment' => BiometricEnrollment::count(),
+                'pending_nsin' => number_format($pendingNsin),
+                'verified_nsin' => number_format($verifiedNsin)
             ],
 
             'student_registration_by_course' => $data1,
@@ -118,7 +128,11 @@ class PlatformScreen extends Screen
             Layout::metrics([
                 'Total Institutions' => 'metrics.institutions',
                 'Total Courses' => 'metrics.courses',
-                'Total Students' => 'metrics.students'
+                'Total Staff' => 'metrics.staff',
+                'Total Students' => 'metrics.students',
+                'Biometric Enrollment' => 'metrics.biometric_enrollment',
+                'Pending NSIN Registrations' => 'metrics.pending_nsin',
+                'Verified NSIN Registrations' => 'metrics.verified_nsin'
             ]),
             Layout::columns([
 
