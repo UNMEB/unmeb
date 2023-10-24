@@ -2,7 +2,17 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Course;
+use App\Models\Institution;
+use App\Models\RegistrationPeriod;
+use App\Models\StudentPaperRegistration;
 use Illuminate\Support\Facades\DB;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\DateRange;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 
@@ -18,7 +28,8 @@ class PackingListReportScreen extends Screen
 
         return [
 
-            'report' => DB::table('student_paper_registration')
+            'report' => StudentPaperRegistration::query()
+                ->from('student_paper_registration')
                 ->join('course_paper', 'student_paper_registration.course_paper_id', '=', 'course_paper.id')
                 ->join('student_registrations', 'student_paper_registration.student_registration_id', '=', 'student_registrations.id')
                 ->join('courses', 'course_paper.course_id', '=', 'courses.id')
@@ -82,6 +93,51 @@ class PackingListReportScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::rows([
+                Group::make([
+                    Relation::make('Registration Period')
+                        ->title("Filter By Registration")
+                        ->placeholder("Registration Period")
+                        ->fromModel(RegistrationPeriod::class, 'id')
+                        ->displayAppend('startAndEndDate'),
+
+                    Relation::make('Institution')
+                        ->title("Filter By Institution")
+                        ->placeholder("Institution")
+                        ->fromModel(Institution::class, 'institution_name'),
+
+                    // Select Year of Study
+                    Select::make('year_of_study')
+                        ->empty('None Selected')
+                        ->title('Select Year of Study')
+                        ->options([
+                            'Year 1 Semester 1' => 'Year 1 Semester 1',
+                            'Year 1 Semester 2' => 'Year 1 Semester 2',
+                            'Year 2 Semester 1' => 'Year 2 Semester 1',
+                            'Year 3 Semester 2' => 'Year 2 Semester 2',
+                            'Year 3 Semester 1' => 'Year 3 Semester 1',
+                        ]),
+
+                    Relation::make('Program')
+                        ->title("Filter Programs")
+                        ->placeholder("Program")
+                        ->multiple()
+                        ->fromModel(Course::class, 'course_name'),
+
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+
+            ])->title("Filter Packing List"),
             Layout::view('packing_list')
         ];
     }

@@ -151,7 +151,8 @@ class PlatformProvider extends OrchidServiceProvider
                 ->icon('bs.archive')
                 ->title('Reports')
                 ->list([
-                    Menu::make('Packing List Report'),
+                    Menu::make('Packing List Report')
+                        ->route('platform.reports.packing_list'),
                     Menu::make('NSIN Registration Report'),
                     Menu::make('Exam Registration Report'),
                     Menu::make('Financial Report'),
@@ -232,7 +233,7 @@ class PlatformProvider extends OrchidServiceProvider
             // Manage Continuous Assessment
             ItemPermission::group('Continuos Assessment')
                 ->addPermission('platform.assessment', 'Manage Continuous Assessment'),
-            
+
             // System Based Permissions
             ItemPermission::group(__('System'))
                 ->addPermission('platform.systems.roles', __('Roles'))
