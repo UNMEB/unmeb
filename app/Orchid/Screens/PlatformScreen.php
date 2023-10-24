@@ -56,22 +56,19 @@ class PlatformScreen extends Screen
         ');
 
         $institutionDistributionByType = DB::table('institutions')
-        ->select('institution_type', DB::raw('COUNT(*) as institution_count'))
-        ->groupBy('institution_type')
-        ->orderByDesc('institution_count')
-        ->get();
+            ->select('institution_type', DB::raw('COUNT(*) as institution_count'))
+            ->groupBy('institution_type')
+            ->orderByDesc('institution_count')
+            ->get();
 
         $institutionDistributionByCategory = DB::table('institutions')
-        ->select('category', DB::raw('COUNT(*) as institution_count'))
-        ->groupBy('category')
-        ->orderByDesc('institution_count')
-        ->get();
+            ->select(DB::raw("COALESCE(category, 'Uncategorised') as category"), DB::raw('COUNT(*) as institution_count'))
+            ->groupBy(DB::raw("COALESCE(category, 'Uncategorised')"))
+            ->orderByDesc('institution_count')
+            ->get();
 
         $pendingNsin = NsinStudentRegistration::where('verify', 0)->count();
         $verifiedNsin = NsinStudentRegistration::where('verify', 1)->count();
-
-
-        
 
         return [
             'metrics' => [
