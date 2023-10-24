@@ -12,7 +12,7 @@
         type: 'pie',
     },
     title: {
-        text: 'Institution Distribution by Type'
+        text: 'Institution Distribution by Category'
     },
     tooltip: {
         headerFormat: '',
