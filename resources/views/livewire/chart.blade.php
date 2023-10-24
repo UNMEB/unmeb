@@ -6,7 +6,6 @@
 
 @push('scripts')
 
-<script src="https://code.highcharts.com/highcharts.js"></script>
     <script>
          Highcharts.chart('chart-container', {
                 chart: {
