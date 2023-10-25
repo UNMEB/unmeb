@@ -37,7 +37,7 @@ class InstitutionListScreen extends Screen
     {
         $institutions = Institution::filters()
             ->defaultSort('id', 'desc')
-            ->simplePaginate();
+            ->paginate();
 
         return [
             'institutions' => $institutions

@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Year;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
@@ -108,6 +109,37 @@ class StudentListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::rows([
+
+                Group::make([
+
+                    Input::make('name')
+                        ->title('Search by Name'),
+
+                    Relation::make('district_id')
+                        ->fromModel(District::class, 'district_name')
+                        ->title('District of origin'),
+
+                    Select::make('gender')
+                        ->title('Gender')
+                        ->options([
+                            'Male' => 'Male',
+                            'Female' => 'Female'
+                        ])
+                        ->empty('Not Selected')
+                ]),
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title("Filter Students"),
+
             Layout::table('students', [
                 TD::make('id', 'ID'),
                 // Show passport picture
@@ -134,19 +166,25 @@ class StudentListScreen extends Screen
                 TD::make(__('Actions'))
                     ->align(TD::ALIGN_CENTER)
                     ->width('100px')
-                    ->render(fn (Student $students) => DropDown::make()
+                    ->render(fn (Student $student) => DropDown::make()
                         ->icon('bs.three-dots-vertical')
-                        ->list([
+                    ->list([ModalToggle::make('Details')
+                        ->icon('bs.people')
+                        ->modal('asyncViewStudentModal')
+                        ->modalTitle('Student Profile')
+                        ->asyncParameters([
+                            'student' => $student->id
+                        ]),
 
                             Link::make(__('Edit'))
-                                ->route('platform.administration.students.edit', $students->id)
+                    ->route('platform.administration.students.edit', $student->id)
                                 ->icon('bs.pencil'),
 
                             Button::make(__('Delete'))
                                 ->icon('bs.trash3')
                                 ->confirm(__('Once the account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.'))
                                 ->method('remove', [
-                                    'id' => $students->id,
+                        'id' => $student->id,
                                 ]),
                         ])),
             ]),
@@ -219,29 +257,35 @@ class StudentListScreen extends Screen
                 ->applyButton('Create Student')
                 ,
 
-            Layout::modal('asyncEditStudentModal', Layout::rows([
+            Layout::modal('asyncEditStudentModal', Layout::rows([]))->async('asyncGetStudent'),
 
-            ]))->async('asyncGetStudent'),
+            Layout::modal('asyncViewStudentModal', Layout::columns([
+                Layout::view('student_profile', [
+                    'student' => null
+                ])
+            ]))
+            ->size(Modal::SIZE_LG)
+            ->async('asyncGetStudent'),
         ];
     }
 
-    public function asyncGetStudent(Student $students): iterable
+    public function asyncGetStudent(Student $student): iterable
     {
         return [
-            'students' => $students,
+            'student' => $student,
         ];
     }
 
-    public function saveStudent(Request $request, Student $students): void
+    public function saveStudent(Request $request, Student $student): void
     {
         $request->validate([
             'students.email' => [
                 'required',
-                Rule::unique(Student::class, 'email')->ignore($students),
+                Rule::unique(Student::class, 'email')->ignore($student),
             ],
         ]);
 
-        $students->fill($request->input('students'))->save();
+        $student->fill($request->input('students'))->save();
 
         Alert::info(__('Student was saved.'));
     }
@@ -408,6 +452,46 @@ class StudentListScreen extends Screen
     public function currentUser(): User
     {
         return auth()->user();
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function filter(Request $request)
+    {
+        $name = $request->input('name');
+        $gender = $request->input('gender');
+        $district = $request->input('district_id');
+
+        $filters  = [];
+
+        if (!empty($name)) {
+            $filters['filter[name]'] = $name;
+        }
+
+        if (!empty($gender)) {
+            $filters['filter[gender]'] = $gender;
+        }
+
+        if (!empty($district)) {
+            $filters['filter[district_id]'] = $district;
+        }
+
+        $url = route('platform.administration.students', $filters);
+
+        return Redirect::to($url);
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.administration.students');
     }
 
 }

@@ -19,28 +19,28 @@ class AcceptedNsinRegistration extends Screen
     public function query(): iterable
     {
         $query = NsinRegistration::query()->from('nsin_registrations AS nsin')
-        ->join('institutions AS i', 'i.id', '=', 'nsin.institution_id')
-        ->join('courses AS c', 'c.id', '=', 'nsin.course_id')
-        ->join('years AS y', 'y.id', '=', 'nsin.year_id')
-        ->join('nsin_registration_periods AS rpn', 'nsin.year_id', '=', 'rpn.year_id')
-        ->leftJoinSub(
-            DB::table('nsin_registrations AS nsin')
-            ->join('nsin_student_registrations AS srn', 'nsin.id', '=', 'srn.nsin_registration_id')
-            ->join('students AS s', 'srn.student_id', '=', 's.id')
-            ->where('nsin.completed', 1)
-            ->groupBy('nsin.id')
-            ->select(
-                'nsin.id AS nsin_registration_id',
-                DB::raw('SUM(CASE WHEN s.gender = "Male" THEN 1 ELSE 0 END) AS registered_males'),
-                DB::raw('SUM(CASE WHEN s.gender = "Female" THEN 1 ELSE 0 END) AS registered_females'),
-                DB::raw('SUM(CASE WHEN srn.verify = 1 AND s.gender = "Male" THEN 1 ELSE 0 END) AS accepted_males'),
-                DB::raw('SUM(CASE WHEN srn.verify = 1 AND s.gender = "Female" THEN 1 ELSE 0 END) AS accepted_females')
-            ),
-            'rc',
-            'nsin.id',
-            '=',
-            'rc.nsin_registration_id'
-        )
+            ->join('institutions AS i', 'i.id', '=', 'nsin.institution_id')
+            ->join('courses AS c', 'c.id', '=', 'nsin.course_id')
+            ->join('years AS y', 'y.id', '=', 'nsin.year_id')
+            ->join('nsin_registration_periods AS rpn', 'nsin.year_id', '=', 'rpn.year_id')
+            ->leftJoinSub(
+                DB::table('nsin_registrations AS nsin')
+                    ->join('nsin_student_registrations AS srn', 'nsin.id', '=', 'srn.nsin_registration_id')
+                    ->join('students AS s', 'srn.student_id', '=', 's.id')
+                    ->where('nsin.completed', 1)
+                    ->groupBy('nsin.id')
+                    ->select(
+                        'nsin.id AS nsin_registration_id',
+                        DB::raw('SUM(CASE WHEN s.gender = "Male" THEN 1 ELSE 0 END) AS registered_males'),
+                        DB::raw('SUM(CASE WHEN s.gender = "Female" THEN 1 ELSE 0 END) AS registered_females'),
+                        DB::raw('SUM(CASE WHEN srn.verify = 1 AND s.gender = "Male" THEN 1 ELSE 0 END) AS accepted_males'),
+                        DB::raw('SUM(CASE WHEN srn.verify = 1 AND s.gender = "Female" THEN 1 ELSE 0 END) AS accepted_females')
+                    ),
+                'rc',
+                'nsin.id',
+                '=',
+                'rc.nsin_registration_id'
+            )
             ->select(
                 'nsin.id AS nsin_registration_id',
                 'i.id AS institution_id',
@@ -105,11 +105,12 @@ class AcceptedNsinRegistration extends Screen
                 TD::make('accepted_males', 'Accepted Males'),
                 TD::make('accepted_females', 'Accepted Females'),
                 TD::make('total_accepted_students', 'Total Accepted'),
-                TD::make('actions', 'Actions')->render(fn (NsinRegistration $data) => Link::make('View Details')->route('platform.registration.nsin.accepted.details', [
-                    'institution_id' => $data->institution_id,
-                    'course_id' => $data->course_id,
-                    'nsin_registration_id' => $data->nsin_registration_id
-                ]))
+                TD::make('actions', 'Actions')->render(fn (NsinRegistration $data) => Link::make('Details')
+                    ->class('btn btn-primary btn-sm link-primary')->route('platform.registration.nsin.accepted.details', [
+                        'institution_id' => $data->institution_id,
+                        'course_id' => $data->course_id,
+                        'nsin_registration_id' => $data->nsin_registration_id
+                    ]))
             ])
         ];
     }

@@ -81,7 +81,9 @@ class ApproveNsinRegistration extends Screen
                 TD::make('students_to_register', 'Students to Register'),
                 TD::make('registered_students', 'Registered Students'),
                 TD::make('actions', 'Actions')->render(
-                    fn ($data) => Link::make('Verify NSIN')->route('platform.registration.nsin.approve.details', [
+                    fn ($data) => Link::make('Details')
+                        ->class('btn btn-primary btn-sm link-primary')
+                        ->route('platform.registration.nsin.approve.details', [
                         'institution_id' => $data->institution_id,
                         'course_id' => $data->course_id,
                         'nsin_registration_id' => $data->id

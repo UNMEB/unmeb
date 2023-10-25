@@ -57,6 +57,8 @@ use App\Orchid\Screens\Registration\NSIN\NsinRegistrationPeriodListScreen;
 use App\Orchid\Screens\Registration\NSIN\NsinRejectionReasons;
 use App\Orchid\Screens\Registration\NSIN\RejectedNsinRegistration;
 use App\Orchid\Screens\Registration\NSIN\RejectedNsinRegistrationDetails;
+use App\Orchid\Screens\Reports\ExamRegistrationReportScreen;
+use App\Orchid\Screens\Reports\NSINRegistrationReportScreen;
 use App\Orchid\Screens\Reports\RegistrationReportScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
@@ -447,6 +449,14 @@ Route::screen('accounts/{institution}/transactions', InstitutionTransactionListS
         ->parent('platform.systems.finance.accounts')
         ->push($institution->institution_name, route('platform.systems.finance.institution.transactions', $institution)));
 
-// Platform  > Reports > Registration
+// Platform  > Reports > Packing List
 Route::screen('reports/packing_list', PackingListReportScreen::class)
     ->name('platform.reports.packing_list');
+
+// Platform  > Reports > Registration > NSIN
+Route::screen('reports/nsin_registration', NSINRegistrationReportScreen::class)
+    ->name('platform.reports.nsin_registration');
+
+// Platform  > Reports > Registration > Exam
+Route::screen('reports/exam_registration', ExamRegistrationReportScreen::class)
+    ->name('platform.reports.exam_registration');

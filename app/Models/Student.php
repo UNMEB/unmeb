@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Orchid\Filters\StudentNameFilter;
 use App\Traits\OrderByLatest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Orchid\Attachment\Attachable;
 use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Like;
+use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
 
@@ -33,6 +36,12 @@ class Student extends Model
         'date_time'
     ];
 
+    protected $allowedFilters = [
+        'gender' => Like::class,
+        'district_id' => Where::class,
+        'name' => StudentNameFilter::class
+    ];
+
     public function district()
     {
         return $this->belongsTo(District::class);
@@ -53,6 +62,18 @@ class Student extends Model
 
         // Return placeholder avatar
         return '<img src="' . asset('placeholder/avatar.png') . '" width="50px">';
+    }
+
+    public function getAvatar2Attribute()
+    {
+        // Check if there is a passport and image exists in public path
+        if ($this->passport && file_exists(public_path('photos/' . $this->passport))) {
+            // Return img tag
+            return '<img src="' . asset('photos/' . $this->passport) .  '" style="width: 180px; border-radius: 10px;">';
+        }
+
+        // Return placeholder avatar
+        return '<img src="' . asset('placeholder/avatar.png') . '" style="width: 180px; border-radius: 10px;">';
     }
 
     public function nsinStudentRegistrations(): HasMany

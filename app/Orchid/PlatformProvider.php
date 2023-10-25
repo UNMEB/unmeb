@@ -54,9 +54,6 @@ class PlatformProvider extends OrchidServiceProvider
                 ])
                 ->permission('platform.assessment'),
 
-
-
-
             Menu::make(__('Manage Students'))
                 ->route('platform.administration.students')
                 ->icon('fa.user')
@@ -142,10 +139,8 @@ class PlatformProvider extends OrchidServiceProvider
                             }
 
                             return null;
-                        }, Color::DANGER)
-
+                }, Color::DANGER)
                 ]),
-
 
             Menu::make('Reports')
                 ->icon('bs.archive')
@@ -153,8 +148,10 @@ class PlatformProvider extends OrchidServiceProvider
                 ->list([
                     Menu::make('Packing List Report')
                         ->route('platform.reports.packing_list'),
-                    Menu::make('NSIN Registration Report'),
-                    Menu::make('Exam Registration Report'),
+                Menu::make('NSIN Registration Report')
+                ->route('platform.reports.nsin_registration'),
+                Menu::make('Exam Registration Report')
+                ->route('platform.reports.exam_registration'),
                     Menu::make('Financial Report'),
                 ]),
 
@@ -205,8 +202,6 @@ class PlatformProvider extends OrchidServiceProvider
                 ->route('platform.administration.staff')
                 ->icon('fa.user-group'),
 
-
-
             Menu::make(__('Users'))
                 ->icon('bs.people')
                 ->route('platform.systems.users')
@@ -233,6 +228,10 @@ class PlatformProvider extends OrchidServiceProvider
             // Manage Continuous Assessment
             ItemPermission::group('Continuos Assessment')
                 ->addPermission('platform.assessment', 'Manage Continuous Assessment'),
+
+            // Manage Students
+            ItemPermission::group('Manage Students')
+                ->addPermission('platform.administration.students.list', 'View All Students'),
 
             // System Based Permissions
             ItemPermission::group(__('System'))
