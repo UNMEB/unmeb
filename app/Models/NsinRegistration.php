@@ -18,7 +18,7 @@ class NsinRegistration extends Model
     use HasFactory, AsSource, Filterable, Sortable, HasInstitution, OrderByLatest;
 
     protected $allowedFilters = [
-        'institution_id' => InstitutionIdFilter::class,
+        'institution_id' => Where::class,
         'course_id' => Where::class,
         'month' => Where::class,
         'year_id' => Where::class,

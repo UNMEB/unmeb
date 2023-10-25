@@ -2,9 +2,18 @@
 
 namespace App\Orchid\Screens\Registration\NSIN;
 
+use App\Models\Course;
+use App\Models\Institution;
 use App\Models\NsinRegistration;
+use App\Models\Year;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
@@ -19,7 +28,7 @@ class ApproveNsinRegistration extends Screen
     public function query(): iterable
     {
 
-        $query = Nsinregistration::query()
+        $query = Nsinregistration::filters()
             ->select([
                 'r.id',
                 'r.month',
@@ -72,6 +81,50 @@ class ApproveNsinRegistration extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::rows([
+                Group::make([
+                    Relation::make('institution_id')
+                        ->title('Filter By Institution')
+                        ->fromModel(Institution::class, 'institution_name'),
+
+                    Relation::make('course_id')
+                        ->title('Filter By Program')
+                        ->fromModel(Course::class, 'course_name'),
+
+                    Select::make('month')
+                        ->title('Filter By Month')
+                        ->options([
+                            'January' => 'January',
+                            'February' => 'February',
+                            'March' => 'March',
+                            'April' => 'April',
+                            'May' => 'May',
+                            'June' => 'June',
+                            'July' => 'July',
+                            'August' => 'August',
+                            'September' => 'September',
+                            'October' => 'October',
+                            'November' => 'November',
+                            'December' => 'December',
+                        ])
+                        ->empty('None Selected'),
+
+                    Select::make('year_id')
+                        ->fromModel(Year::class, 'year')
+                        ->title('Filter By Year')
+                        ->empty('None Selected')
+                ]),
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ]),
             Layout::table('registrations', [
                 TD::make('id', 'ID'),
                 TD::make('institution_name', 'Institution'),
@@ -92,4 +145,50 @@ class ApproveNsinRegistration extends Screen
             ])
         ];
     }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function filter(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+        $month = $request->input('month');
+        $yearId = $request->input('year_id');
+
+        $filters = [];
+
+        if (!empty($institutionId)) {
+            $filters['filter[institution_id]'] = $institutionId;
+        }
+
+        if (!empty($courseId)) {
+            $filters['filter[course_id]'] = $courseId;
+        }
+
+        if (!empty($month)) {
+            $filters['filter[month]'] = $month;
+        }
+
+        if (!empty($yearId)) {
+            $filters['filter[year_id]'] = $yearId;
+        }
+
+        $url = route('platform.registration.nsin.approve', $filters);
+
+        return Redirect::to($url);
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.registration.nsin.approve');
+    }
+
 }

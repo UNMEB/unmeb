@@ -12,7 +12,8 @@
         "laravel/telescope": "^4.16",
         "laravel/tinker": "^2.8",
         "livewire/livewire": "^3.0",
-        "orchid/platform": "^14.14"
+        "orchid/platform": "^14.14",
+        "predis/predis": "^2.2"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",

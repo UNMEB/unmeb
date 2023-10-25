@@ -12,6 +12,7 @@ use App\Models\SurchargeFee;
 use App\Models\Transaction;
 use App\Orchid\Layouts\RegisterStudentsForExamForm;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
@@ -30,28 +31,43 @@ class IncompleteExamRegistration extends Screen
      */
     public function query(): iterable
     {
-        $query = Registration::query()
-            ->from('registrations as r')
+        $page = request('page', 1);
+
+        $cacheKey = 'registration_query_results' . $page;
+
+        // Attempt to retrieve the query results from the cache
+        $cachedResults = Cache::get($cacheKey);
+
+        if ($cachedResults !== null) {
+            // If cached results exist, return them without modifying pagination
+            return ['registrations' => $cachedResults];
+        }
+
+        // If no cached results exist, perform the query and apply pagination
+        $query = Registration::filters()
+            ->from('registrations AS r')
+            ->select('r.id as registration_id', 'i.id AS institution_id', 'i.institution_name', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
+            ->selectRaw('COUNT(sr.id) as registered_students')
+            ->selectRaw('SUM(CASE WHEN sr.sr_flag = 0 THEN 1 ELSE 0 END) as to_register')
             ->join('institutions as i', 'r.institution_id', '=', 'i.id')
             ->join('courses as c', 'r.course_id', '=', 'c.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->select(
-                'r.id',
-                'i.id as institution_id',
-                'i.institution_name',
-                'c.id as course_id',
-                'c.course_name',
-                'r.year_of_study',
-                'rp.reg_start_date',
-                'rp.reg_end_date',
-                DB::raw('(SELECT COUNT(*) FROM student_registrations WHERE registration_id = r.id) as registered_students'),
-                DB::raw('(SELECT COUNT(*) FROM student_registrations WHERE registration_id = r.id AND sr_flag = 0) as to_register')
-            )
+            ->leftJoin('student_registrations as sr', 'sr.registration_id', '=', 'r.id')
+            ->groupBy('r.id', 'i.institution_name', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             ->orderBy('to_register', 'desc');
 
-        return [
-            'registrations' => $query->paginate()
-        ];
+        $perPage = request('per_page', 15); // Adjust the default per page count if needed
+
+
+        $results = ['registrations' => $query->paginate($perPage, ['*'], 'page', $page)];
+
+        // Set the cache duration (e.g., cache for 60 minutes)
+        $minutes = 60;
+
+        // Store the query results in the cache for future use
+        Cache::put($cacheKey, $results['registrations'], $minutes); // Replace $minutes with your desired cache duration
+
+        return $results;
     }
 
     /**
