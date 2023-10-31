@@ -31,6 +31,7 @@ class IncompleteExamRegistration extends Screen
      */
     public function query(): iterable
     {
+
         $page = request('page', 1);
 
         $cacheKey = 'registration_query_results' . $page;
@@ -43,7 +44,6 @@ class IncompleteExamRegistration extends Screen
             return ['registrations' => $cachedResults];
         }
 
-        // If no cached results exist, perform the query and apply pagination
         $query = Registration::filters()
             ->from('registrations AS r')
             ->select('r.id as registration_id', 'i.id AS institution_id', 'i.institution_name', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
@@ -58,11 +58,10 @@ class IncompleteExamRegistration extends Screen
 
         $perPage = request('per_page', 15); // Adjust the default per page count if needed
 
-
         $results = ['registrations' => $query->paginate($perPage, ['*'], 'page', $page)];
 
-        // Set the cache duration (e.g., cache for 60 minutes)
-        $minutes = 60;
+        // Set the cache duration to 7 days (10080 minutes)
+        $minutes = 10080;
 
         // Store the query results in the cache for future use
         Cache::put($cacheKey, $results['registrations'], $minutes); // Replace $minutes with your desired cache duration

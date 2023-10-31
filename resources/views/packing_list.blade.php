@@ -30,6 +30,26 @@
             jQuery(".ui-sortable").sortable({
                 disabled: true
             });
+
+            // On download click use sheetjs to convert html to csv
+            jQuery('#download').on('click', function(e) {
+                e.preventDefault();
+
+                // Get the HTML table element
+                jQuery('table').tableExport({
+                    type: 'excel',
+                    htmlContent: true,
+                    mso: {
+                        fileFormat: 'xlshtml',
+                        styles: ['border-collapse', 'border', 'border-width', 'border-style',
+                            'border-color', 'font-weight',
+                            'border-bottom', 'border-top', 'border-left', 'border-right',
+                            'background-color',
+                            'font'
+                        ],
+                    },
+                });
+            });
         })
     </script>
 @endpush

@@ -2,11 +2,17 @@
 
 namespace App\Orchid\Screens;
 
+use App\Exports\PackingListExport;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\RegistrationPeriod;
 use App\Models\StudentPaperRegistration;
+use DOMDocument;
+use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\DateRange;
 use Orchid\Screen\Fields\Group;
@@ -15,6 +21,10 @@ use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
+
+
+use Goutte\Client;
+use Symfony\Component\DomCrawler\Crawler;
 
 class PackingListReportScreen extends Screen
 {
@@ -82,7 +92,12 @@ class PackingListReportScreen extends Screen
      */
     public function commandBar(): iterable
     {
-        return [];
+        return [
+            Button::make('Export Packing List')
+            ->method('export')
+            ->id('download')
+            ->rawClick(true)
+        ];
     }
 
     /**
@@ -140,5 +155,20 @@ class PackingListReportScreen extends Screen
             ])->title("Filter Packing List"),
             Layout::view('packing_list')
         ];
+    }
+
+    public function filter(Request $request)
+    {
+    }
+
+    public function reset(Request $request)
+    {
+    }
+
+    /**
+     * Export as CSV
+     */
+    public function export(Request $request)
+    {
     }
 }
