@@ -191,12 +191,12 @@ class PlatformProvider extends OrchidServiceProvider
 
             Menu::make(__('Users'))
                 ->icon('bs.people')
-                ->route('platform.systems.users')
-                ->permission('platform.systems.users')
+            ->route('platform.systems.users')
                 ->title(__('Access Controls')),
 
             Menu::make(__('Roles'))
                 ->icon('bs.shield')
+                ->route('platform.systems.roles')
                 ->divider(),
         ];
     }
