@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\NsinStudentRegistration;
 use App\Models\StudentRegistration;
 use App\Models\Transaction;
+use App\Observers\NsinStudentRegistrationObserver;
 use App\Observers\TransactionObserver;
 use App\Observers\StudentRegistrationObserver;
 use Illuminate\Auth\Events\Registered;
@@ -30,7 +32,8 @@ class EventServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Transaction::observe(TransactionObserver::class);
-        StudentRegistration::observe(StudentRegistrationObserver::class);
+        // StudentRegistration::observe(StudentRegistrationObserver::class);
+        NsinStudentRegistration::observe(NsinStudentRegistrationObserver::class);
     }
 
     /**

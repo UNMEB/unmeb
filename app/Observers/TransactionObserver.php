@@ -33,9 +33,13 @@ class TransactionObserver
             // Combine admin and account emails
             $combinedEmails = array_merge($adminEmails, $accountEmails);
 
-            Mail::to('info@unmeb.go.ug')
+            try {
+                Mail::to('info@unmeb.go.ug')
                 ->cc($combinedEmails)
                 ->send(new NotifyAccountsAboutPendingTransaction($transaction, $accountUsers));
+            } catch (\Throwable $th) {
+                //throw $th;
+            }
         }
     }
 
