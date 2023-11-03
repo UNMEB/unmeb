@@ -186,17 +186,16 @@ class PlatformProvider extends OrchidServiceProvider
             ->route('platform.comments.list')
             ->permission('platform.comments.list'),
 
-
-
-
             Menu::make(__('Users'))
                 ->icon('bs.people')
             ->route('platform.systems.users')
+            ->permission('platform.systems.users')
                 ->title(__('Access Controls')),
 
             Menu::make(__('Roles'))
                 ->icon('bs.shield')
                 ->route('platform.systems.roles')
+            ->permission('platform.systems.roles')
                 ->divider(),
         ];
     }
