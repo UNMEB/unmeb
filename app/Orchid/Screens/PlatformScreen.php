@@ -124,7 +124,7 @@ class PlatformScreen extends Screen
         return [
             Layout::metrics([
                 'Total Institutions' => 'metrics.institutions',
-                'Total Courses' => 'metrics.courses',
+                'Total Programs' => 'metrics.courses',
                 'Total Staff' => 'metrics.staff',
                 'Total Students' => 'metrics.students',
                 'Biometric Enrollment' => 'metrics.biometric_enrollment',
