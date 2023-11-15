@@ -6,11 +6,12 @@ use App\Traits\HasInstitution;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Orchid\Filters\Filterable;
 use Orchid\Screen\AsSource;
 
 class Transaction extends Model
 {
-    use HasFactory, AsSource, HasInstitution;
+    use HasFactory, AsSource, HasInstitution, Filterable;
 
     protected $fillable = [
         'amount',

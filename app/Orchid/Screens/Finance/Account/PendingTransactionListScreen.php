@@ -19,6 +19,7 @@ use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
 use Illuminate\Support\Str;
+use Orchid\Screen\Fields\DateRange;
 
 class PendingTransactionListScreen extends Screen
 {
@@ -29,7 +30,10 @@ class PendingTransactionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $transactions = Transaction::with('institution', 'account')->where('is_approved', 0)->get();
+        $transactions = Transaction::with('institution', 'account')->where('is_approved', 0)
+        ->filters()
+            ->defaultSort('id', 'desc')
+            ->get();
         return [
             'transactions' => $transactions
         ];
@@ -68,6 +72,57 @@ class PendingTransactionListScreen extends Screen
     public function layout(): iterable
     {
         return [
+
+            Layout::rows([
+                Group::make([
+                    // Filter By Institution
+                    Input::make('institution_name')
+                        ->title('Filter By Institution'),
+
+                    // Filter By Transaction Type
+                    Select::make('transaction_type')
+                        ->title('Filter By Transaction Type')
+                        ->options([
+                            'credit' => 'Credit',
+                            'debit' => 'Debit',
+                        ]),
+
+                    // Filter By Transaction Method
+                    Select::make('transaction_method')
+                        ->title('Filter By Transaction Method')
+                        ->options([
+                            'bank' => 'Bank Transfer',
+                            'mobile' => 'Mobile Money',
+                        ]),
+
+                    // Filter By Date Range
+                    DateRange::make('date_range')
+                        ->title('Filter By Date Range')
+                        ->format('Y-m-d')
+                        ->placeholder('Select Date Range')
+                        ->popover('Select a date range to filter transactions')
+                        ->help('Filter transactions by a specific date range')
+                        ->autocomplete(false)
+                        ->allowClear(false)
+                        ->required()
+                        ->value([
+                            'start' => now()->subDays(7)->format('Y-m-d'),
+                            'end' => now()->format('Y-m-d'),
+                        ]),
+
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title('Filter Institutions'),
 
             Layout::modal('depositFundsModal', Layout::rows([
                 Relation::make('institution_id')
