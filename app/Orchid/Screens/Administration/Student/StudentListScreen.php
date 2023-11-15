@@ -46,8 +46,7 @@ class StudentListScreen extends Screen
         return [
             'students' => Student::with('district')
                 ->filters()
-                ->defaultSort('id', 'desc')
-                ->orderBy('old', 'asc')
+                ->latest()
                 ->paginate(),
         ];
     }

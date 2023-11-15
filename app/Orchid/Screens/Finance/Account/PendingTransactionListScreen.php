@@ -20,6 +20,7 @@ use Orchid\Support\Facades\Layout;
 
 use Illuminate\Support\Str;
 use Orchid\Screen\Fields\DateRange;
+use Orchid\Screen\Fields\TextArea;
 
 class PendingTransactionListScreen extends Screen
 {
@@ -156,7 +157,7 @@ class PendingTransactionListScreen extends Screen
                 ->applyButton('Deposit Funds'),
 
             Layout::table('transactions', [
-                TD::make('id', 'Transaction ID'),
+                TD::make('id', 'ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
                     return $data->institution->institution_name;
                 }),
@@ -177,13 +178,84 @@ class PendingTransactionListScreen extends Screen
                 }),
                 TD::make('comment', 'Comment'),
                 TD::make('actions', 'Actions')->render(function (Transaction $data) {
-                    return Button::make('Approve')->type(Color::SUCCESS)
-                        ->method('approve', [
-                            'id' => $data->id
-                        ])->disabled($data->is_approved == 1)
-                        ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'));
+                    // return Button::make('Approve')->type(Color::SUCCESS)
+                    //     ->method('approve', [
+                    //         'id' => $data->id
+                    //     ])->disabled($data->is_approved == 1)
+                    //     ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'));
+
+                    return Group::make([
+                        ModalToggle::make('Approve')
+                            ->modal('approveTransactionModal')
+                            ->modalTitle('Approve Transaction')
+                            ->method('approve', [
+                                'id' => $data->id
+                            ])
+                            ->class('btn btn-sm btn-success')
+                            ->asyncParameters([
+                                'transaction' => $data->id,
+                            ]),
+                        ModalToggle::make('Decline')
+                            ->modal('declineTransactionModal')
+                            ->modalTitle('Decline Transaction')
+                            ->method('decline', [
+                                'id' => $data->id
+                            ])
+                            ->asyncParameters([
+                                'transaction' => $data->id,
+                            ])
+                            ->class('btn btn-sm btn-danger'),
+                    ])->autoWidth();
+
+
+
                 })->alignCenter()
-            ])
+                    ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'))
+            ]),
+
+            Layout::modal('approveTransactionModal', [
+
+                Layout::view('transaction_info', [
+                    'amount' => null,
+                    'institution' => null,
+                    'type' => null,
+                    'message' => 'Approve '
+                ]),
+
+                Layout::rows([
+                    TextArea::make('comment')
+                        ->title('Transaction approval remarks')
+                        ->placeholder('Start typing')
+                ])
+            ])->async('asyncGetTransaction')
+            ->applyButton('Approve Transaction'),
+
+            Layout::modal('declineTransactionModal', [
+
+                Layout::view('transaction_info', [
+                    'amount' => null,
+                    'institution' => null,
+                    'type' => null,
+                    'message' => 'Decline '
+                ]),
+
+                Layout::rows([
+                    TextArea::make('comment')
+                        ->title('Transaction decline remarks')
+                        ->placeholder('Start typing')
+                ])
+            ])->async('asyncGetTransaction')
+            ->applyButton('Decline Transaction')
+        ];
+    }
+
+    public function asyncGetTransaction(Transaction $transaction): iterable
+    {
+        return [
+            'transaction' => $transaction,
+            'amount' => $transaction->amount,
+            'institution' => $transaction->account->institution->institution_name,
+            'type' => $transaction->type,
         ];
     }
 
@@ -225,15 +297,41 @@ class PendingTransactionListScreen extends Screen
     }
 
 
-    public function approve(Request $request, $id)
+    public function approve(Request $request)
     {
+
+        $request->validate([
+            'transaction' => 'required|exists:transactions,id',
+        ]);
+
+        $id = $request->input('transaction');
+
+        $transaction = Transaction::find($id);
+
+        $transaction->approved_by = auth()->user()->id;
+        $transaction->is_approved = 1;
+        $transaction->comment = $request->input('comment');
+        $transaction->save();
+
+        // dd($transaction);
+
+        Alert::success('Transaction has been approved and Institution account credited');
+
+        return back();
+    }
+
+    public function decline(Request $request)
+    {
+        $id = $request->input('transaction');
+
         $transaction = Transaction::find($id);
 
         $transaction->approved_by = auth()->id();
-        $transaction->is_approved = 1;
+        $transaction->is_approved = 0;
+        $transaction->comment = $request->input('comment');
         $transaction->save();
 
-        Alert::success('Transaction has been approved and Institution account credited');
+        Alert::success('Transaction has been declined');
 
         return back();
     }
