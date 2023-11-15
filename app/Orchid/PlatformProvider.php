@@ -135,7 +135,8 @@ class PlatformProvider extends OrchidServiceProvider
 
                     // Menu for Institution Accounts
                     Menu::make(__('Institution Accounts'))
-                        ->route('platform.systems.finance.accounts'),
+                    ->route('platform.systems.finance.accounts')
+                    ->permission('platform.finance.accounts.list'),
 
                     // Completed Transactions
                     Menu::make('Institution Transactions')
@@ -266,14 +267,15 @@ class PlatformProvider extends OrchidServiceProvider
             ItemPermission::group('Manage Finance')
                 ->addPermission(
                     'platform.finance.list',
-                    'View Institution Accounts'
+                'Manage Finances'
                 )
                 ->addPermission('platform.finance.transactions.pending', 'View Pending Transactions')
                 ->addPermission('platform.finance.transactions.complete', 'View Complete Transaction')
                 ->addPermission('platform.finance.deposit', 'Deposit Funds')
                 ->addPermission('platform.finance.approve', 'Approve Deposits')
                 ->addPermission('platform.finance.transactions.reverse', 'Reverse Transactions')
-                ->addPermission('platform.finance.transactions.flag', 'Flag Transaction'),
+            ->addPermission('platform.finance.transactions.flag', 'Flag Transaction')
+            ->addPermission('platform.finance.accounts.list', 'View Institution Accounts'),
 
             // Manage Report
             ItemPermission::group('Manage Reports')

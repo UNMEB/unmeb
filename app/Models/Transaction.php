@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\HasInstitution;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Screen\AsSource;
@@ -41,4 +42,25 @@ class Transaction extends Model
     {
         return auth()->user();
     }
+
+    protected static function booted()
+    {
+        // Add a global scope to filter transactions based on user's institution access
+        static::addGlobalScope('institutionAccess', function (Builder $builder) {
+            $user = auth()->user();
+
+            if ($user && $user->hasAccess('platform.internals.all_institutions')) {
+                // User has access to all institutions, no need to filter
+                return;
+            }
+
+            // Use the user's institution ID to filter transactions
+            $builder->whereHas('account', function ($query) use ($user) {
+                if ($user->institution) {
+                    $query->where('institution_id', $user->institution->id);
+                }
+            });
+        });
+    }
 }
+

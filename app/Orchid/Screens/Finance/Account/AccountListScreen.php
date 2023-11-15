@@ -57,6 +57,7 @@ class AccountListScreen extends Screen
                 ->method('deposit')
                 ->icon('wallet'),
         ];
+
     }
 
     /**
