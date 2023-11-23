@@ -16,6 +16,7 @@ use Orchid\Filters\Types\Like;
 use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+use Log;
 
 
 
@@ -130,5 +131,14 @@ class Student extends Model
     public function scopeFilterByInstitution($query, $data)
     {
         return $query->where('institution_id', $data['id']);
+    }
+
+    public function getLatestNinAttribute()
+    {
+        $record = $this->nsinRegistrations()->latest()->first();
+
+        Log::info('Student Record', $record->toArray());
+
+        return $record ? $record->getNin() : "No NSIN";
     }
 }

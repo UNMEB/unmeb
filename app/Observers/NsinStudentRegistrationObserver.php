@@ -6,6 +6,7 @@ use App\Models\Course;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\NsinStudentRegistration;
+use App\Models\Student;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -27,6 +28,9 @@ class NsinStudentRegistrationObserver
         Log::info('NSIN Registration Updated', $nsinStudentRegistration->toArray());
 
         $studentId = $nsinStudentRegistration->student_id;
+
+        $student = Student::find($studentId);
+        
 
         // Get the NSIN Registration Information
         $nsinRegistration = NsinRegistration::find($nsinStudentRegistration->nsin_registration_id);
@@ -59,6 +63,11 @@ class NsinStudentRegistrationObserver
 
             $nsinStudentRegistration->nsin = $nsin;
             $nsinStudentRegistration->save();
+
+            // Update the student record with this NSIN
+            $student->nsin = $nsin;
+            $student->save();
+
         }
     }
 

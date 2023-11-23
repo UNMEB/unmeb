@@ -21,4 +21,9 @@ class NsinStudentRegistration extends Model
     {
         return $this->belongsTo(NsinRegistration::class);
     }
+
+    public function student()
+    {
+        return $this->belongsTo(Student::class);
+    }
 }
