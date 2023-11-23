@@ -107,7 +107,7 @@ class RegisterStudentsForExamForm extends Listener
                 // Select Students
                 Relation::make('student_ids')
                     ->fromModel(Student::class, 'id')
-                    ->title('Select students to register for NSIN')
+                ->title('Select students to register for Exams')
                     ->multiple()
                     ->displayAppend('studentWithNsin')
                     ->searchColumns('surname', 'othername', 'firstname')
@@ -158,7 +158,7 @@ class RegisterStudentsForExamForm extends Listener
 
             foreach($papers as $paper) {
                 $modifiedPaperName = $paper->paper_name. ' ( '. $paper->paper. ' - '. $paper->code. ' )';
-                
+
                 $allPapers[] = (object) [
                     'id' => $paper->id,
                     'paper_name' => $modifiedPaperName

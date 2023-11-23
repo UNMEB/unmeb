@@ -13,6 +13,7 @@ use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
@@ -98,24 +99,24 @@ class DistrictListScreen extends Screen
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (District $district) {
-                        $editButton = ModalToggle::make('Edit District')
+                    return Group::make([
+                        ModalToggle::make('Edit District')
                             ->modal('editDistrictModal')
                             ->modalTitle('Edit ' . $district->name)
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
                                 'district' => $district->id,
                             ])
-                            ->render();
+                            ->class('btn btn-primary btn-sm'),
 
-                        $deleteButton = Button::make('Delete')
+                        Button::make('Delete')
                             ->confirm('Are you sure you want to delete this district?')
                             ->method('delete', [
                                 'id' => $district->id
                             ])
-                            ->render();
-
-                        return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
-                    })
+                                ->class('btn btn-danger btn-sm')
+                        ])->fullWidth();
+                    }),
             ]),
             Layout::modal('createDistrictModal', Layout::rows([
                 Input::make('district.name')

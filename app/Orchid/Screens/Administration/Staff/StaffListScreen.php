@@ -60,7 +60,7 @@ class StaffListScreen extends Screen
         return [
             Link::make(__('Add Staff'))
                 ->icon('bs.plus-circle')
-                ->route('platform.administration.staff.create'),
+            ->route('platform.staff.create'),
         ];
     }
 
@@ -98,7 +98,7 @@ class StaffListScreen extends Screen
                         ->list([
 
                             Link::make(__('Edit'))
-                                ->route('platform.administration.staff.edit', $staff->id)
+                        ->route('platform.staff.edit', $staff->id)
                                 ->icon('bs.pencil'),
 
                             Button::make(__('Delete'))

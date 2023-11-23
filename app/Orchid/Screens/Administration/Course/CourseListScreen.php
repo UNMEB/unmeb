@@ -95,35 +95,32 @@ class CourseListScreen extends Screen
                     ->align(TD::ALIGN_RIGHT)
                     ->sort(),
 
-                TD::make(__('Assign Papers'))
-                    ->width(200)
-                    ->cantHide()
-                    ->align(TD::ALIGN_CENTER)
-                    ->render(fn (Course $course) => Link::make('Assign Papers')
-                        ->route('platform.administration.courses.assign', $course->id)),
-
                 TD::make(__('Actions'))
-                    ->width(200)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (Course $course) {
-                    $editButton = ModalToggle::make('Edit Program')
+
+                    return Group::make([
+                        Link::make('Assign Papers')
+                            ->route('platform.courses.assign', $course->id)
+                            ->class('btn btn-success btn-sm link-success'),
+
+                        ModalToggle::make('Edit Program')
                             ->modal('editCourseModal')
                         ->modalTitle('Edit Program ' . $course->name)
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
                                 'course' => $course->id,
                             ])
-                            ->render();
+                        ->class('btn btn-primary btn-sm link-primary'),
 
-                        $deleteButton = Button::make('Delete')
+                        Button::make('Delete')
                         ->confirm('Are you sure you want to delete this program?')
                             ->method('delete', [
                                 'id' => $course->id
                             ])
-                            ->render();
-
-                        return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
+                            ->class('btn btn-danger btn-sm link-danger'),
+                    ])->fullWidth();
                     })
 
 

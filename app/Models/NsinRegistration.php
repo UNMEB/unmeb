@@ -28,4 +28,9 @@ class NsinRegistration extends Model
     {
         return $this->hasMany(NsinStudentRegistration::class);
     }
+
+    public function year()
+    {
+        return $this->belongsTo(Year::class);
+    }
 }

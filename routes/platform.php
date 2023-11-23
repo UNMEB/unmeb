@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Models\Institution;
 use App\Models\NsinRegistration;
+use App\Models\Student;
 use App\Orchid\Screens\Administration\Course\CourseAssignPapersListScreen;
 use App\Orchid\Screens\Administration\Course\CourseListScreen;
 use App\Orchid\Screens\Administration\District\DistrictListScreen;
@@ -16,9 +18,9 @@ use App\Orchid\Screens\Administration\Student\StudentListScreen;
 use App\Orchid\Screens\Administration\Surcharge\SurchargeFeeListScreen;
 use App\Orchid\Screens\Administration\Surcharge\SurchargeListScreen;
 use App\Orchid\Screens\Administration\Years\YearListScreen;
-use App\Orchid\Screens\Assessment\PracticalAssessmentListScreen;
-use App\Orchid\Screens\Assessment\ResultsAssessmentListScreen;
-use App\Orchid\Screens\Assessment\TheoryAssessmentListScreen;
+use App\Orchid\Screens\Assessment\ContinuousAssessmentListScreen;
+use App\Orchid\Screens\Assessment\InstitutionAssessmentListScreen;
+
 use App\Orchid\Screens\Biometric\StudentEnrollmentListScreen;
 use App\Orchid\Screens\Biometric\StudentVerificationListScreen;
 use App\Orchid\Screens\Comment\CommentListScreen;
@@ -133,116 +135,87 @@ Route::screen('roles', RoleListScreen::class)
         ->push(__('Roles'), route('platform.systems.roles')));
 
 
-// Platform > Assessment > Theory
-Route::screen('assessments/theory', TheoryAssessmentListScreen::class)
-    ->name('platform.assessment.theory.list')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.index')
-    ->push(
-        __('Theory Assessments'),
-        route('platform.assessment.theory.list')
-    ));
-
-// Platform > Assessment > Practical
-Route::screen('assessments/practical', PracticalAssessmentListScreen::class)
-    ->name('platform.assessment.practical.list')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.index')
-        ->push(
-            __('Practical Assessments'),
-            route('platform.assessment.practical.list')
-        ));
-
-// Platform > Assessment > Results
-Route::screen('assessments/results', ResultsAssessmentListScreen::class)
-    ->name('platform.assessment.results')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.index')
-        ->push(
-            __('Assessment Results'),
-            route('platform.assessment.results')
-        ));
 
 // Platform > Administration > Insitutions > Assign Programs
 Route::screen('administration/institutions/{institution}/assign', InstitutionAssignCoursesListScreen::class)
-    ->name('platform.administration.institutions.assign')
+->name('platform.institutions.assign')
     ->breadcrumbs(fn (Trail $trail, $institution) => $trail
-        ->parent('platform.administration.institutions')
-        ->push($institution->institution_name, route('platform.administration.institutions.assign', $institution)));
+->parent('platform.institutions')
+->push($institution->institution_name, route('platform.institutions.assign', $institution)));
 
 // Platform > Administration > Institutions
 Route::screen('administration/institutions', InstitutionListScreen::class)
-    ->name('platform.administration.institutions')
+->name('platform.institutions')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(
             __('Institutions'),
-            route('platform.administration.institutions')
+    route('platform.institutions')
         ));
 
 // Platform > Administration > Courses > Assign Papers
 Route::screen('administration/courses/{course}/assign', CourseAssignPapersListScreen::class)
-    ->name('platform.administration.courses.assign')
+->name('platform.courses.assign')
     ->breadcrumbs(fn (Trail $trail, $course) => $trail
-        ->parent('platform.administration.courses')
-        ->push($course->course_name, route('platform.administration.courses.assign', $course)));
+->parent('platform.courses')
+->push($course->course_name, route('platform.courses.assign', $course)));
 
 
 // Platform > Administration > Programs
 Route::screen('administration/courses', CourseListScreen::class)
-    ->name('platform.administration.courses')
+->name('platform.courses')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(
     __('Programs'),
-            route('platform.administration.courses')
+    route('platform.courses')
         ));
 
 // Platform > Administration > Papers
 Route::screen('administration/papers', PaperListScreen::class)
-    ->name('platform.administration.papers')
+->name('platform.papers')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(
             __('Papers'),
-            route('platform.administration.papers')
+    route('platform.papers')
         ));
 
 // Platform > Administration > Years
 Route::screen('administration/years', YearListScreen::class)
-    ->name('platform.administration.years')
+->name('platform.years')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(
             __('Years'),
-            route('platform.administration.years')
+    route('platform.years')
         ));
 
 // Platform > Administration > Districts
 Route::screen('administration/districts', DistrictListScreen::class)
-    ->name('platform.administration.districts')
+->name('platform.districts')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(
             __('Districts'),
-            route('platform.administration.districts')
+    route('platform.districts')
         ));
 
 // Platform > Administration > Surcharges
 Route::screen('administration/surcharges', SurchargeListScreen::class)
-    ->name('platform.administration.surcharges')
+->name('platform.surcharges')
     ->breadcrumbs(
         fn (Trail $trail) => $trail
             ->parent('platform.index')
             ->push(
                 __('Surcharges'),
-                route('platform.administration.surcharges')
+        route('platform.surcharges')
             )
     );
 
 // Platform > Administration > Surcharge Fees
 Route::screen('administration/surcharge-fees', SurchargeFeeListScreen::class)
-    ->name('platform.administration.surcharge-fees')
+->name('platform.surcharge-fees')
     ->breadcrumbs(
         fn (Trail $trail) => $trail
             ->parent('platform.index')
@@ -258,45 +231,35 @@ Route::screen('comments', CommentListScreen::class)
 
 // Platform > Administration > Staff > Edit
 Route::screen('staff/{staff}/edit', StaffEditScreen::class)
-    ->name('platform.administration.staff.edit')
+->name('platform.staff.edit')
     ->breadcrumbs(fn (Trail $trail, $staff) => $trail
-        ->parent('platform.administration.staff')
-        ->push($staff->staff_name, route('platform.administration.staff.edit', $staff)));
+->parent('platform.staff')
+->push($staff->staff_name, route('platform.staff.edit', $staff)));
 
 // Platform > Administration > Staff > Create
 Route::screen('staff/create', StaffEditScreen::class)
-    ->name('platform.administration.staff.create')
+->name('platform.staff.create')
     ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.administration.staff')
-        ->push(__('Create'), route('platform.administration.staff.create')));
+->parent('platform.staff')
+->push(
+    __('Create'),
+    route('platform.staff.create')
+));
 
 // Platform > Administration > Staff
 Route::screen('staff', StaffListScreen::class)
-    ->name('platform.administration.staff')
+->name('platform.staff')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
-        ->push(__('Staff'), route('platform.administration.staff')));
+    ->push(__('Staff'), route('platform.staff')));
 
-// Platform > Administration > Students > Edit
-Route::screen('students/{student}/edit', StaffEditScreen::class)
-    ->name('platform.administration.students.edit')
-    ->breadcrumbs(fn (Trail $trail, $student) => $trail
-        ->parent('platform.administration.student')
-        ->push($student->fullName, route('platform.administration.students.edit', $student)));
-
-// Platform > Staff > Create
-Route::screen('students/create', StudentEditScreen::class)
-    ->name('platform.administration.students.create')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.administration.students')
-        ->push(__('Create'), route('platform.administration.students.create')));
 
 // Platform > Administration > Students
 Route::screen('students', StudentListScreen::class)
-    ->name('platform.administration.students')
+->name('platform.students')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
-        ->push(__('Students'), route('platform.administration.students')));
+->push(__('Students'), route('platform.students')));
 
 // Platform > Registration > NSIN > Incomplete > Details
 Route::screen('registrations/nsin/incomplete/details', IncompleteNsinRegistrationDetails::class)
@@ -460,3 +423,14 @@ Route::screen('reports/nsin_registration', NSINRegistrationReportScreen::class)
 // Platform  > Reports > Registration > Exam
 Route::screen('reports/exam_registration', ExamRegistrationReportScreen::class)
     ->name('platform.reports.exam_registration');
+
+// Platform > Assessment > Institution
+// Route::screen('assessment/{institution}/list', InstitutionAssessmentListScreen::class)
+//     ->name('platform.assessment.institution.list')
+//     ->breadcrumbs(fn (Trail $trail, Institution $institution) => $trail
+//         ->parent('platform.assessment.list')
+//         ->push($institution->short_name, route('platform.assessment.institution.list', $institution)));
+
+// Platform > Assessment > List
+Route::screen('assessment', ContinuousAssessmentListScreen::class)
+    ->name('platform.assessment.list');

@@ -87,9 +87,7 @@
 
 
 
-    <script type="text/javascript" src="{{ asset('FileSaver.min.js')}}"></script>
-    <script type="text/javascript" src="{{ asset('xlsx.core.min.js')}}"></script>
-    <script type="text/javascript" src="{{ asset('tableExport.min.js')}}"></script>
+    
 
     @stack('scripts')
 

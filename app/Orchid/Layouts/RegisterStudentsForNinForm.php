@@ -16,8 +16,9 @@ use Orchid\Support\Facades\Layout;
 class RegisterStudentsForNinForm extends Listener
 {
 
-    public $courses  = [];
+    public $courses  = null;
     public $students = [];
+    public $institutionId;
 
 
     /**
@@ -67,16 +68,21 @@ class RegisterStudentsForNinForm extends Listener
 
                 Select::make('course_id')
                     ->title('Select Program')
+                    ->empty('No Course Selected')
                     ->options($this->courses)
-                    ->canSee(count($this->courses) > 0),
+                ->canSee($this->courses != null)
+                ->required(),
 
                 // Select Students
                 Relation::make('student_ids')
                     ->fromModel(Student::class, 'id')
                     ->title('Select students to register for NSIN')
                     ->multiple()
-                    ->displayAppend('fullName')
+                ->displayAppend('studentWithNin')
                     ->searchColumns('surname', 'othername', 'firstname')
+                ->applyScope('filterByInstitution', [
+                    'id' => $this->institutionId
+                ])
                     ->chunk(100),
             ])
         ];
@@ -100,6 +106,10 @@ class RegisterStudentsForNinForm extends Listener
         $institution = Institution::find($institutionId);
 
         $this->courses = $institution->courses->pluck('course_name', 'id');
+
+        if ($institution) {
+            $this->institutionId = $institution->id;
+        }
 
         return $repository
             ->set('nsin_registration_period_id', $nsinRegistrationPeriodId)

@@ -239,7 +239,7 @@ class IncompleteExamRegistration extends Screen
             'account_id' => $institution->account->id,
             'institution_id' => $institution->id,
             'initiated_by' => auth()->user()->id,
-            'is_approved' => 1,
+            'status' => 'approved',
             'comment'  => 'Exam Registration',
         ]);
 

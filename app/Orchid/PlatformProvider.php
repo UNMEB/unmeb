@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Orchid;
 
+use App\Models\Institution;
 use App\Models\Transaction;
 use Orchid\Platform\Dashboard;
 use Orchid\Platform\ItemPermission;
@@ -42,30 +43,21 @@ class PlatformProvider extends OrchidServiceProvider
 
             // Continuous Assessment
             Menu::make(__('Continuous Assessment'))
-                ->icon('fa.file-signature')
-            ->list([Menu::make(_('Theory Assessment'))
-                        ->route('platform.assessment.theory.list'),
-
-                Menu::make(_('Practical Assessment'))
-                        ->route('platform.assessment.practical.list'),
-
-
-                Menu::make(_('Assessment Marks'))
-                        ->route('platform.assessment.results'),
-                ])
+            ->route('platform.assessment.list')
+            ->icon('fa.file-signature')
                 ->permission('platform.assessment.list'),
 
             // Manage Students
             Menu::make(__('Manage Students'))
-                ->route('platform.administration.students')
+            ->route('platform.students')
             ->icon('fa.user-graduate')
-                ->permission('platform.administration.students.list'),
+            ->permission('platform.students.list'),
 
             // Manage Staff
             Menu::make(__('Manage Staff'))
-            ->route('platform.administration.staff')
+            ->route('platform.staff')
             ->icon('fa.user-graduate')
-            ->permission('platform.administration.staff.list'),
+            ->permission('platform.staff.list'),
 
             // Manage Student NSIN Registration
             Menu::make(__('Student NSIN Registration'))
@@ -120,11 +112,35 @@ class PlatformProvider extends OrchidServiceProvider
             ->permission('platform.registration.periods.exam.list')
                 ->divider(),
 
+            // Manage Administration
+            Menu::make('Administration')
+            ->icon('bs.briefcase')
+            ->title('')
+                ->list([
+
+                    Menu::make('Districts')
+                        ->route('platform.districts'),
+
+                    Menu::make('Institutions')
+                    ->route('platform.institutions'),
+
+                    Menu::make('Programs')
+                        ->route('platform.courses'),
+
+                    Menu::make('Papers')
+                        ->route('platform.papers'),
+
+                    Menu::make('Years')
+                        ->route('platform.years'),
+                ])
+                ->permission('platform.administration.list')
+                ->divider(),
+
             // Manage Finance
             Menu::make(__('Finance'))
                 ->icon('bs.book')
                 ->badge(function () {
-                    $pendingTransactionCount = Transaction::where('is_approved', false)->count();
+                $pendingTransactionCount = Transaction::where('status', 'pending')->count();
                     if ($pendingTransactionCount > 0) {
                         return $pendingTransactionCount;
                     }
@@ -146,7 +162,7 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make('Pending Transactions')
                         ->route('platform.systems.finance.pending')
                         ->badge(function () {
-                            $pendingTransactionCount = Transaction::where('is_approved', false)->count();
+                    $pendingTransactionCount = Transaction::where('status', 'pending')->count();
                             if ($pendingTransactionCount > 0) {
                                 return $pendingTransactionCount;
                             }
@@ -168,18 +184,18 @@ class PlatformProvider extends OrchidServiceProvider
                 ->route('platform.reports.exam_registration'),
                     Menu::make('Financial Report'),
                 ])
-                ->permission('platform.administration.reports.list')
+                ->permission('platform.reports.list')
                 ->divider(),
 
             Menu::make('Surcharges & Fees')
                 ->icon('bs.archive')
                 ->list([
                     Menu::make('Surcharges')
-                        ->route('platform.administration.surcharges'),
+                ->route('platform.surcharges'),
                     Menu::make('Surcharge Fees')
-                        ->route('platform.administration.surcharge-fees'),
+                ->route('platform.surcharge-fees'),
                 ])
-                ->permission('platform.administration.surcharges.list')
+                ->permission('platform.surcharges.list')
                 ->divider(),
 
             Menu::make('Comments')
@@ -210,26 +226,45 @@ class PlatformProvider extends OrchidServiceProvider
     {
         return [
             // Manage Continuous Assessment
-            ItemPermission::group('Continuos Assessment')
+            ItemPermission::group('Continuous Assessment')
             ->addPermission('platform.assessment.list', 'Access continuous Assessment'),
 
             // Manage Students
             ItemPermission::group('Manage Students')
-                ->addPermission('platform.administration.students.list', 'View students')
-                ->addPermission('platform.administration.students.create', 'Create students')
-                ->addPermission('platform.administration.students.update', 'Update students')
-                ->addPermission('platform.administration.students.delete', 'Delete students')
-                ->addPermission('platform.administration.students.import', 'Import students')
-                ->addPermission('platform.administration.students.export', 'Export students'),
+                ->addPermission('platform.students.list', 'View students')
+                ->addPermission('platform.students.create', 'Create students')
+                ->addPermission('platform.students.update', 'Update students')
+                ->addPermission('platform.students.delete', 'Delete students')
+                ->addPermission('platform.students.import', 'Import students')
+                ->addPermission('platform.students.export', 'Export students'),
 
             // Manage Staff
             ItemPermission::group('Manage Staff')
-                ->addPermission('platform.administration.staff.list', 'View staff')
-                ->addPermission('platform.administration.staff.create', 'Create staff')
-                ->addPermission('platform.administration.staff.update', 'Update staff')
-                ->addPermission('platform.administration.staff.delete', 'Delete staff')
-                ->addPermission('platform.administration.staff.import', 'Import staff')
-                ->addPermission('platform.administration.staff.export', 'Export staff'),
+                ->addPermission('platform.staff.list', 'View staff')
+                ->addPermission(
+                    'platform.staff.create',
+                    'Create staff'
+                )
+                ->addPermission(
+                    'platform.staff.update',
+                    'Update staff'
+                )
+                ->addPermission(
+                    'platform.staff.delete',
+                    'Delete staff'
+                )
+                ->addPermission(
+                    'platform.staff.import',
+                    'Import staff'
+                )
+                ->addPermission(
+                    'platform.staff.export',
+                    'Export staff'
+                ),
+
+            // Manage Administration
+            ItemPermission::group('Manage Administration')
+            ->addPermission('platform.administration.list', 'View administration'),
 
             // Manage NSIN Student Registration
             ItemPermission::group('Manage NSIN Registrations')
@@ -279,23 +314,26 @@ class PlatformProvider extends OrchidServiceProvider
 
             // Manage Report
             ItemPermission::group('Manage Reports')
-                ->addPermission('platform.administration.reports.list', 'View Reports')
-                ->addPermission('platform.administration.reports.packing_list', 'View Packing List Report')
-                ->addPermission('platform.administration.reports.nsin_registration', 'View NSIN Registration Report')
-                ->addPermission('platform.administration.reports.exam_registration', 'View Exam Registration Report'),
+                ->addPermission(
+                    'platform.reports.list',
+                    'View Reports'
+                )
+                ->addPermission('platform.reports.packing_list', 'View Packing List Report')
+                ->addPermission('platform.reports.nsin_registration', 'View NSIN Registration Report')
+                ->addPermission('platform.reports.exam_registration', 'View Exam Registration Report'),
 
             // Manage Surcharges  Surcharge Fees
             ItemPermission::group('Manage Surcharges & Fees')
-            ->addPermission('platform.administration.surcharges.list', 'Manage Surcharges & Fees')
-            ->addPermission('platform.administration.surcharges.types.list', 'View Surcharges')
-            ->addPermission('platform.administration.surcharges.types.create', 'Create Surcharges')
-            ->addPermission('platform.administration.surcharges.types.update', 'Update Surcharges')
-            ->addPermission('platform.administration.surcharges.types.delete', 'Delete Surcharges')
-            ->addPermission('platform.administration.surcharges.fees.list', 'View Surcharge Fees')
-            ->addPermission('platform.administration.surcharges.fees.create', 'Create Surcharge Fee')
-            ->addPermission('platform.administration.surcharges.fees.update', 'Update Surcharge Fee')
-            ->addPermission('platform.administration.surcharges.fees.delete', 'Delete Surcharge Fee')
-            ->addPermission('platform.administration.surcharges.fees.export', 'Export Surcharge Fees'),
+            ->addPermission('platform.surcharges.list', 'Manage Surcharges & Fees')
+            ->addPermission('platform.surcharges.types.list', 'View Surcharges')
+            ->addPermission('platform.surcharges.types.create', 'Create Surcharges')
+            ->addPermission('platform.surcharges.types.update', 'Update Surcharges')
+            ->addPermission('platform.surcharges.types.delete', 'Delete Surcharges')
+            ->addPermission('platform.surcharges.fees.list', 'View Surcharge Fees')
+            ->addPermission('platform.surcharges.fees.create', 'Create Surcharge Fee')
+            ->addPermission('platform.surcharges.fees.update', 'Update Surcharge Fee')
+            ->addPermission('platform.surcharges.fees.delete', 'Delete Surcharge Fee')
+            ->addPermission('platform.surcharges.fees.export', 'Export Surcharge Fees'),
 
 
 

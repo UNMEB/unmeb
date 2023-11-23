@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\InstitutionScope;
 use App\Orchid\Filters\StudentNameFilter;
 use App\Traits\OrderByLatest;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -14,6 +16,8 @@ use Orchid\Filters\Types\Like;
 use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+
+
 
 class Student extends Model
 {
@@ -97,6 +101,11 @@ class Student extends Model
         return auth()->user();
     }
 
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
+
     /**
      * Accessor for the "studentWithNsin" attribute.
      *
@@ -107,26 +116,19 @@ class Student extends Model
         return "{$this->firstname} - {$this->surname} - ({$this->nsin})";
     }
 
-    protected static function booted()
+    public function getStudentWithNinAttribute()
     {
-        // Add a global scope to filter students based on user's institution access
-        static::addGlobalScope('institutionAccess', function (Builder $builder) {
-            $user = auth()->user();
-
-            if ($user && $user->hasAccess('platform.internals.all_institutions')) {
-                // User has access to all institutions, no need to filter
-                return;
-            }
-
-            // Use the user's institution ID to filter students
-            $builder->whereHas('nsinStudentRegistrations.nsinRegistration', function ($query) use ($user) {
-                if ($user->institution) {
-                    $query->where('institution_id', $user->institution->id);
-                }
-            });
-        });
+        return "{$this->firstname} - {$this->surname} - ({$this->nin})";
     }
 
+    protected static function booted()
+    {
+        $user = auth()->user() ?? null;
+        static::addGlobalScope(new InstitutionScope($user));
+    }
 
-
+    public function scopeFilterByInstitution($query, $data)
+    {
+        return $query->where('institution_id', $data['id']);
+    }
 }

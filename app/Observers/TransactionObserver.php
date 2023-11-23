@@ -16,7 +16,7 @@ class TransactionObserver
 
     public function created(Transaction $transaction)
     {
-        if ($transaction->is_approved == 0  && $transaction->type == 'credit') {
+        if ($transaction->status == 'pending'  && $transaction->type == 'credit') {
 
             $adminRole = Role::firstWhere('slug', 'system-admin');
             $accountRole = Role::firstWhere('slug', 'accountant');
@@ -46,7 +46,7 @@ class TransactionObserver
     public function updated(Transaction $transaction): void
     {
         // Check approval status
-        if ($transaction->is_approved == 1 && $transaction->type == 'credit') {
+        if ($transaction->status == 'approved' && $transaction->type == 'credit') {
             // Increment the account balance for the institution
             $transaction->account->increment('balance', $transaction->amount);
 

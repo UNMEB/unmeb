@@ -23,6 +23,7 @@ use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
+use Orchid\Support\Color;
 use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
@@ -128,17 +129,11 @@ class InstitutionListScreen extends Screen
                 TD::make('code', __('Code')),
                 TD::make('email', __('Email Address')),
                 TD::make('phone_no', __('Phone Number')),
-
-                TD::make(__('Assign'))
-                    ->width(200)
-                    ->cantHide()
-                    ->align(TD::ALIGN_CENTER)
-                    ->render(fn (Institution $institution) => Link::make('Assign Programs')
-                        ->route('platform.administration.institutions.assign', $institution->id)),
                 TD::make(__('Actions'))
                     ->alignCenter()
                     ->render(function (Institution $institution) {
-                        return Group::make([
+                    return Group::make([Link::make('Programs')->class('btn btn-primary btn-sm link-primary')
+                            ->route('platform.institutions.assign', $institution->id),
                             ModalToggle::make('Edit')
                                 ->icon('fa.edit')
                                 ->method('edit')
@@ -146,12 +141,14 @@ class InstitutionListScreen extends Screen
                                 ->modalTitle('Edit Institution')
                                 ->asyncParameters([
                                     'institution' => $institution->id
-                                ]),
+                            ])
+                            ->class('btn btn-success btn-sm link-success'),
                             Button::make('Delete')
                                 ->confirm('Are you sure you want to delete this institution?')
                                 ->method('delete', [
                                     'id' => $institution->id
                                 ])
+                        ->class('btn btn-danger btn-sm link-danger')
                         ]);
                     })
 
@@ -438,7 +435,7 @@ class InstitutionListScreen extends Screen
         }
 
         // Generate the URL with the filter parameters using the "institutions" route
-        $url = route('platform.administration.institutions', $filterParams);
+        $url = route('platform.institutions', $filterParams);
 
         // Redirect to the generated URL
         return Redirect::to($url);
@@ -451,6 +448,6 @@ class InstitutionListScreen extends Screen
      */
     public function reset(Request $request)
     {
-        return redirect()->route('platform.administration.institutions');
+        return redirect()->route('platform.institutions');
     }
 }

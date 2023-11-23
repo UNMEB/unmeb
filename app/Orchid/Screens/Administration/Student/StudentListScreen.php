@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens\Administration\Student;
 
+use App\Exports\StudentExport;
 use App\Models\Account;
 use App\Models\Course;
 use App\Models\District;
@@ -13,7 +14,9 @@ use App\Models\Student;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Year;
+use App\Orchid\Layouts\AddNewStudentForm;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
+use Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
@@ -33,6 +36,7 @@ use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Excel as ExcelExcel;
 
 class StudentListScreen extends Screen
 {
@@ -91,12 +95,12 @@ class StudentListScreen extends Screen
             ->modal('uploadStudentsModal')
             ->method('upload')
             ->icon('upload')
-            ->canSee(auth()->user()->hasAccess('platform.administration.students.import')),
+            ->canSee(auth()->user()->hasAccess('platform.students.import')),
 
             Button::make('Export Data')
             ->method('download')
             ->rawClick(false)
-            ->canSee(auth()->user()->hasAccess('platform.administration.students.export'))
+            ->canSee(auth()->user()->hasAccess('platform.students.export'))
         ];
     }
 
@@ -175,9 +179,13 @@ class StudentListScreen extends Screen
                             'student' => $student->id
                         ]),
 
-                            Link::make(__('Edit'))
-                    ->route('platform.administration.students.edit', $student->id)
-                                ->icon('bs.pencil'),
+                    ModalToggle::make('Edit')
+                        ->icon('bs.people')
+                        ->modal('asyncEditStudentModal')
+                        ->modalTitle('Edit Student Profile')
+                        ->asyncParameters([
+                            'student' => $student->id
+                        ]),
 
                             Button::make(__('Delete'))
                                 ->icon('bs.trash3')
@@ -191,15 +199,24 @@ class StudentListScreen extends Screen
             Layout::modal('registerStudentModal', RegisterStudentsForNinForm::class)
                 ->title('Register Students For NSIN'),
 
-            Layout::modal('createStudentModal', Layout::rows([
+            Layout::modal('createStudentModal', AddNewStudentForm::class)
+                ->size(Modal::SIZE_LG)
+                ->title('Create Student')
+                ->applyButton('Create Student')
+                ,
+
+            Layout::modal('asyncEditStudentModal', Layout::rows([
 
                 Group::make([
                     Input::make('student.surname')
                     ->title('Surname')
-                        ->placeholder('Enter Surname'),
+                        ->placeholder('Enter Surname')
+                        ->required(),
+
 
                     Input::make('student.firstname')
                     ->title('First Name')
+                        ->required()
                         ->placeholder('Enter First name'),
 
                     Input::make('student.othername')
@@ -214,19 +231,22 @@ class StudentListScreen extends Screen
                         'Female' => 'FEMALE',
                     ])
                         ->title('Student Gender')
-                        ->empty('Non Selected'),
+                        ->empty('Non Selected')
+                        ->required(),
 
 
                     Input::make('student.dob')
-                        ->title('Date Of Birth')
-                        ->type('date')
-                        ->placeholder('Enter date of birth'),
+                    ->title('Date Of Birth')
+                    ->type('date')
+                        ->placeholder('Enter date of birth')
+                        ->required(),
                 ]),
 
                 Group::make([
                     Input::make('student.telephone')
                     ->title('Phone Number')
-                        ->placeholder('Enter phone number'),
+                    ->placeholder('Enter phone number'),
+
                     Input::make('student.email')
                     ->title('Student Email Address')
                     ->placeholder('Enter email address'),
@@ -236,27 +256,30 @@ class StudentListScreen extends Screen
                     Select::make('student.district_id')
                     ->title('District')
                         ->fromModel(District::class, 'district_name')
-                        ->empty('Non Selected'),
+                        ->empty('Non Selected')
+                        ->required(),
 
                     Input::make('student.location')
                     ->title('Address')
-                        ->placeholder('Enter student address'),
+                        ->placeholder('Enter student address')
+                        ->required(),
                 ]),
 
-                Input::make('student.passport')
-                ->title('Provide Passport Photo')
-                ->type('file')
-                    ->name('student.passport')
-                    ->placeholder('Enter student passport photo'),
+                Group::make([
+                    Input::make('student.passport')
+                    ->title('Provide Student Photo')
+                    ->type('file')
+                        ->name('student.passport')
+                        ->placeholder('Enter student passport photo')
+                        ->required(),
 
+                    Input::make('student.nin')
+                    ->title('National Identification Number / Passport Number')
+                    ->required(),
 
-            ]))
-                ->size(Modal::SIZE_LG)
-                ->title('Create Student')
-                ->applyButton('Create Student')
-                ,
+                ]),
 
-            Layout::modal('asyncEditStudentModal', Layout::rows([]))->async('asyncGetStudent'),
+            ]))->async('asyncGetStudent'),
 
             Layout::modal('asyncViewStudentModal', Layout::columns([
                 Layout::view('student_profile', [
@@ -311,24 +334,46 @@ class StudentListScreen extends Screen
             'student.passport' => 'required|file',
             'student.telephone' => 'required',
             'student.email' => 'required',
-            'student.district_id' => 'required'
+            'student.district_id' => 'required',
+            'student.nin' => 'required',
         ]);
 
-        $student = new Student();
-        // Create a new Student record and set its attributes
-        $student = new Student();
-        $student->firstname = $request->input('student.firstname');
-        $student->surname = $request->input('student.surname');
-        $student->othername = $request->input('student.othername');
-        $student->nsin = $request->input('student.nsin');
-        $student->dob = $request->input('student.dob');
-        $student->gender = $request->input('student.gender');
-        $student->district_id = $request->input('student.district_id');
-        $student->telephone = $request->input('student.telephone');
-        $student->email = $request->input('student.email');
-        $student->date_time = now();
+        $student = null;
 
-        // Check if a file was uploaded
+        $previousNSIN = $request->input('previous_nsin');
+
+
+        if ($previousNSIN != null) {
+            $student = Student::firstWhere('nsin', $previousNSIN);
+            $student->firstname = $request->input('student.firstname');
+            $student->surname = $request->input('student.surname');
+            $student->othername = $request->input('student.othername');
+            $student->nsin = null;
+            $student->dob = $request->input('student.dob');
+            $student->gender = $request->input('student.gender');
+            $student->district_id = $request->input('student.district_id');
+            $student->telephone = $request->input('student.telephone');
+            $student->email = $request->input('student.email');
+            $student->date_time = now();
+            $student->nin = $request->input('student.nin');
+            $student->institution_id = $request->input('institution_id');
+        } else {
+            $student = new Student();
+            $student->firstname = $request->input('student.firstname');
+            $student->surname = $request->input('student.surname');
+            $student->othername = $request->input('student.othername');
+            $student->nsin = null;
+            $student->dob = $request->input('student.dob');
+            $student->gender = $request->input('student.gender');
+            $student->district_id = $request->input('student.district_id');
+            $student->location = $request->input('student.location');
+            $student->telephone = $request->input('student.telephone');
+            $student->email = $request->input('student.email');
+            $student->date_time = now();
+            $student->nin = $request->input('student.nin');
+            $student->institution_id = $request->input('institution_id');
+        }
+
         if ($request->hasFile('student.passport')) {
 
             // Get the uploaded file
@@ -357,6 +402,8 @@ class StudentListScreen extends Screen
         Alert::error("Passport photo is required");
 
         return  redirect()->back();
+
+
     }
 
     /**
@@ -439,8 +486,8 @@ class StudentListScreen extends Screen
             'account_id' => $institution->account->id,
             'institution_id' => $institution->id,
             'initiated_by' => auth()->user()->id,
-            'is_approved' => 1,
-            'comment'  => 'NSIN Registration',
+            'status' => 'approved',
+            'comment'  => 'SYSTEM ' . now() . ':: NSIN Registration',
         ]);
 
         $transaction->save();
@@ -478,7 +525,7 @@ class StudentListScreen extends Screen
             $filters['filter[district_id]'] = $district;
         }
 
-        $url = route('platform.administration.students', $filters);
+        $url = route('platform.students', $filters);
 
         return Redirect::to($url);
     }
@@ -490,7 +537,17 @@ class StudentListScreen extends Screen
      */
     public function reset(Request $request)
     {
-        return redirect()->route('platform.administration.students');
+        return redirect()->route('platform.students');
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function download(Request $request)
+    {
+        return Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
     }
 
 }

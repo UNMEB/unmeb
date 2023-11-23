@@ -16,6 +16,11 @@
 @endpush
 
 @push('scripts')
+
+    <script type="text/javascript" src="{{ asset('FileSaver.min.js')}}"></script>
+    <script type="text/javascript" src="{{ asset('xlsx.core.min.js')}}"></script>
+    <script type="text/javascript" src="{{ asset('tableExport.min.js')}}"></script>
+
     <script>
         jQuery(document).ready(function() {
             jQuery("#pivotContainer").pivotUI(<?php echo json_encode($report); ?>, {

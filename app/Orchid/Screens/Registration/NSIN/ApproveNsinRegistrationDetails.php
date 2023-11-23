@@ -8,10 +8,12 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Orchid\Screen\Screen;
 use Illuminate\Support\Str;
+use Log;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\TD;
 use Orchid\Support\Color;
@@ -134,30 +136,27 @@ class ApproveNsinRegistrationDetails extends Screen
                 TD::make('email', 'Email'),
                 TD::make('remarks', 'Remarks'),
                 TD::make('action', 'Actions')->render(function ($row) {
-                    if ($row->verify == 0) {
-                        return Button::make('Approve')
+                    return Group::make([
+                        Button::make('Approve')
                             ->type(Color::SUCCESS)
                             ->method('approve', [
                                 'id' => $row->id,
                                 'nsin_registration_id' => $this->nsinRegistrationId,
                                 'course_id' => $this->courseId,
                                 'institution_id' => $this->institutionId
-                            ]);
-                    } else if ($row->verify == 1) {
-                        return  ModalToggle::make('Reject')
+                            ])->canSee($row->verify == 0),
+
+                        ModalToggle::make('Reject')
                             ->modal('rejectRegistrationModal')
                             ->modalTitle('Reject NSIN Registration')
                             ->method('reject', [
                                 'id' => $row->id,
-                            ])
-                            ->type(Color::DANGER)
-                            ->asyncParameters([
-                                'student' => $row->id,
                                 'nsin_registration_id' => $this->nsinRegistrationId,
                                 'course_id' => $this->courseId,
                                 'institution_id' => $this->institutionId
-                            ]);
-                    }
+                            ])
+                            ->type(Color::DANGER),
+                    ]);
                 })
             ]),
 
@@ -169,6 +168,7 @@ class ApproveNsinRegistrationDetails extends Screen
                 ]),
 
                 Layout::rows([
+
                     TextArea::make('remarks')
                         ->title('Reason for Rejecting Student')
                         ->placeholder('Enter reason for rejection...')
@@ -206,21 +206,22 @@ class ApproveNsinRegistrationDetails extends Screen
 
             Alert::success('Student NSIN Registration approved');
 
-            return redirect()->back();
+            // return redirect()->back();
+            return;
         }
 
         Alert::error("Unable to approve student at the moment");
 
-        return redirect()->back();
+        // return redirect()->back();
     }
 
-    public function reject(Request $request)
+    public function reject(Request $request, $id)
     {
         $data = request()->all();
 
         $nsinStudentRegistration = NsinStudentRegistration::query()
             ->where('nsin_registration_id', $data['nsin_registration_id'])
-            ->where('student_id', $data['student'])
+            ->where('student_id', $id)
             ->latest()
             ->first();
 
@@ -230,13 +231,16 @@ class ApproveNsinRegistrationDetails extends Screen
                 'remarks' => $data['remarks']
             ]);
 
-            Alert::success('Student NSIN Registration reject action complete');
+            $nsinStudentRegistration->save();
+
+            Alert::success('Student NSIN Registration rejected');
 
             return redirect()->back();
         }
 
-        Alert::error("Unable to complete reject action for student at the moment");
+        Alert::error("Unable to approve student at the moment");
 
         return redirect()->back();
+
     }
 }

@@ -2,14 +2,18 @@
 
 namespace App\Orchid\Screens\Finance\Account;
 
+use App\Exports\InstitutionAccountExport;
 use App\Models\Account;
 use App\Models\Institution;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\Currency;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
+use Orchid\Screen\Fields\DateRange;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
@@ -55,9 +59,21 @@ class AccountListScreen extends Screen
             ModalToggle::make('Deposit Funds')
                 ->modal('depositFundsModal')
                 ->method('deposit')
-                ->icon('wallet'),
+                ->icon('wallet')
+                ->class('btn btn-primary btn-sm link-primary'),
+
+            Button::make('Export Accounts')
+                ->method('export')
+                ->icon('archive')
+                ->class('btn btn-success btn-sm link-success')
+                ->rawClick(false),
         ];
 
+    }
+
+    public function description(): string
+    {
+        return 'View, filter and export institution account balances';
     }
 
     /**
@@ -99,6 +115,14 @@ class AccountListScreen extends Screen
             ]))
                 ->title('Deposit Funds')
                 ->applyButton('Deposit Funds'),
+
+            Layout::modal('exportAccounts', Layout::rows([
+                DateRange::make('date_range')
+                ->title('Filter By Date')
+                ->format('Y-m-d')
+                ->placeholder(''),
+            ]))
+            ->applyButton('Export Accounts'),
 
             Layout::table('accounts', [
                 TD::make('id', 'ID'),
@@ -186,5 +210,10 @@ class AccountListScreen extends Screen
     public function currentUser(): User
     {
         return auth()->user();
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(new InstitutionAccountExport, 'accounts.csv', \Maatwebsite\Excel\Excel::CSV);
     }
 }

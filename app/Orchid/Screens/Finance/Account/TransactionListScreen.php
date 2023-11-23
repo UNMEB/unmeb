@@ -31,7 +31,7 @@ class TransactionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $transactions = Transaction::with('institution', 'account')->where('is_approved', 1)->latest();
+        $transactions = Transaction::with('institution', 'account')->where('status', 'approved')->latest();
         return [
             'transactions' => $transactions->paginate()
         ];
@@ -116,11 +116,11 @@ class TransactionListScreen extends Screen
                 TD::make('amount', 'Amount')->render(function ($data) {
                     return 'Ush ' . number_format($data->amount);
                 }),
-                TD::make('is_approved', 'Approval Status')->render(function ($data) {
-                    return $data->is_approved == 1 ? 'Approved' : 'Pending';
+                TD::make('status', 'Approval Status')->render(function ($data) {
+                    return $data->status == 'approved' ? 'Approved' : 'Pending';
                 }),
                 TD::make('approved_by', 'Approved By')->render(function (Transaction $data) {
-                    return $data->is_approved == 1 ? optional($data->approvedBy)->name : 'Not Approved';
+                    return $data->status == 'approved' ? optional($data->approvedBy)->name : 'Not Approved';
                 }),
                 TD::make('comment', 'Comment'),
                 TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {

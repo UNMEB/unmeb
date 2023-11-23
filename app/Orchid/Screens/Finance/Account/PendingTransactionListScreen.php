@@ -31,7 +31,7 @@ class PendingTransactionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $transactions = Transaction::with('institution', 'account')->where('is_approved', 0)
+        $transactions = Transaction::with('institution', 'account')->where('status', 'pending')
         ->filters()
             ->defaultSort('id', 'desc')
             ->get();
@@ -170,19 +170,15 @@ class PendingTransactionListScreen extends Screen
                 TD::make('amount', 'Amount')->render(function ($data) {
                     return 'Ush ' . number_format($data->amount);
                 }),
-                TD::make('is_approved', 'Approval Status')->render(function ($data) {
-                    return $data->is_approved == 1 ? 'Approved' : 'Pending';
+                TD::make('status', 'Approval Status')->render(function ($data) {
+                    return $data->status == 'approved' ? 'Approved' : 'Pending';
                 }),
                 TD::make('approved_by', 'Approved By')->render(function (Transaction $data) {
-                    return $data->is_approved == 1 ? optional($data->approvedBy)->name : 'Not Approved';
+                    return $data->status == 'approved' ? optional($data->approvedBy)->name : 'Not Approved';
                 }),
                 TD::make('comment', 'Comment'),
                 TD::make('actions', 'Actions')->render(function (Transaction $data) {
-                    // return Button::make('Approve')->type(Color::SUCCESS)
-                    //     ->method('approve', [
-                    //         'id' => $data->id
-                    //     ])->disabled($data->is_approved == 1)
-                    //     ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'));
+
 
                     return Group::make([
                         ModalToggle::make('Approve')
@@ -205,6 +201,17 @@ class PendingTransactionListScreen extends Screen
                                 'transaction' => $data->id,
                             ])
                             ->class('btn btn-sm btn-danger'),
+
+                        ModalToggle::make('Flag')
+                            ->modal('flagTransactionModal')
+                            ->modalTitle('Flag Transaction')
+                            ->method('flag', [
+                                'id' => $data->id
+                            ])
+                            ->asyncParameters([
+                                'transaction' => $data->id,
+                            ])
+                            ->class('btn btn-sm btn-warning'),
                     ])->autoWidth();
 
 
@@ -241,11 +248,28 @@ class PendingTransactionListScreen extends Screen
 
                 Layout::rows([
                     TextArea::make('comment')
-                        ->title('Transaction decline remarks')
+                        ->title('Transaction decline reason')
                         ->placeholder('Start typing')
                 ])
             ])->async('asyncGetTransaction')
-            ->applyButton('Decline Transaction')
+            ->applyButton('Decline Transaction'),
+
+            Layout::modal('flagTransactionModal', [
+
+                Layout::view('transaction_info', [
+                    'amount' => null,
+                    'institution' => null,
+                    'type' => null,
+                    'message' => 'Flag '
+                ]),
+
+                Layout::rows([
+                    TextArea::make('comment')
+                        ->title('Transaction flag reason')
+                        ->placeholder('Start typing')
+                ])
+            ])->async('asyncGetTransaction')
+            ->applyButton('Flag Transaction')
         ];
     }
 
@@ -309,7 +333,7 @@ class PendingTransactionListScreen extends Screen
         $transaction = Transaction::find($id);
 
         $transaction->approved_by = auth()->user()->id;
-        $transaction->is_approved = 1;
+        $transaction->status = 'approved';
         $transaction->comment = $request->input('comment');
         $transaction->save();
 
@@ -327,7 +351,7 @@ class PendingTransactionListScreen extends Screen
         $transaction = Transaction::find($id);
 
         $transaction->approved_by = auth()->id();
-        $transaction->is_approved = 0;
+        $transaction->status = 'declined';
         $transaction->comment = $request->input('comment');
         $transaction->save();
 
@@ -335,6 +359,24 @@ class PendingTransactionListScreen extends Screen
 
         return back();
     }
+
+    public function flag(Request $request)
+    {
+        $id = $request->input('transaction');
+
+        $transaction = Transaction::find($id);
+
+        $transaction->approved_by = auth()->id();
+        $transaction->status = 'flagged';
+        $transaction->comment = $request->input('comment');
+        $transaction->save();
+
+        Alert::success('Transaction has been flagged and pending action');
+
+        return back();
+    }
+
+
 
     public function currentUser(): User
     {

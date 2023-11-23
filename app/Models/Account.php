@@ -32,7 +32,7 @@ class Account extends Model
         // Calculate the total amount of pending debit transactions
         $totalPendingDebits = Transaction::where('account_id', $this->id)
             ->where('type', 'credit')
-            ->where('is_approved', false)
+            ->where('status', 'pending')
             ->sum('amount');
 
         if ($totalPendingDebits > 0) {

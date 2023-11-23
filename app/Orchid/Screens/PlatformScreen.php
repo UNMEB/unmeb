@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
+use App\Models\Account;
 use App\Models\BiometricEnrollment;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\NsinStudentRegistration;
 use App\Models\Staff;
 use App\Models\Student;
+use App\Models\StudentRegistration;
+use App\Models\User;
 use App\View\Components\Chart;
 use App\View\Components\GenderDistributionByCourseChart;
 use App\View\Components\GenderDistributionChart;
@@ -35,13 +38,12 @@ class PlatformScreen extends Screen
     public function query(): iterable
     {
 
-        $data1 =  DB::table('student_registrations')
-            ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
-            ->join('courses', 'registrations.course_id', '=', 'courses.id')
-            ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
-            ->groupBy('registrations.course_id')
-            ->orderBy('registrations.course_id', 'asc')
-            ->get();
+        $data1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+        ->join('courses', 'registrations.course_id', '=', 'courses.id')
+        ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
+        ->groupBy('registrations.course_id')
+        ->orderBy('registrations.course_id', 'asc')
+        ->get();
 
         $genderDistributionByCourse = DB::select('
             SELECT
@@ -70,17 +72,19 @@ class PlatformScreen extends Screen
         $pendingNsin = NsinStudentRegistration::where('verify', 0)->count();
         $verifiedNsin = NsinStudentRegistration::where('verify', 1)->count();
 
+        $institutionCourses = $this->currentUser()->inRole('institution') && count($this->currentUser()->institution->courses);
+
         return [
             'metrics' => [
                 'institutions' => number_format(Institution::count()),
-                'courses' => Course::count(),
+                'courses' => $this->currentUser()->inRole('institution') ? $institutionCourses : Course::count(),
                 'students' => number_format(Student::count()),
                 'staff' => number_format(Staff::count()),
                 'biometric_enrollment' => BiometricEnrollment::count(),
                 'pending_nsin' => number_format($pendingNsin),
-                'verified_nsin' => number_format($verifiedNsin)
+                'verified_nsin' => number_format($verifiedNsin),
+                'account_balance' => Account::sum('balance')
             ],
-
             'student_registration_by_course' => $data1,
             'gender_distribution_by_course' => collect($genderDistributionByCourse),
             'institution_distribution_by_type' => collect($institutionDistributionByType),
@@ -93,6 +97,12 @@ class PlatformScreen extends Screen
      */
     public function name(): ?string
     {
+        $institution = $this->currentUser()->institution;
+
+        if ($institution) {
+            return $institution->institution_name;
+        }
+
         return 'Uganda Nurses And Midwives Examination Board';
     }
 
@@ -121,8 +131,10 @@ class PlatformScreen extends Screen
      */
     public function layout(): iterable
     {
-        return [
-            Layout::metrics([
+
+        $metrics = [];
+        if ($this->currentUser()->inRole('administrator')) {
+            $metrics = [
                 'Total Institutions' => 'metrics.institutions',
                 'Total Programs' => 'metrics.courses',
                 'Total Staff' => 'metrics.staff',
@@ -130,7 +142,18 @@ class PlatformScreen extends Screen
                 'Biometric Enrollment' => 'metrics.biometric_enrollment',
                 'Pending NSIN Registrations' => 'metrics.pending_nsin',
                 'Verified NSIN Registrations' => 'metrics.verified_nsin'
-            ]),
+            ];
+        } else if ($this->currentUser()->inRole('institution')) {
+            $metrics = [
+                'Account Balance' => 'metrics.account_balance',
+                'Total Programs' => 'metrics.courses',
+                'Total Staff' => 'metrics.staff',
+                'Total Students' => 'metrics.students',
+            ];
+        }
+
+        return [
+            Layout::metrics($metrics),
             Layout::columns([
 
                 // Student Registrations By Course
@@ -148,5 +171,10 @@ class PlatformScreen extends Screen
 
             ])
         ];
+    }
+
+    public function currentUser(): User
+    {
+        return auth()->user();
     }
 }
