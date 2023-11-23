@@ -124,11 +124,11 @@ class ApproveNsinRegistrationDetails extends Screen
 
                 TD::make('id', 'ID'),
                 // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
-                TD::make('district_id', 'District')->render(fn (Student $student) => $student->district->district_name),
+                TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
                 TD::make('NSIN', 'NSIN'),
@@ -204,15 +204,16 @@ class ApproveNsinRegistrationDetails extends Screen
                 'verify' => 1
             ]);
 
+            $nsinStudentRegistration->save();
+
             Alert::success('Student NSIN Registration approved');
 
-            // return redirect()->back();
-            return;
+            return redirect()->back();
         }
 
         Alert::error("Unable to approve student at the moment");
 
-        // return redirect()->back();
+        return redirect()->back();
     }
 
     public function reject(Request $request, $id)
