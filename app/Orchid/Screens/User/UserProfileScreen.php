@@ -102,6 +102,7 @@ class UserProfileScreen extends Screen
     {
         $request->validate([
             'user.name'  => 'required|string',
+            'user.picture' => 'required',
             'user.email' => [
                 'required',
                 Rule::unique(User::class, 'email')->ignore($request->user()),

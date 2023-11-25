@@ -19,6 +19,7 @@ class User extends Authenticatable
         'email',
         'password',
         'permissions',
+        'picture',
     ];
 
     /**
@@ -72,5 +73,17 @@ class User extends Authenticatable
     public function institution()
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    public function getAvatarAttribute()
+    {
+        // Check if there is a picture and image exists in public path
+        if ($this->picture) {
+            // Return img tag
+            return '<img src="' . $this->picture .  '" width="50px">';
+        }
+
+        // Return placeholder avatar
+        return '<img src="' . asset('placeholder/avatar.png') . '" width="50px">';
     }
 }

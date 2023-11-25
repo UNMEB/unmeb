@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens\User;
 
+use App\Models\User;
 use App\Orchid\Layouts\Role\RolePermissionLayout;
 use App\Orchid\Layouts\User\UserEditLayout;
 use App\Orchid\Layouts\User\UserPasswordLayout;
@@ -13,7 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Orchid\Access\Impersonation;
-use Orchid\Platform\Models\User;
+// use Orchid\Platform\Models\User;
 use Orchid\Screen\Action;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Screen;
@@ -156,7 +157,11 @@ class UserEditScreen extends Screen
                 'required',
                 Rule::unique(User::class, 'email')->ignore($user),
             ],
+            'user.picture' => 'required'
         ]);
+
+        $user->picture = $request->get('user.picture');
+        $user->save();
 
         $permissions = collect($request->get('permissions'))
             ->map(fn ($value, $key) => [base64_decode($key) => $value])
@@ -166,6 +171,8 @@ class UserEditScreen extends Screen
         $user->when($request->filled('user.password'), function (Builder $builder) use ($request) {
             $builder->getModel()->password = Hash::make($request->input('user.password'));
         });
+
+        // dd($request->collect('user'));
 
         $user
             ->fill($request->collect('user')->except(['password', 'permissions', 'roles'])->toArray())
