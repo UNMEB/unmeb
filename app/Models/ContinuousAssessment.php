@@ -18,7 +18,6 @@ class ContinuousAssessment extends Model
         'course_id',
         'paper_id',
         'student_id',
-        'paper_type',
         'theory_marks',
         'practical_marks',
         'total_marks',
@@ -69,27 +68,15 @@ class ContinuousAssessment extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function calculateTotalCAMarkPractical($practicalTest, $clinicalPractice, $logBook)
+    public function getTotalTheoryMarkAttribute()
     {
-        // $practicalTestConverted = $practicalTest * self::PRACTICAL_TEST_CONVERSION_FACTOR;
-        // $clinicalPracticeConverted = $clinicalPractice * self::CLINICAL_PRACTICE_ASSESSMENT_CONVERSION_FACTOR;
-        // $logBookConverted = $logBook * self::LOGBOOK_ASSESSMENT_CONVERSION_FACTOR;
-
-        $practicalTestConverted = $practicalTest;
-        $clinicalPracticeConverted = $clinicalPractice;
-        $logBookConverted = $logBook;
-
-        return $practicalTestConverted + $clinicalPracticeConverted + $logBookConverted;
+        return array_sum($this->theory_marks);
     }
 
-    public function calculateTotalCAMarkTheory($assignmentMarks, $testMarks)
+    public function getTotalPracticalMarkAttribute()
     {
-        // $assignmentConverted = $assignmentMarks * self::ASSIGNMENT_CONVERSION_FACTOR;
-        // $testConverted = $testMarks * self::TEST_CONVERSION_FACTOR;
-
-        $assignmentConverted = $assignmentMarks;
-        $testConverted = $testMarks;
-
-        return $assignmentConverted + $testConverted;
+        return array_sum($this->practical_marks);
     }
+
+    
 }

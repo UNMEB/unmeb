@@ -15,7 +15,7 @@ use Orchid\Support\Facades\Layout;
 
 class AddStudentAssessmentFormScreen extends Screen
 {
-    
+
     public $students = [];
     public $papertType;
 
@@ -33,7 +33,7 @@ class AddStudentAssessmentFormScreen extends Screen
         $this->papertType = request()->get('paper_type');
     }
 
-    
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -43,23 +43,23 @@ class AddStudentAssessmentFormScreen extends Screen
     {
 
         $students = Student::query()
-                ->from('students')
-                ->join('student_registrations', 'students.id', '=', 'student_registrations.student_id')
-                ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
-                ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
-                ->join('courses', 'registrations.course_id', '=', 'courses.id')
-                ->join('student_paper_registration', 'student_registrations.id', '=', 'student_paper_registration.student_registration_id')
-                ->join('course_paper', 'student_paper_registration.course_paper_id', '=', 'course_paper.id')
-                ->join('papers', 'course_paper.paper_id', '=', 'papers.id')
-                ->where('institutions.id', $this->institutionId)
-                ->where('registrations.year_of_study', $this->yearOfStudy)
-                ->where('courses.id', $this->courseId)
-                ->where('papers.id', $this->paperId)
-                ->select('students.id as student_id', 'student_registrations.id as student_registration_id', 'students.nsin', 'students.surname', 'students.firstname')
-                ->get();
+            ->from('students')
+            ->join('student_registrations', 'students.id', '=', 'student_registrations.student_id')
+            ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+            ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
+            ->join('courses', 'registrations.course_id', '=', 'courses.id')
+            ->join('student_paper_registration', 'student_registrations.id', '=', 'student_paper_registration.student_registration_id')
+            ->join('course_paper', 'student_paper_registration.course_paper_id', '=', 'course_paper.id')
+            ->join('papers', 'course_paper.paper_id', '=', 'papers.id')
+            ->where('institutions.id', $this->institutionId)
+            ->where('registrations.year_of_study', $this->yearOfStudy)
+            ->where('courses.id', $this->courseId)
+            ->where('papers.id', $this->paperId)
+            ->select('students.id as student_id', 'student_registrations.id as student_registration_id', 'students.nsin', 'students.surname', 'students.firstname')
+            ->get();
 
         // dd($this->paperId);
-                
+
         return [
             'students' => $students
         ];
@@ -183,7 +183,6 @@ class AddStudentAssessmentFormScreen extends Screen
 
     public function submitMarks(Request $request)
     {
-
         $registrationPeriodId = $request->get('exam_registration_period_id');
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
@@ -192,49 +191,65 @@ class AddStudentAssessmentFormScreen extends Screen
         $students = $request->get('students');
 
         foreach ($students as $student) {
-            // Create a new assessment
-            $assessment = new ContinuousAssessment();
-            $assessment->registration_period_id = $registrationPeriodId;
-            $assessment->institution_id = $institutionId;
-            $assessment->course_id = $courseId;
-            $assessment->paper_id = $paperId;
-            $assessment->student_id = $student['id'] ?? $student['student_id']; // Ensure you're getting the correct ID
-            $assessment->paper_type = $paperType;
+            // Check for an existing assessment
+            $assessment = ContinuousAssessment::firstOrNew([
+                'registration_period_id' => $registrationPeriodId,
+                'institution_id' => $institutionId,
+                'course_id' => $courseId,
+                'paper_id' => $paperId,
+                'student_id' => $student['id'] ?? $student['student_id'],
+            ]);
+
             $assessment->created_by = auth()->id();
 
-            if ($paperType == 'Theory') {
-                // Theory
-                $assignmentMarks = ($student['first_assessment_marks'] + $student['second_assessment_marks']) / 2;
-                $testMarks = ($student['first_test_marks'] + $student['second_test_marks']) / 2;
-
-                $assessment->theory_marks = [
-                    'first_assessment_marks' => $student['first_assessment_marks'],
-                    'second_assessment_marks' => $student['second_assessment_marks'],
-                    'first_test_marks' => $student['first_test_marks'],
-                    'second_test_marks' => $student['second_test_marks'],
-                ];
-                // Use the calculateTotalCAMarkTheory method to calculate the total theory marks
-                $assessment->total_marks = $assessment->calculateTotalCAMarkTheory($assignmentMarks, $testMarks);
-            } else {
-                // Practical
-                $practicalMark = $student['practical_assessment_marks'];
-                $clinicalMark = $student['practical_clinical_assessment_marksassessment_marks'];
-                $logbookMark = $student['logbook_assessment_marks'];
-
-                $assessment->practical_assessment_markss = [
-                    'practical_assessment_marks' => $practicalMark,
-                    'practical_clinical_assessment_marksassessment_marks' => $clinicalMark,
-                    'logbook_assessment_marks' => $logbookMark,
-                ];
-                // Use the calculateTotalCAMarkPractical method to calculate the total practical marks
-                $assessment->total_marks = $assessment->calculateTotalCAMarkPractical($practicalMark, $clinicalMark, $logbookMark);
-            }
+            // Set marks based on paper type
+            $this->setMarks($assessment, $student, $paperType);
 
             $assessment->save();
         }
 
-        Alert::info('Successfully added marks.');
+        Alert::info('Successfully added or updated marks.');
 
-        return back();
+        return redirect()->route('platform.assessment.list');
+    }
+
+
+    private function setMarks($assessment, $student, $paperType)
+    {
+        if ($paperType == 'Theory') {
+            $assignmentMarks = ($student['first_assessment_marks'] + $student['second_assessment_marks']) / 2;
+            $testMarks = ($student['first_test_marks'] + $student['second_test_marks']) / 2;
+
+            $assessment->theory_marks = [
+                'first_assessment_marks' => $student['first_assessment_marks'],
+                'second_assessment_marks' => $student['second_assessment_marks'],
+                'first_test_marks' => $student['first_test_marks'],
+                'second_test_marks' => $student['second_test_marks'],
+            ];
+
+            $assessment->total_marks = $this->calculateTotalCAMarkTheory($assignmentMarks, $testMarks);
+        } else {
+            $practicalMark = $student['practical_assessment_marks'];
+            $clinicalMark = $student['clinical_assessment_marks'];
+            $logbookMark = $student['logbook_assessment_marks'];
+
+            $assessment->practical_marks = [
+                'practical_assessment_marks' => $practicalMark,
+                'clinical_assessment_marks' => $clinicalMark,
+                'logbook_assessment_marks' => $logbookMark,
+            ];
+
+            $assessment->total_marks = $this->calculateTotalCAMarkPractical($practicalMark, $clinicalMark, $logbookMark);
+        }
+    }
+
+    public function calculateTotalCAMarkPractical($practicalTest, $clinicalPractice, $logBook)
+    {
+        return $practicalTest + $clinicalPractice + $logBook;
+    }
+
+    public function calculateTotalCAMarkTheory($assignmentMarks, $testMarks)
+    {
+        return $assignmentMarks + $testMarks;
     }
 }

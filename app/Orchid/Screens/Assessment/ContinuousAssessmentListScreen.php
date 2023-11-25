@@ -30,7 +30,15 @@ class ContinuousAssessmentListScreen extends Screen
      */
     public function query(): iterable
     {
-        return [];
+        return [
+            'results' => ContinuousAssessment::
+            with([
+                'institution',
+                'course',
+                'student'
+            ])
+            ->filters()->paginate()
+        ];
     }
 
     /**
@@ -95,7 +103,13 @@ class ContinuousAssessmentListScreen extends Screen
             Layout::columns([
                 Layout::tabs([
                     'Continuous Assessment' => Layout::table('results', [
-
+                        TD::make('id', 'ID'),
+                        TD::make('institution.institution_name', 'Institution'),
+                        TD::make('course.course_name','Course Name'),
+                        TD::make('student.fullName','Student Name'),
+                        TD::make('totalTheoryMark', 'Theory Marks'),
+                        TD::make('totalPracticalMark', 'Practical Marks'),
+                        TD::make('total_marks', 'Total Marks')
                     ]),
                 ]),
             ])
@@ -123,62 +137,5 @@ class ContinuousAssessmentListScreen extends Screen
 
 
         return Redirect::to($url);
-    }
-
-    public function submitMarks(Request $request)
-    {
-
-        $registrationPeriodId = $request->get('exam_registration_period_id');
-        $institutionId = $request->get('institution_id');
-        $courseId = $request->get('course_id');
-        $paperId = $request->get('paper_id');
-        $paperType = $request->get('paper_type');
-        $students = $request->get('students');
-
-        foreach ($students as $student) {
-            // Create a new assessment
-            $assessment = new ContinuousAssessment();
-            $assessment->registration_period_id = $registrationPeriodId;
-            $assessment->institution_id = $institutionId;
-            $assessment->course_id = $courseId;
-            $assessment->paper_id = $paperId;
-            $assessment->student_id = $student['id'] ?? $student['student_id']; // Ensure you're getting the correct ID
-            $assessment->paper_type = $paperType;
-            $assessment->created_by = auth()->id();
-
-            if ($paperType == 'Theory') {
-                // Theory
-                $assignmentMarks = ($student['first_assessment_marks'] + $student['second_assessment_marks']) / 2;
-                $testMarks = ($student['first_test_marks'] + $student['second_test_marks']) / 2;
-
-                $assessment->theory_marks = [
-                    'first_assessment_marks' => $student['first_assessment_marks'],
-                    'second_assessment_marks' => $student['second_assessment_marks'],
-                    'first_test_marks' => $student['first_test_marks'],
-                    'second_test_marks' => $student['second_test_marks'],
-                ];
-                // Use the calculateTotalCAMarkTheory method to calculate the total theory marks
-                $assessment->total_marks = $assessment->calculateTotalCAMarkTheory($assignmentMarks, $testMarks);
-            } else {
-                // Practical
-                $practicalMark = $student['practical_assessment_marks'];
-                $clinicalMark = $student['practical_clinical_assessment_marksassessment_marks'];
-                $logbookMark = $student['logbook_assessment_marks'];
-
-                $assessment->practical_assessment_markss = [
-                    'practical_assessment_marks' => $practicalMark,
-                    'practical_clinical_assessment_marksassessment_marks' => $clinicalMark,
-                    'logbook_assessment_marks' => $logbookMark,
-                ];
-                // Use the calculateTotalCAMarkPractical method to calculate the total practical marks
-                $assessment->total_marks = $assessment->calculateTotalCAMarkPractical($practicalMark, $clinicalMark, $logbookMark);
-            }
-
-            $assessment->save();
-        }
-
-        Alert::info('Successfully added marks.');
-
-        return back();
-    }
+    }    
 }
