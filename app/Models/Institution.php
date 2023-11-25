@@ -20,6 +20,7 @@ class Institution extends Model
         'institution_location' => Like::class,
         'code' => Like::class,
         'phone_no' => Like::class,
+        'course_name' => Like::class,
     ];
 
     protected $fillable = [

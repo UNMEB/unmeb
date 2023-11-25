@@ -2,18 +2,25 @@
 
 namespace App\Orchid\Screens\Registration\Exam;
 
+use App\Models\District;
 use App\Models\Institution;
+use App\Models\Registration;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Color;
+use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
 class ApproveExamRegistrationDetails extends Screen
@@ -42,7 +49,8 @@ class ApproveExamRegistrationDetails extends Screen
             'institutions.institution_name',
             'courses.course_name',
             'registrations.id AS registration_id',
-            'students.*'
+            'students.*',
+            'student_registrations.sr_flag'
         )
             ->join('student_registrations', 'students.id', '=', 'student_registrations.student_id')
             ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
@@ -98,6 +106,37 @@ class ApproveExamRegistrationDetails extends Screen
     public function layout(): iterable
     {
         return [
+
+            Layout::rows([
+
+                Group::make([
+
+                    Input::make('name')
+                        ->title('Search by Name'),
+
+                    Relation::make('district_id')
+                        ->fromModel(District::class, 'district_name')
+                        ->title('District of origin'),
+
+                    Select::make('gender')
+                        ->title('Gender')
+                        ->options([
+                            'Male' => 'Male',
+                            'Female' => 'Female'
+                        ])
+                        ->empty('Not Selected')
+                ]),
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title("Filter Students"),
             
             Layout::table('students', [
 
@@ -113,7 +152,7 @@ class ApproveExamRegistrationDetails extends Screen
                 TD::make('NSIN', 'NSIN'),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email'),
-                TD::make('old', 'Old Student'),
+                TD::make('old', 'Old Student')->render(fn ($data) => $data->old ==1 ? 'YES' : 'NO'),
                 TD::make('date_time', 'Registration Date'),
                 TD::make('actions', 'Actions')
                     ->render(function ($data) {
@@ -121,8 +160,11 @@ class ApproveExamRegistrationDetails extends Screen
                             Button::make('Approve')
                                 ->type(Color::SUCCESS)
                                 ->method('approve', [
-                                    'id' => $data->id
-                                ]),
+                                    'id' => $data->id,
+                                    'institution_id' => $this->institutionId,
+                                    'course_id' => $this->courseId,
+                                    'registration_id' => $this->registrationId
+                                ])->canSee($data->sr_flag == 0),
 
                             ModalToggle::make('Reject')
                                 ->type(Color::DANGER)
@@ -171,13 +213,32 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function approve(Request $request, $id)
     {
+
         $studentId = $id;
         $registrationId = $request->input('registration_id');
 
 
-        $studentRegistration = StudentRegistration::quer()
-            ->where('registration_id', $registrationId)
+        $studentRegistration = StudentRegistration::where('registration_id', $registrationId)
             ->where('student_id', $studentId)->first();
+
+        if ($studentRegistration != null) {
+            $studentRegistration->sr_flag = 1;
+            $studentRegistration->save();
+
+            // Increment the registration
+            $registration = Registration::find($registrationId);
+
+            if($registration != null) {
+                $registration->approved +=1;
+                $registration->save();
+
+                Alert::success('Student exam registration approved');
+            }
+
+
+        }
+
+        return back();
     }
 
     public function reject(Request $request)
@@ -192,5 +253,35 @@ class ApproveExamRegistrationDetails extends Screen
             ->get();
 
         dd(collect($studentRegistration)->toJson());
+    }
+
+    public function filter(Request $request)
+    {
+        $name = $request->input('name');
+        $gender = $request->input('gender');
+        $district = $request->input('district_id');
+
+        $filters  = [];
+
+        if (!empty($name)) {
+            $filters['filter[name]'] = $name;
+        }
+
+        if (!empty($gender)) {
+            $filters['filter[gender]'] = $gender;
+        }
+
+        if (!empty($district)) {
+            $filters['filter[district_id]'] = $district;
+        }
+
+        $url = route('platform.registration.exam.approve.details', $filters);
+
+        return Redirect::to($url);
+    }
+
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.registration.exam.approve.details');
     }
 }

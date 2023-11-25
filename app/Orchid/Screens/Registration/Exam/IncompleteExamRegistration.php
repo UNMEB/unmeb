@@ -2,10 +2,13 @@
 
 namespace App\Orchid\Screens\Registration\Exam;
 
+use App\Exports\IncompleteExamRegistrationsExport;
+use App\Jobs\GenerateCSV;
 use App\Models\Account;
 use App\Models\Institution;
 use App\Models\Paper;
 use App\Models\Registration;
+use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\SurchargeFee;
@@ -14,13 +17,21 @@ use App\Orchid\Layouts\RegisterStudentsForExamForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Excel as ExcelExcel;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
+use Illuminate\Http\File;
+use Log;
 
 class IncompleteExamRegistration extends Screen
 {
@@ -31,42 +42,18 @@ class IncompleteExamRegistration extends Screen
      */
     public function query(): iterable
     {
-
-        $page = request('page', 1);
-
-        $cacheKey = 'registration_query_results' . $page;
-
-        // Attempt to retrieve the query results from the cache
-        $cachedResults = Cache::get($cacheKey);
-
-        if ($cachedResults !== null) {
-            // If cached results exist, return them without modifying pagination
-            return ['registrations' => $cachedResults];
-        }
-
-        $query = Registration::filters()
-            ->from('registrations AS r')
-            ->select('r.id as registration_id', 'i.id AS institution_id', 'i.institution_name', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
-            ->selectRaw('COUNT(sr.id) as registered_students')
-            ->selectRaw('SUM(CASE WHEN sr.sr_flag = 0 THEN 1 ELSE 0 END) as to_register')
-            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
+        $query = Institution::filters()
+            ->from('institutions as i')
+            ->join('registrations as r', 'i.id', '=', 'r.institution_id')
             ->join('courses as c', 'r.course_id', '=', 'c.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->leftJoin('student_registrations as sr', 'sr.registration_id', '=', 'r.id')
-            ->groupBy('r.id', 'i.institution_name', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
-            ->orderBy('to_register', 'desc');
+            ->select('i.id AS institution_id', 'i.institution_name', 'r.id as registration_id', 'c.id as course_id', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
+            ->groupBy('i.id', 'i.institution_name', 'r.id', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
+            ->orderBy('r.updated_at', 'desc');
 
-        $perPage = request('per_page', 15); // Adjust the default per page count if needed
-
-        $results = ['registrations' => $query->paginate($perPage, ['*'], 'page', $page)];
-
-        // Set the cache duration to 7 days (10080 minutes)
-        $minutes = 10080;
-
-        // Store the query results in the cache for future use
-        Cache::put($cacheKey, $results['registrations'], $minutes); // Replace $minutes with your desired cache duration
-
-        return $results;
+        return [
+            'results' => $query->paginate(),
+        ];
     }
 
     /**
@@ -87,11 +74,18 @@ class IncompleteExamRegistration extends Screen
     public function commandBar(): iterable
     {
         return [
-            ModalToggle::make('Register Students For Exams')
+            ModalToggle::make('New Registration')
                 ->modalTitle('Register Student For Exams')
                 ->modal('examRegistrationModal')
                 ->method('register')
+                ->icon('plus')
+                ->class('btn btn-sm btn-success'),
 
+            Button::make('Export Data')
+                ->method('export')
+                ->icon('download')
+                ->class('btn btn-primary btn-sm link-primary')
+                ->rawClick(false)
         ];
     }
 
@@ -106,23 +100,56 @@ class IncompleteExamRegistration extends Screen
 
             Layout::modal('examRegistrationModal', RegisterStudentsForExamForm::class),
 
-            Layout::table('registrations', [
-                TD::make('institution_name', 'Institution'),
-                TD::make('course_name', 'Program'),
-                TD::make('year_of_study', 'Year Of Study'),
-                TD::make('reg_start_date', 'Registration Start Date'),
-                TD::make('reg_end_date', 'Registration Start Date'),
-                TD::make('registered_students', 'Students Registered'),
-                TD::make('to_register', 'Students to Registered'),
-                TD::make('actions', 'Actions')->render(fn (Registration $data) => Link::make('Details')
-                    ->class('btn btn-primary btn-sm link-primary')
-                    ->disabled($data->to_register == 0)
-                    ->route('platform.registration.exam.incomplete.details', [
-                        'institution_id' => $data->institution_id,
-                        'course_id' => $data->course_id,
-                        'registration_id' => $data->id
-                    ]))
+            Layout::rows([
+                Group::make([
+                    Input::make('institution_name')
+                        ->title('Filter By Institution'),
 
+                    Input::make('course_name')
+                        ->title('Filter By Program'),
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])
+                ->title('Filter Results'),
+
+            Layout::table('results', [
+                TD::make('registration_id', 'ID'),
+                TD::make('institution_name', 'Institution Name'),
+                TD::make('course_name', 'Course Name'),
+                TD::make('register_count', 'All Registrations')
+                    ->render(function ($data) {
+                        $regs = StudentRegistration::query()
+                            ->where('registration_id', $data->registration_id)
+                            ->count();
+                        return $regs;
+                    }),
+                TD::make('register_count', 'Pending Registrations')
+                    ->render(function ($data) {
+                        $regs = StudentRegistration::query()
+                            ->where('registration_id', $data->registration_id)
+                            ->where('sr_flag', 0)
+                            ->count();
+                        return $regs;
+                    }),
+                TD::make('actions', 'Actions')->render(function ($data) {
+                    return Link::make('View Details')
+                        ->class('btn btn-primary btn-sm link-primary')
+                        ->route('platform.registration.exam.incomplete.details', [
+                            'institution_id' => $data->institution_id,
+                            'course_id' => $data->course_id,
+                            'registration_id' => $data->registration_id
+                        ]);
+                }),
 
             ])
         ];
@@ -240,11 +267,55 @@ class IncompleteExamRegistration extends Screen
             'institution_id' => $institution->id,
             'initiated_by' => auth()->user()->id,
             'status' => 'approved',
-            'comment'  => 'Exam Registration',
+            'comment' => 'Exam Registration',
         ]);
 
         $transaction->save();
 
         Alert::success('Registration successful');
+    }
+
+    public function filter(Request $request)
+    {
+        $institutionName = $request->input('institution_name');
+        $courseName = $request->input('course_name');
+
+
+        $filterParams = [];
+
+        if (!empty($institutionName)) {
+            $filterParams['filter[institution_name]'] = $institutionName;
+        }
+
+        if (!empty($courseName)) {
+            $filterParams['filter[course_name]'] = $courseName;
+        }
+
+        $url = route('platform.registration.exam.incomplete', $filterParams);
+
+        return redirect()->to($url);
+
+    }
+
+    public function reset(Request $request)
+    {
+        $url = route('platform.registration.exam.incomplete');
+        
+        return redirect()->to($url);
+    }
+
+    public function export(Request $request)
+    {
+        if(Storage::disk('local')->exists('public/incomplete_exam_registrations.csv')) {
+            
+            return Storage::disk('local')->download('public/incomplete_exam_registrations.csv');
+
+        } else {
+            GenerateCSV::dispatch();
+
+            Alert::info('The file has been scheduled for download. Check back later');
+
+            return back();
+        }
     }
 }
