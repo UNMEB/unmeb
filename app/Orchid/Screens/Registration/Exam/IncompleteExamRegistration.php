@@ -42,7 +42,7 @@ class IncompleteExamRegistration extends Screen
      */
     public function query(): iterable
     {
-        $query = Institution::filters()
+        $query = Registration::filters()
             ->from('institutions as i')
             ->join('registrations as r', 'i.id', '=', 'r.institution_id')
             ->join('courses as c', 'r.course_id', '=', 'c.id')

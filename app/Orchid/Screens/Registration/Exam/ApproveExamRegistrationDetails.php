@@ -44,14 +44,16 @@ class ApproveExamRegistrationDetails extends Screen
      */
     public function query(): iterable
     {
-        $students = Student::select(
-            'students.id',
-            'institutions.institution_name',
-            'courses.course_name',
-            'registrations.id AS registration_id',
-            'students.*',
-            'student_registrations.sr_flag'
-        )
+        $students = Student::
+            filters()->
+            select(
+                'students.id',
+                'institutions.institution_name',
+                'courses.course_name',
+                'registrations.id AS registration_id',
+                'students.*',
+                'student_registrations.sr_flag'
+            )
             ->join('student_registrations', 'students.id', '=', 'student_registrations.student_id')
             ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
@@ -128,7 +130,11 @@ class ApproveExamRegistrationDetails extends Screen
                 ]),
                 Group::make([
                     Button::make('Submit')
-                        ->method('filter'),
+                        ->method('filter', [
+                            'institution_id' => $this->institutionId,
+                            'course_id' => $this->courseId,
+                            'registration_id' => $this->registrationId,
+                        ]),
 
                     // Reset Filters
                     Button::make('Reset')
@@ -137,22 +143,22 @@ class ApproveExamRegistrationDetails extends Screen
                 ])->autoWidth()
                     ->alignEnd(),
             ])->title("Filter Students"),
-            
+
             Layout::table('students', [
 
                 TD::make('id', 'ID'),
                 // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
-                TD::make('district_id', 'District')->render(fn (Student $student) => $student->district->district_name),
+                TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
                 TD::make('NSIN', 'NSIN'),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email'),
-                TD::make('old', 'Old Student')->render(fn ($data) => $data->old ==1 ? 'YES' : 'NO'),
+                TD::make('old', 'Old Student')->render(fn($data) => $data->old == 1 ? 'YES' : 'NO'),
                 TD::make('date_time', 'Registration Date'),
                 TD::make('actions', 'Actions')
                     ->render(function ($data) {
@@ -228,8 +234,8 @@ class ApproveExamRegistrationDetails extends Screen
             // Increment the registration
             $registration = Registration::find($registrationId);
 
-            if($registration != null) {
-                $registration->approved +=1;
+            if ($registration != null) {
+                $registration->approved += 1;
                 $registration->save();
 
                 Alert::success('Student exam registration approved');
@@ -257,25 +263,39 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function filter(Request $request)
     {
+
+        // Get existing query parameters
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+        $registrationId = $request->input('registration_id');
+
+        // Get new filter parameters
         $name = $request->input('name');
         $gender = $request->input('gender');
         $district = $request->input('district_id');
 
-        $filters  = [];
+        // Prepare the filters array with only new filter parameters
+        $filters = [];
 
         if (!empty($name)) {
             $filters['filter[name]'] = $name;
         }
-
         if (!empty($gender)) {
             $filters['filter[gender]'] = $gender;
         }
-
         if (!empty($district)) {
             $filters['filter[district_id]'] = $district;
         }
 
-        $url = route('platform.registration.exam.approve.details', $filters);
+        // Combine existing query parameters with new filters
+        $queryParams = array_merge([
+            'institution_id' => $institutionId,
+            'course_id' => $courseId,
+            'registration_id' => $registrationId
+        ], $filters);
+
+        // Redirect to the same route with updated query parameters
+        $url = route('platform.registration.exam.approve.details', $queryParams);
 
         return Redirect::to($url);
     }

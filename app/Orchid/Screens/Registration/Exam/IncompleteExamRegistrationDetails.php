@@ -18,8 +18,6 @@ class IncompleteExamRegistrationDetails extends Screen
      */
     public function query(): iterable
     {
-
-
         $data = request()->all();
         $institutionId = $data['institution_id'];
         $courseId = $data['course_id'];
