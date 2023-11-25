@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
+use Orchid\Screen\Fields\Cropper;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
@@ -40,25 +41,13 @@ class AddNewStudentForm extends Listener
         return [
             Layout::rows([
 
-                Relation::make('institution_id')
-                    ->title('Select Institution')
-                    ->fromModel(Institution::class, 'institution_name')
-                    ->applyScope('userInstitutions')
-                    ->chunk(20),
-
-                Select::make('new_registration')
-                    ->title('New / Continuing Student')
-                    ->options([
-                        'New' => 'New Student',
-                        'Continuing' => 'Continuing Student'
-                    ])
-                    ->empty('Non Selected')
-                    ->required(),
-
-                Input::make('previous_nsin')
-                    ->title('Previous NSIN')
+                Cropper::make('student.passport')
+                    ->title('Provide Student Photo')
+                    ->name('student.passport')
+                    ->placeholder('Enter student passport photo')
                     ->required()
-                    ->canSee($this->query->get('new_registration') == 'Continuing'),
+                    ->width(270)
+                    ->height(270),
 
                 Group::make([
                     Input::make('student.surname')
@@ -79,6 +68,28 @@ class AddNewStudentForm extends Listener
                         ->value($this->student->othername ?? null)
                         ->placeholder('Enter Other name'),
                 ]),
+
+                Relation::make('institution_id')
+                    ->title('Select Institution')
+                    ->fromModel(Institution::class, 'institution_name')
+                    ->applyScope('userInstitutions')
+                    ->chunk(20),
+
+                Select::make('new_registration')
+                    ->title('New / Continuing Student')
+                    ->options([
+                        'New' => 'New Student',
+                        'Continuing' => 'Continuing Student'
+                    ])
+                    ->empty('Non Selected')
+                    ->required(),
+
+                Input::make('previous_nsin')
+                    ->title('Previous NSIN')
+                    ->required()
+                    ->canSee($this->query->get('new_registration') == 'Continuing'),
+
+
 
                 Group::make([
                     Select::make('student.gender')
@@ -129,12 +140,7 @@ class AddNewStudentForm extends Listener
                 ]),
 
                 Group::make([
-                    Input::make('student.passport')
-                        ->title('Provide Student Photo')
-                        ->type('file')
-                        ->name('student.passport')
-                        ->placeholder('Enter student passport photo')
-                        ->required(),
+
 
                     Input::make('student.nin')
                         ->title('National Identification Number / Passport Number')

@@ -5,11 +5,14 @@ namespace App\Orchid\Screens\Registration\Exam;
 use App\Exports\IncompleteExamRegistrationsExport;
 use App\Jobs\GenerateCSV;
 use App\Models\Account;
+use App\Models\Course;
+use App\Models\CoursePaper;
 use App\Models\Institution;
 use App\Models\Paper;
 use App\Models\Registration;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
+use App\Models\StudentPaperRegistration;
 use App\Models\StudentRegistration;
 use App\Models\SurchargeFee;
 use App\Models\Transaction;
@@ -174,6 +177,9 @@ class IncompleteExamRegistration extends Screen
         // Get the institution
         $institution = Institution::find($institutionId);
 
+        // Get the course
+        $course = Course::find($courseId);
+
 
         $accountBalance = (float) $institution->account->balance;
 
@@ -223,26 +229,45 @@ class IncompleteExamRegistration extends Screen
                 $bill += $costToPay;
             }
 
-            // Check if the student is already registered for the same period, instituion and course
+            // Register Student Exam Registration
             $existingRegistration = StudentRegistration::where([
                 'registration_id' => $registration->id,
-                'trial' => $trial,
                 'student_id' => $student->id,
+                'trial' => $trial,
             ])->first();
 
-            if (!$existingRegistration) {
+            if($existingRegistration != null) {
+                // Student already has a registration
 
+            } else {
                 $courseCodes = Paper::whereIn('id', $paperIds)->pluck('code');
 
-                $examStudentRegistration = new StudentRegistration();
-                $examStudentRegistration->registration_id = $registration->id;
-                $examStudentRegistration->trial = $trial;
-                $examStudentRegistration->student_id = $student->id;
-                $examStudentRegistration->course_codes = $courseCodes;
-                $examStudentRegistration->no_of_papers = count($paperIds);
-                $examStudentRegistration->sr_flag = 0;
-                $examStudentRegistration->save();
+                $existingRegistration = new StudentRegistration();
+                $existingRegistration->registration_id = $registration->id;
+                $existingRegistration->trial = $trial;
+                $existingRegistration->student_id = $student->id;
+                $existingRegistration->course_codes = $courseCodes;
+                $existingRegistration->no_of_papers = count($paperIds);
+                $existingRegistration->sr_flag = 0;
+                $existingRegistration->save();
             }
+
+            // Register Student Papers
+            $studentCoursePapers = DB::table('course_paper') // Use the actual pivot table name
+            ->where('course_id', $course->id)
+            ->whereIn('paper_id', $paperIds)
+            ->pluck('id');
+
+            // dd($studentCoursePapers);
+
+            foreach ($studentCoursePapers as $coursePaperId) {
+                // Create a new StudentPaperRegistration record
+                $studentPaperRegistration = new StudentPaperRegistration();
+                $studentPaperRegistration->student_registration_id = $existingRegistration->id;
+                $studentPaperRegistration->course_paper_id = $coursePaperId;
+                $studentPaperRegistration->save();
+            }
+
         }
 
         if ($bill > $accountBalance) {
@@ -300,14 +325,14 @@ class IncompleteExamRegistration extends Screen
     public function reset(Request $request)
     {
         $url = route('platform.registration.exam.incomplete');
-        
+
         return redirect()->to($url);
     }
 
     public function export(Request $request)
     {
-        if(Storage::disk('local')->exists('public/incomplete_exam_registrations.csv')) {
-            
+        if (Storage::disk('local')->exists('public/incomplete_exam_registrations.csv')) {
+
             return Storage::disk('local')->download('public/incomplete_exam_registrations.csv');
 
         } else {

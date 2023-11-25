@@ -50,7 +50,8 @@ class ApproveNsinRegistrationDetails extends Screen
             'nsin_registrations.id AS nsin_registration_id',
             'students.*',
             'nsin_student_registrations.verify',
-            'nsin_student_registrations.remarks'
+            'nsin_student_registrations.remarks',
+            'nsin_student_registrations.nsin',
         )
             ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
             ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
@@ -116,7 +117,7 @@ class ApproveNsinRegistrationDetails extends Screen
                 TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
-                TD::make('NSIN', 'NSIN'),
+                TD::make('nsin', 'NSIN'),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email'),
                 TD::make('remarks', 'Remarks'),

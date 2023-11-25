@@ -92,15 +92,15 @@ class StudentListScreen extends Screen
                 ->icon('plus'),
 
             ModalToggle::make('Import Students')
-            ->modal('uploadStudentsModal')
-            ->method('upload')
-            ->icon('upload')
-            ->canSee(auth()->user()->hasAccess('platform.students.import')),
+                ->modal('uploadStudentsModal')
+                ->method('upload')
+                ->icon('upload')
+                ->canSee(auth()->user()->hasAccess('platform.students.import')),
 
             Button::make('Export Data')
-            ->method('download')
-            ->rawClick(false)
-            ->canSee(auth()->user()->hasAccess('platform.students.export'))
+                ->method('download')
+                ->rawClick(false)
+                ->canSee(auth()->user()->hasAccess('platform.students.export'))
         ];
     }
 
@@ -146,14 +146,14 @@ class StudentListScreen extends Screen
             Layout::table('students', [
                 TD::make('id', 'ID'),
                 // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
                 TD::make('district.district_name', 'District'),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
-                TD::make('nsin', 'NSIN')->render(fn (Student $student) => $student->nsin),
+                TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email')->defaultHidden(),
                 TD::make('old', __('Old Student'))
@@ -169,29 +169,30 @@ class StudentListScreen extends Screen
                 TD::make(__('Actions'))
                     ->align(TD::ALIGN_CENTER)
                     ->width('100px')
-                    ->render(fn (Student $student) => DropDown::make()
+                    ->render(fn(Student $student) => DropDown::make()
                         ->icon('bs.three-dots-vertical')
-                    ->list([ModalToggle::make('Details')
-                        ->icon('bs.people')
-                        ->modal('asyncViewStudentModal')
-                        ->modalTitle('Student Profile')
-                        ->asyncParameters([
-                            'student' => $student->id
-                        ]),
+                        ->list([
+                            ModalToggle::make('Details')
+                                ->icon('bs.people')
+                                ->modal('asyncViewStudentModal')
+                                ->modalTitle('Student Profile')
+                                ->asyncParameters([
+                                    'student' => $student->id
+                                ]),
 
-                    ModalToggle::make('Edit')
-                        ->icon('bs.people')
-                        ->modal('asyncEditStudentModal')
-                        ->modalTitle('Edit Student Profile')
-                        ->asyncParameters([
-                            'student' => $student->id
-                        ]),
+                            ModalToggle::make('Edit')
+                                ->icon('bs.people')
+                                ->modal('asyncEditStudentModal')
+                                ->modalTitle('Edit Student Profile')
+                                ->asyncParameters([
+                                    'student' => $student->id
+                                ]),
 
                             Button::make(__('Delete'))
                                 ->icon('bs.trash3')
                                 ->confirm(__('Once the account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.'))
                                 ->method('remove', [
-                        'id' => $student->id,
+                                    'id' => $student->id,
                                 ]),
                         ])),
             ]),
@@ -203,79 +204,79 @@ class StudentListScreen extends Screen
                 ->size(Modal::SIZE_LG)
                 ->title('Create Student')
                 ->applyButton('Create Student')
-                ,
+            ,
 
             Layout::modal('asyncEditStudentModal', Layout::rows([
 
                 Group::make([
                     Input::make('student.surname')
-                    ->title('Surname')
+                        ->title('Surname')
                         ->placeholder('Enter Surname')
                         ->required(),
 
 
                     Input::make('student.firstname')
-                    ->title('First Name')
+                        ->title('First Name')
                         ->required()
                         ->placeholder('Enter First name'),
 
                     Input::make('student.othername')
-                    ->title('Other Name')
+                        ->title('Other Name')
                         ->placeholder('Enter Other name'),
                 ]),
 
                 Group::make([
                     Select::make('student.gender')
-                    ->options([
-                        'Male' => 'MALE',
-                        'Female' => 'FEMALE',
-                    ])
+                        ->options([
+                            'Male' => 'MALE',
+                            'Female' => 'FEMALE',
+                        ])
                         ->title('Student Gender')
                         ->empty('Non Selected')
                         ->required(),
 
 
                     Input::make('student.dob')
-                    ->title('Date Of Birth')
-                    ->type('date')
+                        ->title('Date Of Birth')
+                        ->type('date')
                         ->placeholder('Enter date of birth')
                         ->required(),
                 ]),
 
                 Group::make([
                     Input::make('student.telephone')
-                    ->title('Phone Number')
-                    ->placeholder('Enter phone number'),
+                        ->title('Phone Number')
+                        ->placeholder('Enter phone number'),
 
                     Input::make('student.email')
-                    ->title('Student Email Address')
-                    ->placeholder('Enter email address'),
+                        ->title('Student Email Address')
+                        ->placeholder('Enter email address'),
                 ]),
 
                 Group::make([
                     Select::make('student.district_id')
-                    ->title('District')
+                        ->title('District')
                         ->fromModel(District::class, 'district_name')
                         ->empty('Non Selected')
                         ->required(),
 
                     Input::make('student.location')
-                    ->title('Address')
+                        ->title('Address')
                         ->placeholder('Enter student address')
                         ->required(),
                 ]),
 
                 Group::make([
                     Input::make('student.passport')
-                    ->title('Provide Student Photo')
-                    ->type('file')
+                        ->title('Provide Student Photo')
+                        ->type('file')
                         ->name('student.passport')
                         ->placeholder('Enter student passport photo')
                         ->required(),
 
                     Input::make('student.nin')
-                    ->title('National Identification Number / Passport Number')
-                    ->required(),
+                        ->title('National Identification Number / Passport Number')
+                        ->required(),
 
                 ]),
 
@@ -286,8 +287,8 @@ class StudentListScreen extends Screen
                     'student' => null
                 ])
             ]))
-            ->size(Modal::SIZE_LG)
-            ->async('asyncGetStudent'),
+                ->size(Modal::SIZE_LG)
+                ->async('asyncGetStudent'),
         ];
     }
 
@@ -331,7 +332,7 @@ class StudentListScreen extends Screen
             'student.firstname' => 'required',
             'student.gender' => 'required',
             'student.dob' => 'required',
-            'student.passport' => 'required|file',
+            'student.passport' => 'required',
             'student.telephone' => 'required',
             'student.email' => 'required',
             'student.district_id' => 'required',
@@ -342,68 +343,33 @@ class StudentListScreen extends Screen
 
         $previousNSIN = $request->input('previous_nsin');
 
-
         if ($previousNSIN != null) {
             $student = Student::firstWhere('nsin', $previousNSIN);
-            $student->firstname = $request->input('student.firstname');
-            $student->surname = $request->input('student.surname');
-            $student->othername = $request->input('student.othername');
             $student->nsin = null;
-            $student->dob = $request->input('student.dob');
-            $student->gender = $request->input('student.gender');
-            $student->district_id = $request->input('student.district_id');
-            $student->telephone = $request->input('student.telephone');
-            $student->email = $request->input('student.email');
-            $student->date_time = now();
-            $student->nin = $request->input('student.nin');
-            $student->institution_id = $request->input('institution_id');
         } else {
             $student = new Student();
-            $student->firstname = $request->input('student.firstname');
-            $student->surname = $request->input('student.surname');
-            $student->othername = $request->input('student.othername');
             $student->nsin = null;
-            $student->dob = $request->input('student.dob');
-            $student->gender = $request->input('student.gender');
-            $student->district_id = $request->input('student.district_id');
-            $student->location = $request->input('student.location');
-            $student->telephone = $request->input('student.telephone');
-            $student->email = $request->input('student.email');
-            $student->date_time = now();
-            $student->nin = $request->input('student.nin');
-            $student->institution_id = $request->input('institution_id');
         }
 
-        if ($request->hasFile('student.passport')) {
+        $student->firstname = $request->input('student.firstname');
+        $student->surname = $request->input('student.surname');
+        $student->othername = $request->input('student.othername');
+        $student->dob = $request->input('student.dob');
+        $student->gender = $request->input('student.gender');
+        $student->district_id = $request->input('student.district_id');
+        $student->telephone = $request->input('student.telephone');
+        $student->email = $request->input('student.email');
+        $student->date_time = now();
+        $student->nin = $request->input('student.nin');
+        $student->institution_id = $request->input('institution_id');
+        $student->passport = $request->input('student.passport');
+        $student->location = $request->input('student.location');
 
-            // Get the uploaded file
-            $uploadedFile = $request->file('student.passport');
+        $student->save();
 
-            // Define the directory to store uploaded files
-            $photoDirectory = public_path('photos');
+        Alert::success("Student record uploaded");
 
-            // Generate a unique filename for the photo
-            $photoFilename = uniqid() . '.' . $uploadedFile->getClientOriginalExtension();
-
-            // Move the uploaded file to the destination directory
-            $uploadedFile->move($photoDirectory, $photoFilename);
-
-            // Save the file path to the database
-            $photoPath = $photoDirectory . '/' . $photoFilename;
-
-            $student->passport = $photoPath; // Store the filename in the database
-            $student->save();
-
-            Alert::success("Student record uploaded");
-
-            return redirect()->back();
-        }
-
-        Alert::error("Passport photo is required");
-
-        return  redirect()->back();
-
-
+        return redirect()->back();
     }
 
     /**
@@ -487,7 +453,7 @@ class StudentListScreen extends Screen
             'institution_id' => $institution->id,
             'initiated_by' => auth()->user()->id,
             'status' => 'approved',
-            'comment'  => 'SYSTEM ' . now() . ':: NSIN Registration',
+            'comment' => 'SYSTEM ' . now() . ':: NSIN Registration',
         ]);
 
         $transaction->save();
@@ -511,7 +477,7 @@ class StudentListScreen extends Screen
         $gender = $request->input('gender');
         $district = $request->input('district_id');
 
-        $filters  = [];
+        $filters = [];
 
         if (!empty($name)) {
             $filters['filter[name]'] = $name;

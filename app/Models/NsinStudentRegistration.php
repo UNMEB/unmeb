@@ -26,4 +26,7 @@ class NsinStudentRegistration extends Model
     {
         return $this->belongsTo(Student::class);
     }
+
+    // Temporary property, not saved in the database
+    public $is_observer_triggered = false;
 }

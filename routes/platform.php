@@ -70,6 +70,7 @@ use App\Orchid\Screens\User\UserProfileScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 use App\Orchid\Screens\StudentAccessLogListScreen;
+use App\Orchid\Screens\AddStudentAssessmentFormScreen;
 
 /*
 |--------------------------------------------------------------------------
@@ -436,6 +437,12 @@ Route::screen('reports/exam_registration', ExamRegistrationReportScreen::class)
 //         ->parent('platform.assessment.list')
 //         ->push($institution->short_name, route('platform.assessment.institution.list', $institution)));
 
+// Platform > Assessment > Marks
+Route::screen('assessment/marks', AddStudentAssessmentFormScreen::class)
+    ->name('platform.assessment.marks');
+
 // Platform > Assessment > List
 Route::screen('assessment', ContinuousAssessmentListScreen::class)
     ->name('platform.assessment.list');
+
+

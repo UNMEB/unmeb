@@ -28,9 +28,4 @@ class Course extends Model
         return $this->belongsToMany(Paper::class, 'course_paper', 'course_id', 'paper_id')
         ->withPivot('flag');
     }
-
-    // Institution Courses
-    public function scopeInstitutionCourses($query): Builder
-    {
-    }
 }
