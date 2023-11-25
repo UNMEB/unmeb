@@ -27,6 +27,14 @@ class ApproveNsinRegistrationDetails extends Screen
     public $courseId;
     public $nsinRegistrationId;
 
+    public function __construct(Request $request)
+    {
+        $data = $request->all();
+        $this->institutionId = $data['institution_id'] ?? null;
+        $this->courseId = $data['course_id'] ?? null;
+        $this->nsinRegistrationId = $data['nsin_registration_id'] ?? null;
+    }
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -34,12 +42,6 @@ class ApproveNsinRegistrationDetails extends Screen
      */
     public function query(): iterable
     {
-        $data = request()->all();
-
-        $this->institutionId = $data['institution_id'];
-        $this->courseId = $data['course_id'];
-        $this->nsinRegistrationId = $data['nsin_registration_id'];
-
         $students = Student::select(
             'nsin_student_registrations.id as nsin_student_registration_id',
             'students.id AS id',
@@ -58,18 +60,6 @@ class ApproveNsinRegistrationDetails extends Screen
             ->where('courses.id', $this->courseId)
             ->where('nsin_registrations.id', $this->nsinRegistrationId);
 
-        if (isset($data['nsin_registration_id'])) {
-            $students->where('nsin_registrations.id', $data['nsin_registration_id']);
-        }
-
-        if (isset($data['course_id'])) {
-            $students->where('courses.id', $data['course_id']);
-        }
-
-        if (isset($data['institution_id'])) {
-            $students->where('institutions.id', $data['institution_id']);
-        }
-
         return [
             'students' => $students->paginate()
         ];
@@ -82,25 +72,20 @@ class ApproveNsinRegistrationDetails extends Screen
      */
     public function name(): ?string
     {
-        return 'Approve/Reject Student Registration';
+        return 'Approve/Reject Student NSIN Registration';
     }
 
     public function description(): ?string
     {
-        $data = request()->all();
-        $institutionId = $data['institution_id'] ?? null;
-
-        if ($institutionId) {
-            $institution = Institution::find($institutionId);
+        if ($this->institutionId) {
+            $institution = Institution::find($this->institutionId);
             if ($institution) {
                 return 'Approve/Reject NSIN registrations for ' . Str::title($institution->institution_name);
             }
         }
 
-        return null; // Return null if institution_id is null or invalid.
+        return null;
     }
-
-
 
     /**
      * The screen's action buttons.
@@ -187,38 +172,19 @@ class ApproveNsinRegistrationDetails extends Screen
         ];
     }
 
-
-
     public function approve(Request $request, $id)
     {
-        $data = request()->all();
-
-        $nsinStudentRegistration = NsinStudentRegistration::query()
-            ->where('nsin_registration_id', $data['nsin_registration_id'])
-            ->where('student_id', $id)
-            ->latest()
-            ->first();
-
-        if ($nsinStudentRegistration != null) {
-            $nsinStudentRegistration->update([
-                'verify' => 1
-            ]);
-
-            $nsinStudentRegistration->save();
-
-            Alert::success('Student NSIN Registration approved');
-
-            return redirect()->back();
-        }
-
-        Alert::error("Unable to approve student at the moment");
-
-        return redirect()->back();
+        return $this->processRegistration($request, $id, 'approve');
     }
 
     public function reject(Request $request, $id)
     {
-        $data = request()->all();
+        return $this->processRegistration($request, $id, 'reject');
+    }
+
+    public function processRegistration(Request $request, $id, $action)
+    {
+        $data = $request->all();
 
         $nsinStudentRegistration = NsinStudentRegistration::query()
             ->where('nsin_registration_id', $data['nsin_registration_id'])
@@ -227,21 +193,23 @@ class ApproveNsinRegistrationDetails extends Screen
             ->first();
 
         if ($nsinStudentRegistration != null) {
-            $nsinStudentRegistration->update([
-                'verify' => 0,
-                'remarks' => $data['remarks']
-            ]);
-
-            $nsinStudentRegistration->save();
-
-            Alert::success('Student NSIN Registration rejected');
+            if ($action === 'approve') {
+                $nsinStudentRegistration->update(['verify' => 1]);
+                Alert::success('Student NSIN Registration approved');
+            } elseif ($action === 'reject') {
+                $nsinStudentRegistration->update([
+                    'verify' => 0,
+                    'remarks' => $data['remarks']
+                ]);
+                $nsinStudentRegistration->save();
+                Alert::success('Student NSIN Registration rejected');
+            }
 
             return redirect()->back();
         }
 
-        Alert::error("Unable to approve student at the moment");
-
+        Alert::error("Unable to $action student at the moment");
         return redirect()->back();
-
     }
+
 }

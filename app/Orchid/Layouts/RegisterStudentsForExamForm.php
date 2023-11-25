@@ -20,6 +20,8 @@ class RegisterStudentsForExamForm extends Listener
     public $courses = [];
     public $papers = [];
 
+    public $institution = null;
+
     /**
      * List of field names for which values will be listened.
      *
@@ -109,8 +111,11 @@ class RegisterStudentsForExamForm extends Listener
                     ->fromModel(Student::class, 'id')
                 ->title('Select students to register for Exams')
                     ->multiple()
-                    ->displayAppend('studentWithNsin')
+                    ->displayAppend('studentWithNin')
                     ->searchColumns('surname', 'othername', 'firstname')
+                    ->applyScope('filterByInstitution', [
+                        'id' => $this->institution
+                    ])
                     ->chunk(100),
             ])
         ];
@@ -139,6 +144,7 @@ class RegisterStudentsForExamForm extends Listener
             // Load the courses
             $institution = Institution::find($institutionId);
             $this->courses = $institution->courses->pluck('course_name', 'id');
+            $this->institution = $institution->id;
         }
 
         if ($courseId != null) {

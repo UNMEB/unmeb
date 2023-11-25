@@ -4,13 +4,21 @@ namespace App\Orchid\Screens\Administration\Staff;
 
 use App\Models\Institution;
 use App\Models\Staff;
+use Exception;
+use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\Cropper;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Picture;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
+use Orchid\Screen\Fields\Upload;
 use Orchid\Screen\Screen;
 use Orchid\Support\Color;
+use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
+use Illuminate\Support\Arr;
 
 class StaffEditScreen extends Screen
 {
@@ -76,19 +84,34 @@ class StaffEditScreen extends Screen
         return [
             Layout::block(
                 Layout::rows([
-                    Input::make('staff.staff_name')
+                    Group::make([
+                        Cropper::make('staff.picture')
+                        ->title('Staff Member Photo')
+                        ->width('270')
+                        ->height('270')
+                        ->required(),
+
+                    
+                    ]),
+
+                    Group::make([
+
+                        Input::make('staff.name')
                         ->title('Staff Name')
                         ->placeholder('Enter staff name'),
 
-                    Input::make('staff.telephone')
+                        Input::make('staff.telephone')
                         ->title('Phone Number')
                         ->type('tel')
+                        ->min('10')
+                        ->max('12')
                         ->placeholder('Enter Phone Number'),
 
                     Input::make('staff.email')
                         ->title('Email Address')
                         ->type('email')
                         ->placeholder('Enter email address'),
+                    ]),
                 ])
             )
                 ->title('Personal Information')
@@ -114,19 +137,29 @@ class StaffEditScreen extends Screen
                         ])
                         ->empty('Select Level of Education'),
 
-                    Input::make('staff.reg_date')
-                        ->title('Registration Date')
-                        ->type('date')
-                        ->placeholder('Registration Date'),
+                    Group::make([
+                        Input::make('staff.reg_date')
+                            ->title('Registration Date')
+                            ->type('date')
+                            ->placeholder('Registration Date'),
 
-                    Input::make('staff.reg_no')
-                        ->title('Registration Number')
-                        ->placeholder('Registration Number'),
+                        Input::make('staff.reg_no')
+                            ->title('Registration Number')
+                            ->type('numeric')
+                            ->placeholder('Registration Number'),
+                    ]),
 
-                    Input::make('staff.lic_exp')
-                        ->title('License Expiry')
-                        ->type('date')
-                        ->placeholder('License Expiry'),
+                    Group::make([
+                        Input::make('staff.council')
+                            ->title('Council')
+                            ->placeholder('Registration Council'),
+
+                        Input::make('staff.lic_exp')
+                            ->title('License Expiry')
+                            ->type('date')
+                            ->placeholder('License Expiry'),
+                    ]),
+
                 ])
             )
                 ->title('Education Information')
@@ -140,29 +173,35 @@ class StaffEditScreen extends Screen
                 ),
 
             Layout::block(
-                Layout::rows([Relation::make('staff.institution_id')
-                        ->fromModel(Institution::class, 'institution_name')
-                        ->applyScope('userInstitutions')
-                        ->title('Select Institution')
-                        ->placeholder('Select an institution'),
+                Layout::rows([
+
+                    Group::make([
+                        Relation::make('staff.institution_id')
+                            ->fromModel(Institution::class, 'institution_name')
+                            ->applyScope('userInstitutions')
+                            ->title('Select Institution')
+                            ->placeholder('Select an institution'),
 
 
-                    Select::make('staff.status')
-                        ->title('Status')
-                        ->options([
-                            'Part' => 'Part Time',
-                            'Full' => 'Full Time'
-                        ])
-                        ->empty('Select Employment Status'),
+                        Select::make('staff.status')
+                            ->title('Status')
+                            ->options([
+                                'Part' => 'Part Time',
+                                'Full' => 'Full Time'
+                            ])
+                            ->empty('Select Employment Status'),
+                    ]),
 
-                    Input::make('staff.designation')
-                        ->title('Designation')
-                        ->placeholder('Designation'),
+                    Group::make([
+                        Input::make('staff.designation')
+                            ->title('Designation')
+                            ->placeholder('Designation'),
 
-                    Input::make('staff.experience')
-                        ->title('Level of Experience')
-                        ->type('number')
-                        ->placeholder('Level of Experience'),
+                        Input::make('staff.experience')
+                            ->title('Level of Experience')
+                            ->type('number')
+                            ->placeholder('Level of Experience'),
+                    ]),
 
                     Select::make('staff.qualification')
                         ->title('Qualification')
@@ -181,8 +220,6 @@ class StaffEditScreen extends Screen
                         ])
                         ->empty('Select Qualification'),
 
-
-
                 ])
             )
                 ->title('Professional Information')
@@ -197,14 +234,20 @@ class StaffEditScreen extends Screen
 
             Layout::block(
                 Layout::rows([
-                    Input::make('staff.bank')->title('Bank Name')
-                        ->placeholder('Enter bank name'),
-                    Input::make('staff.branch')->title('Bank Branch')
-                        ->placeholder('Enter bank branch'),
-                    Input::make('staff.acc_name')->title('Account Name')
-                        ->placeholder('Enter account name'),
-                    Input::make('staff.acc_no')->title('Account Number')
-                        ->placeholder('Enter account number'),
+
+                    Group::make([
+                        Input::make('staff.bank')->title('Bank Name')
+                            ->placeholder('Enter bank name'),
+                        Input::make('staff.branch')->title('Bank Branch')
+                            ->placeholder('Enter bank branch'),
+                    ]),
+
+                    Group::make([
+                        Input::make('staff.acc_name')->title('Account Name')
+                            ->placeholder('Enter account name'),
+                        Input::make('staff.acc_no')->title('Account Number')
+                            ->placeholder('Enter account number'),
+                    ]),
                 ])
             )
                 ->title('Banking Information')
@@ -216,8 +259,68 @@ class StaffEditScreen extends Screen
                         ->canSee($this->staff->exists)
                         ->type(Color::BASIC)
                 )
-
-
         ];
+    }
+
+    public function save(Request $request)
+    {
+        $this->validate($request, [
+            'staff.name' => 'required',
+            'staff.telephone' => 'required',
+            'staff.email' => 'required',
+            'staff.education' => 'required',
+            'staff.reg_date' => 'required',
+            'staff.reg_no' => 'required',
+            'staff.lic_exp' => 'required',
+            'staff.institution_id' => 'required',
+            'staff.status' => 'required',
+            'staff.designation' => 'required',
+            'staff.experience' => 'required',
+            'staff.qualification' => 'required',
+            'staff.bank' => 'required',
+            'staff.branch' => 'required',
+            'staff.acc_name' => 'required',
+            'staff.acc_no' => 'required',
+            'staff.picture' => 'required',
+            'staff.council' => 'required'
+        ]);
+
+        $staffId = $this->staff->id;
+
+        // Check if we are updating an existing staff or creating a new one
+        if ($staffId != null) {
+            // Updating existing staff
+            $staff = Staff::findOrFail($staffId);
+        } else {
+            // Creating new staff
+            $staff = new Staff();
+        }
+
+        // Assign values from the request to the staff model
+        $staff->staff_name = $request->input('staff.name');
+        $staff->telephone = $request->input('staff.telephone');
+        $staff->email = $request->input('staff.email');
+        $staff->education = $request->input('staff.education');
+        $staff->reg_date = $request->input('staff.reg_date');
+        $staff->reg_no = $request->input('staff.reg_no');
+        $staff->lic_exp = $request->input('staff.lic_exp');
+        $staff->institution_id = $request->input('staff.institution_id');
+        $staff->status = $request->input('staff.status');
+        $staff->designation = $request->input('staff.designation');
+        $staff->experience = $request->input('staff.experience');
+        $staff->qualification = $request->input('staff.qualification');
+        $staff->bank = $request->input('staff.bank');
+        $staff->branch = $request->input('staff.branch');
+        $staff->acc_name = $request->input('staff.acc_name');
+        $staff->acc_no = $request->input('staff.acc_no');
+        $staff->picture = $request->input('staff.picture');
+        $staff->council = $request->input('staff.council');
+
+        // Save the staff model
+        $staff->save();
+
+        Alert::success('Staff record saved');
+
+        return redirect()->route('platform.staff');
     }
 }

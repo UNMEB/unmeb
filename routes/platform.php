@@ -69,6 +69,7 @@ use App\Orchid\Screens\User\UserListScreen;
 use App\Orchid\Screens\User\UserProfileScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
+use App\Orchid\Screens\StudentAccessLogListScreen;
 
 /*
 |--------------------------------------------------------------------------
@@ -381,9 +382,13 @@ Route::screen('registration/periods/nsin', NsinRegistrationPeriodListScreen::cla
 Route::screen('biometric/student_verification', StudentVerificationListScreen::class)
     ->name('platform.biometric.verification');
 
-//Platform > Registration > Periods > NSIN
+//Platform > Biometruc > Enrollment
 Route::screen('biometric/enrollment', StudentEnrollmentListScreen::class)
     ->name('platform.biometric.enrollment');
+
+//Platform > Biometruc > Access
+Route::screen('biometric/access', StudentAccessLogListScreen::class)
+    ->name('platform.biometric.access');
 
 // Platform > System > Finance > Accounts
 Route::screen('finance/accounts', AccountListScreen::class)

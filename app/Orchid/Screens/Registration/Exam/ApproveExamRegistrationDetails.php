@@ -2,9 +2,11 @@
 
 namespace App\Orchid\Screens\Registration\Exam;
 
+use App\Models\Institution;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
@@ -20,6 +22,14 @@ class ApproveExamRegistrationDetails extends Screen
     public $courseId;
     public $registrationId;
 
+    public function __construct(Request $request)
+    {
+        $data = $request->all();
+        $this->institutionId = $data['institution_id'] ?? null;
+        $this->courseId = $data['course_id'] ?? null;
+        $this->registrationId = $data['registration_id'] ?? null;
+    }
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -27,11 +37,6 @@ class ApproveExamRegistrationDetails extends Screen
      */
     public function query(): iterable
     {
-        $data = request()->all();
-        $this->institutionId = $data['institution_id'];
-        $this->courseId = $data['course_id'];
-        $this->registrationId = $data['registration_id'];
-
         $students = Student::select(
             'students.id',
             'institutions.institution_name',
@@ -60,7 +65,19 @@ class ApproveExamRegistrationDetails extends Screen
      */
     public function name(): ?string
     {
-        return 'Incomplete Exam Registrations';
+        return 'Approve/Reject Student Exam Registration';
+    }
+
+    public function description(): ?string
+    {
+        if ($this->institutionId) {
+            $institution = Institution::find($this->institutionId);
+            if ($institution) {
+                return 'Approve/Reject Exam registrations for ' . Str::title($institution->institution_name);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -81,6 +98,7 @@ class ApproveExamRegistrationDetails extends Screen
     public function layout(): iterable
     {
         return [
+            
             Layout::table('students', [
 
                 TD::make('id', 'ID'),
@@ -153,7 +171,13 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function approve(Request $request, $id)
     {
-        dd($id);
+        $studentId = $id;
+        $registrationId = $request->input('registration_id');
+
+
+        $studentRegistration = StudentRegistration::quer()
+            ->where('registration_id', $registrationId)
+            ->where('student_id', $studentId)->first();
     }
 
     public function reject(Request $request)

@@ -133,8 +133,16 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make('Years')
                         ->route('platform.years'),
                 ])
-                ->permission('platform.administration.list')
-                ->divider(),
+                ->permission('platform.administration.list'),
+
+                Menu::make('Biometric Access')
+                ->icon('clock')
+                ->list([
+                    Menu::make('Access Log')
+                        ->route('platform.biometric.access'),
+                    Menu::make('Enrollment')
+                        ->route('platform.biometric.enrollment')
+                ])->divider(),
 
             // Manage Finance
             Menu::make(__('Finance'))
@@ -171,6 +179,8 @@ class PlatformProvider extends OrchidServiceProvider
                 }, Color::DANGER)
                 ])
                 ->permission('platform.finance.list'),
+
+           
 
             Menu::make('Reports')
                 ->icon('bs.archive')

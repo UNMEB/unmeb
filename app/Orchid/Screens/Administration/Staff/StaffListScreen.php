@@ -74,6 +74,7 @@ class StaffListScreen extends Screen
         return [
             Layout::table('staff', [
                 TD::make('id', 'ID'),
+                TD::make('picture', 'Photo')->render(fn (Staff $staff) => $staff->avatar),
                 TD::make('staff_name', 'Name'),
                 TD::make('designation', 'Designation'),
                 TD::make('status', 'Status'),
