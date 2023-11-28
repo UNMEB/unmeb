@@ -70,13 +70,14 @@ class ContinuousAssessment extends Model
 
     public function getTotalTheoryMarkAttribute()
     {
-        return array_sum($this->theory_marks);
+        return is_array($this->theory_marks) ? array_sum($this->theory_marks) : 0;
     }
 
     public function getTotalPracticalMarkAttribute()
     {
-        return array_sum($this->practical_marks);
+        return is_array($this->practical_marks) ? array_sum($this->practical_marks) : 0;
     }
 
-    
+
+
 }
