@@ -136,7 +136,13 @@ class TransactionListScreen extends Screen
 
     public function print(Request $request, $id)
     {
-        $receiptData = [];
+        $receiptData = [
+            'amount' => '',
+            'amountInWords' => '',
+            'address'   => '',
+            'approvedBy' => '',
+            'institution' => '',
+        ];
 
         $pdf = Pdf::loadView('receipt', $receiptData);
 
