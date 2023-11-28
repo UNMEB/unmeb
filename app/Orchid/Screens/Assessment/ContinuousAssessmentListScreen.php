@@ -10,6 +10,7 @@ use App\Orchid\Layouts\AddStudentMarksForm;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Layouts\Modal;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Alert;
@@ -90,15 +91,16 @@ class ContinuousAssessmentListScreen extends Screen
 
             Layout::rows([
                 Group::make([
-                    Relation::make('institution_name')
+                    Select::make('institution_name')
                         ->fromModel(Institution::class, 'institution_name')
-                        ->title('Institution Name'),
+                        ->title('Filter By Institution Name')
+                        ->empty('Non Selected'),
                 ]),
                 Group::make([
                     Button::make('Submit'),
                     Button::make('Reset')->class('btn btn-dark btn-sm link-dark'),
                 ])->autoWidth(),
-            ]),
+            ])->title('Filter Results'),
 
             Layout::columns([
                 Layout::tabs([
