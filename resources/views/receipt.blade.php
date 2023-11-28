@@ -122,7 +122,7 @@
         </div>
         <div class="header">
             <div class="logo">
-                <img src="public/logo.png" alt="Company Logo" />
+                <img src="/logo.png" alt="Company Logo" />
             </div>
         </div>
 
