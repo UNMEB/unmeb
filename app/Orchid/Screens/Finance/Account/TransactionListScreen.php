@@ -128,9 +128,7 @@ class TransactionListScreen extends Screen
                         ->method('print', [
                             'id' => $data->id
                         ])
-                        ->class('btn btn-success btn-sm link-success')
-                        ->rawClick();
-
+                        ->rawClick(false);
                 })
             ])
         ];
@@ -138,17 +136,33 @@ class TransactionListScreen extends Screen
 
     public function print(Request $request, $id)
     {
+        $transaction = Transaction::find($id);
+
+        // Amount
+        $amount = $transaction->amount;
+
+        // Amount in words
+        $amountInWords = (new NumberFormatter('en_US', NumberFormatter::SPELLOUT))->format($amount);
+
+
+        // Html for address
+        $address = " Plot 157 Ssebowa Road,Kiwatule, Nakawa division, <br />
+
+        Kampala –Uganda (East Africa). <br />
+
+        P.O. Box 3513, Kampala (Uganda).";
+
         $receiptData = [
-            'amount' => '',
-            'amountInWords' => '',
-            'address'   => '',
-            'approvedBy' => '',
-            'institution' => '',
+            'amount' => 'Ush ' . number_format($amount),
+            'amountInWords' => Str::title($amountInWords),
+            'address'   => $address,
+            'approvedBy' => $transaction->approvedBy->name ?? 'UNMEB OSRS',
+            'institution' => $transaction->institution->institution_name,
         ];
 
         $pdf = Pdf::loadView('receipt', $receiptData);
 
-        return $pdf->download('receipt.pdf');
+        return $pdf->stream('receipt.pdf');
     }
 
     /**
@@ -163,7 +177,7 @@ class TransactionListScreen extends Screen
         if ($this->currentUser()->inRole('system-admin')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
-            $institution = $this->currentUser()->institution;
+            $institution =  $this->currentUser()->institution;
         }
 
         $accountId = $institution->account->id;
