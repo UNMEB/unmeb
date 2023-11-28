@@ -136,9 +136,11 @@ class TransactionListScreen extends Screen
 
     public function print(Request $request, $id)
     {
-        echo "Hello World";
+        $receiptData = [];
 
-        return back();
+        $pdf = Pdf::loadView('receipt', $receiptData);
+
+        return $pdf->download('receipt.pdf');
     }
 
     /**
