@@ -127,8 +127,7 @@ class TransactionListScreen extends Screen
                     return Button::make('Print Receipt')
                         ->method('print', [
                             'id' => $data->id
-                        ])
-                        ->rawClick(false);
+                        ]);
                 })
             ])
         ];
