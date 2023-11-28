@@ -136,6 +136,8 @@ class TransactionListScreen extends Screen
     public function print(Request $request, $id)
     {
         echo "Hello World";
+
+        return back();
     }
 
     /**
