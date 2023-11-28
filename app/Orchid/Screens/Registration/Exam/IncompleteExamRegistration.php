@@ -331,9 +331,9 @@ class IncompleteExamRegistration extends Screen
 
     public function export(Request $request)
     {
-        if (Storage::disk('local')->exists('public/incomplete_exam_registrations.csv')) {
+        if (Storage::disk('public')->exists('public/incomplete_exam_registrations.csv')) {
 
-            return Storage::disk('local')->download('public/incomplete_exam_registrations.csv');
+            return Storage::disk('public')->download('public/incomplete_exam_registrations.csv');
 
         } else {
             GenerateCSV::dispatch();

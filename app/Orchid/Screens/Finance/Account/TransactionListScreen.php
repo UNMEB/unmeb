@@ -160,9 +160,11 @@ class TransactionListScreen extends Screen
             'institution' => $transaction->institution->institution_name,
         ];
 
-        $pdf = Pdf::loadView('receipt', $receiptData);
+        dd($receiptData);
 
-        return $pdf->download('receipt.pdf');
+        // $pdf = Pdf::loadView('receipt', $receiptData);
+
+        // return $pdf->download('receipt.pdf');
     }
 
     /**
