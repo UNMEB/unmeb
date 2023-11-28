@@ -127,7 +127,8 @@ class TransactionListScreen extends Screen
                     return Button::make('Print Receipt')
                         ->method('print', [
                             'id' => $data->id
-                        ]);
+                        ])->rawClick();
+
                 })
             ])
         ];
@@ -152,7 +153,7 @@ class TransactionListScreen extends Screen
         if ($this->currentUser()->inRole('system-admin')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
-            $institution =  $this->currentUser()->institution;
+            $institution = $this->currentUser()->institution;
         }
 
         $accountId = $institution->account->id;
