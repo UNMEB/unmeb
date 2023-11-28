@@ -122,7 +122,7 @@
         </div>
         <div class="header">
             <div class="logo">
-                <img src="{{ asset('logo.png') }}" alt="Company Logo" />
+                <!-- <img src="{{ asset('logo.png') }}" alt="Company Logo" /> -->
             </div>
         </div>
 
