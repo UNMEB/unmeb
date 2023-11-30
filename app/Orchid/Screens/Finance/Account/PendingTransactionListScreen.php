@@ -2,10 +2,12 @@
 
 namespace App\Orchid\Screens\Finance\Account;
 
+use App\Exports\PendingTransactionExport;
 use App\Models\Institution;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
@@ -61,7 +63,13 @@ class PendingTransactionListScreen extends Screen
             ModalToggle::make('Deposit Funds')
             ->modal('depositFundsModal')
             ->method('deposit')
-            ->icon('wallet'),
+            ->icon('wallet')
+            ->class('btn btn-sm btn-success link-success'),
+
+            Button::make('Export Transactions')
+                ->method('export')
+                ->rawClick()
+                ->class('btn btn-sm btn-primary link-primary')
         ];
     }
 
@@ -77,8 +85,10 @@ class PendingTransactionListScreen extends Screen
             Layout::rows([
                 Group::make([
                     // Filter By Institution
-                    Input::make('institution_name')
-                        ->title('Filter By Institution'),
+                    Select::make('institution_id')
+                    ->title('Filter By Institution')
+                    ->fromModel(Institution::class, 'institution_name')
+                    ->empty('Select Option'),
 
                     // Filter By Transaction Type
                     Select::make('transaction_type')
@@ -86,7 +96,8 @@ class PendingTransactionListScreen extends Screen
                         ->options([
                             'credit' => 'Credit',
                             'debit' => 'Debit',
-                        ]),
+                        ])
+                        ->empty('Select Option'),
 
                     // Filter By Transaction Method
                     Select::make('transaction_method')
@@ -94,7 +105,8 @@ class PendingTransactionListScreen extends Screen
                         ->options([
                             'bank' => 'Bank Transfer',
                             'mobile' => 'Mobile Money',
-                        ]),
+                        ])
+                        ->empty('Select Option'),
 
                     // Filter By Date Range
                     DateRange::make('date_range')
@@ -104,12 +116,7 @@ class PendingTransactionListScreen extends Screen
                         ->popover('Select a date range to filter transactions')
                         ->help('Filter transactions by a specific date range')
                         ->autocomplete(false)
-                        ->allowClear(false)
-                        ->required()
-                        ->value([
-                            'start' => now()->subDays(7)->format('Y-m-d'),
-                            'end' => now()->format('Y-m-d'),
-                        ]),
+                        ->allowClear(false),
 
                 ]),
 
@@ -381,5 +388,20 @@ class PendingTransactionListScreen extends Screen
     public function currentUser(): User
     {
         return auth()->user();
+    }
+
+    public function filter(Request $request)
+    {
+        dd($request->all());
+    }
+
+    public function reset(Request $request)
+    {
+
+    }
+
+    public function export(Request $request)
+    {
+        return Excel::download(new PendingTransactionExport, 'pending_transactions.csv');
     }
 }
