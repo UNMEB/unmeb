@@ -96,7 +96,7 @@ class StaffEditScreen extends Screen
 
                     Group::make([
 
-                        Input::make('staff.name')
+                        Input::make('staff.staff_name')
                         ->title('Staff Name')
                         ->placeholder('Enter staff name'),
 
@@ -265,7 +265,7 @@ class StaffEditScreen extends Screen
     public function save(Request $request)
     {
         $this->validate($request, [
-            'staff.name' => 'required',
+            'staff.staff_name' => 'required',
             'staff.telephone' => 'required',
             'staff.email' => 'required',
             'staff.education' => 'required',
@@ -297,7 +297,7 @@ class StaffEditScreen extends Screen
         }
 
         // Assign values from the request to the staff model
-        $staff->staff_name = $request->input('staff.name');
+        $staff->staff_name = $request->input('staff.staff_name');
         $staff->telephone = $request->input('staff.telephone');
         $staff->email = $request->input('staff.email');
         $staff->education = $request->input('staff.education');

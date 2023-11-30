@@ -14,6 +14,7 @@ use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\Currency;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\DateRange;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
@@ -34,7 +35,7 @@ class AccountListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'accounts' => Account::orderBy('updated_at', 'DESC')->paginate(),
+            'accounts' => Account::filters()->orderBy('updated_at', 'DESC')->paginate(),
         ];
     }
 
@@ -123,6 +124,19 @@ class AccountListScreen extends Screen
                 ->placeholder(''),
             ]))
             ->applyButton('Export Accounts'),
+
+            Layout::rows([
+                Group::make([
+                    Relation::make('institution_name')
+                    ->fromModel(Institution::class,'institution_name')
+                    ->chunk(20)
+                    ->title('Filter By Institution')
+                    ->placeholder('Start typing...'),
+
+                DateRange::make('date')
+                    ->title('Filter By Date')
+                ])
+            ]),
 
             Layout::table('accounts', [
                 TD::make('id', 'ID'),
