@@ -3,7 +3,9 @@
 namespace App\Orchid\Screens\Assessment;
 
 use App\Models\ContinuousAssessment;
+use App\Models\Course;
 use App\Models\Institution;
+use App\Models\Paper;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Orchid\Layouts\AddStudentMarksForm;
@@ -33,12 +35,12 @@ class ContinuousAssessmentListScreen extends Screen
     {
         return [
             'results' => ContinuousAssessment::
-            with([
-                'institution',
-                'course',
-                'student'
-            ])
-            ->filters()->paginate()
+                with([
+                    'institution',
+                    'course',
+                    'student'
+                ])
+                ->filters()->paginate()
         ];
     }
 
@@ -91,15 +93,34 @@ class ContinuousAssessmentListScreen extends Screen
 
             Layout::rows([
                 Group::make([
-                    Select::make('institution_name')
+                    Select::make('institution_id')
                         ->fromModel(Institution::class, 'institution_name')
                         ->title('Filter By Institution Name')
                         ->empty('Non Selected'),
+
+                    Select::make('course_id')
+                        ->fromModel(Course::class, 'course_name')
+                        ->title('Filter By Program Name')
+                        ->empty('Non Selected'),
+
+                    Select::make('paper_id')
+                        ->fromModel(Paper::class, 'paper_name')
+                        ->title('Filter By Paper')
+                        ->empty('Non Selected'),
                 ]),
+
                 Group::make([
-                    Button::make('Submit'),
-                    Button::make('Reset')->class('btn btn-dark btn-sm link-dark'),
-                ])->autoWidth(),
+                    Button::make('Submit')
+                        ->method('filter')
+                        ->class('btn btn-primary'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+
             ])->title('Filter Results'),
 
             Layout::columns([
@@ -107,8 +128,8 @@ class ContinuousAssessmentListScreen extends Screen
                     'Continuous Assessment' => Layout::table('results', [
                         TD::make('id', 'ID'),
                         TD::make('institution.institution_name', 'Institution'),
-                        TD::make('course.course_name','Course Name'),
-                        TD::make('student.fullName','Student Name'),
+                        TD::make('course.course_name', 'Course Name'),
+                        TD::make('student.fullName', 'Student Name'),
                         TD::make('totalTheoryMark', 'Theory Marks'),
                         TD::make('totalPracticalMark', 'Practical Marks'),
                         TD::make('total_marks', 'Total Marks')
@@ -138,6 +159,38 @@ class ContinuousAssessmentListScreen extends Screen
         ]);
 
 
-        return Redirect::to($url);
-    }    
+        return redirect()->to($url);
+    }
+
+    public function filter(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+        $paperId = $request->input('paper_id');
+
+        // Define the filter parameters
+        $filterParams = [];
+
+        // Check and add each parameter to the filterParams array
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        if (!empty($courseId)) {
+            $filterParams['filter[course_id]'] = $courseId;
+        }
+
+        if (!empty($paperId)) {
+            $filterParams['filter[paper_id]'] = $paperId;
+        }
+
+        $url = route('platform.assessment.list', $filterParams);
+
+        return redirect()->to($url);
+    }
+
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.assessment.list');
+    }
 }

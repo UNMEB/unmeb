@@ -265,6 +265,4 @@ class AccountListScreen extends Screen
     {
         return redirect()->route('platform.systems.finance.accounts');
     }
-
-
 }

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('amount', 15, 2);
             $table->enum('method', ['bank', 'mobile_money'])->nullable();
             $table->enum('type', ['credit', 'debit']);
-            $table->integer('is_approved')->default(0); // 0 = pending, 1 = approved
+            $table->string('status')->default('pending');
             $table->foreignId('account_id');
             $table->foreignId('approved_by')
                 ->nullable();

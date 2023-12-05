@@ -15,7 +15,6 @@ class Account extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable, HasInstitution;
 
-
     protected $fillable = [
         'institution_id',
         'balance'

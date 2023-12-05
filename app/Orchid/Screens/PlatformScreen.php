@@ -19,6 +19,7 @@ use App\View\Components\GenderDistributionChart;
 use App\View\Components\InstitutionDistributionByCategoryChart;
 use App\View\Components\InstitutionDistributionByTypeChart;
 use App\View\Components\StudentRegistrationByCourseBarChart;
+use App\View\Components\StudentRegistrationByInstitution;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Orchid\Screen\Actions\Button;
@@ -38,11 +39,18 @@ class PlatformScreen extends Screen
     public function query(): iterable
     {
 
-        $data1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+        $studentRegistrationByCourse = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
         ->join('courses', 'registrations.course_id', '=', 'courses.id')
         ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
         ->groupBy('registrations.course_id')
         ->orderBy('registrations.course_id', 'asc')
+        ->get();
+
+        $studentRegistrationByInstitution = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+        ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
+        ->select('institutions.institution_name AS institution', DB::raw('COUNT(*) as count_of_students'))
+        ->groupBy('registrations.institution_id')
+        ->orderBy('registrations.institution_id', 'asc')
         ->get();
 
         $genderDistributionByCourse = DB::select('
@@ -85,7 +93,8 @@ class PlatformScreen extends Screen
                 'verified_nsin' => number_format($verifiedNsin),
                 'account_balance' => Account::sum('balance')
             ],
-            'student_registration_by_course' => $data1,
+            'student_registration_by_course' => $studentRegistrationByCourse,
+            'student_registration_by_institution' => $studentRegistrationByInstitution,
             'gender_distribution_by_course' => collect($genderDistributionByCourse),
             'institution_distribution_by_type' => collect($institutionDistributionByType),
             'institution_distribution_by_category' => collect($institutionDistributionByCategory)
@@ -154,8 +163,8 @@ class PlatformScreen extends Screen
 
         return [
             Layout::metrics($metrics),
+            
             Layout::columns([
-
                 // Student Registrations By Course
                 Layout::component(StudentRegistrationByCourseBarChart::class),
 
@@ -169,6 +178,11 @@ class PlatformScreen extends Screen
                 // Institution Distribution By Category
                 Layout::component(InstitutionDistributionByCategoryChart::class)
 
+            ]),
+
+            Layout::columns([
+                // Student Registrations By Institution
+                Layout::component(StudentRegistrationByInstitution::class), 
             ])
         ];
     }

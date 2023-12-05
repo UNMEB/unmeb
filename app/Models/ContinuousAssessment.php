@@ -5,12 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
 
 class ContinuousAssessment extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable;
+
+    protected $allowedFilters = [
+        'institution_id' => Where::class,
+        'course_id' => Where::class,
+        'paper_id' => Where::class,
+        'student_id' => Where::class,
+    ];
 
     protected $fillable = [
         'registration_period_id',
