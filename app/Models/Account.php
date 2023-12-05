@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
 
@@ -18,6 +19,10 @@ class Account extends Model
     protected $fillable = [
         'institution_id',
         'balance'
+    ];
+
+    protected $allowedFilters = [
+        'institution_id' => Where::class,
     ];
 
     public function lastTransaction()

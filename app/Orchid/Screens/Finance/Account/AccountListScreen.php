@@ -34,8 +34,11 @@ class AccountListScreen extends Screen
      */
     public function query(): iterable
     {
+        $accounts = Account::filters()
+            ->orderBy('updated_at', 'DESC');
+
         return [
-            'accounts' => Account::filters()->orderBy('updated_at', 'DESC')->paginate(),
+            'accounts' => $accounts->paginate(),
         ];
     }
 
@@ -85,7 +88,6 @@ class AccountListScreen extends Screen
     public function layout(): iterable
     {
         return [
-
             Layout::modal('depositFundsModal', Layout::rows([
                 Relation::make('institution_id')
                     ->fromModel(Institution::class, 'institution_name')
@@ -127,15 +129,23 @@ class AccountListScreen extends Screen
 
             Layout::rows([
                 Group::make([
-                    Relation::make('institution_name')
+                    Relation::make('institution_id')
                     ->fromModel(Institution::class,'institution_name')
                     ->chunk(20)
                     ->title('Filter By Institution')
                     ->placeholder('Start typing...'),
+                ]),
 
-                DateRange::make('date')
-                    ->title('Filter By Date')
-                ])
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
             ]),
 
             Layout::table('accounts', [
@@ -230,4 +240,31 @@ class AccountListScreen extends Screen
     {
         return Excel::download(new InstitutionAccountExport, 'accounts.csv', \Maatwebsite\Excel\Excel::CSV);
     }
+
+    public function filter(Request $request)
+    {
+        // Retrieve data from the request
+        $institutionId = $request->input('institution_id');
+        
+        // Define the filter parameters
+        $filterParams = [];
+
+        // Check and add each parameter to the filterParams array
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+        
+        // Generate the URL with the filter parameters using the "institutions" route
+        $url = route('platform.systems.finance.accounts', $filterParams);
+
+        // Redirect to the generated URL
+        return redirect()->to($url);
+    }
+
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.systems.finance.accounts');
+    }
+
+
 }

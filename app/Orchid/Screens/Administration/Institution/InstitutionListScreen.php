@@ -86,7 +86,6 @@ class InstitutionListScreen extends Screen
     public function layout(): iterable
     {
         return [
-
             Layout::rows([
                 Group::make([
                     Input::make('institution_name')
@@ -435,7 +434,7 @@ class InstitutionListScreen extends Screen
         $url = route('platform.institutions', $filterParams);
 
         // Redirect to the generated URL
-        return Redirect::to($url);
+        return redirect()->to($url);
     }
 
     /**
