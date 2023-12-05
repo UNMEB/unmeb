@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\AttendanceController;
-use App\Http\Controllers\PackingListController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -19,9 +17,3 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-
-Route::get('/packing_list', [PackingListController::class, 'index']);
-
-Route::post('/biometrics/verify', [AttendanceController::class, 'verify']);
-
-Route::post('/biometrics/enroll', [AttendanceController::class, 'enroll']);

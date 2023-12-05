@@ -70,7 +70,17 @@ class ContinuousAssessment extends Model
 
     public function getTotalTheoryMarkAttribute()
     {
-        return is_array($this->theory_marks) ? array_sum($this->theory_marks) : 0;
+        $firstAssignment = $this->theory_marks['first_assignment_marks'];
+        $secondAssignment = $this->theory_marks['second_assignment_marks'];
+        $averageAssignment = ($firstAssignment + $secondAssignment) /2;
+
+        $firstTest = $this->theory_marks['first_test_marks'];
+        $secondTest = $this->theory_marks['second_test_marks'];
+        $averageTest = ($firstTest + $secondTest) /2;
+
+        $average = ($averageAssignment + $averageTest);
+
+        return $average;
     }
 
     public function getTotalPracticalMarkAttribute()

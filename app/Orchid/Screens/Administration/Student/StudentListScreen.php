@@ -16,7 +16,6 @@ use App\Models\User;
 use App\Models\Year;
 use App\Orchid\Layouts\AddNewStudentForm;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
-use Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
@@ -39,6 +38,7 @@ use Orchid\Support\Facades\Toast;
 use Illuminate\Support\Str;
 
 use Maatwebsite\Excel\Excel as ExcelExcel;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 class StudentListScreen extends Screen
@@ -522,7 +522,7 @@ class StudentListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return \Maatwebsite\Excel\Facades\Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
+        return Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
     }
 
     public function edit(Request $request, Student $student)
