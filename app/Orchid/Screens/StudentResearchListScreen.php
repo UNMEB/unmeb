@@ -29,7 +29,7 @@ class StudentResearchListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Stduent Research';
+        return 'Student Research';
     }
 
     /**

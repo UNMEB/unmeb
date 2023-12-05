@@ -24,6 +24,7 @@ use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\Cropper;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
@@ -36,7 +37,9 @@ use Orchid\Support\Facades\Layout;
 use Orchid\Support\Facades\Toast;
 
 use Illuminate\Support\Str;
+
 use Maatwebsite\Excel\Excel as ExcelExcel;
+
 
 class StudentListScreen extends Screen
 {
@@ -182,8 +185,9 @@ class StudentListScreen extends Screen
 
                             ModalToggle::make('Edit')
                                 ->icon('bs.people')
-                                ->modal('asyncEditStudentModal')
+                                ->modal('editStudentModal')
                                 ->modalTitle('Edit Student Profile')
+                                ->method('edit')
                                 ->asyncParameters([
                                     'student' => $student->id
                                 ]),
@@ -206,7 +210,16 @@ class StudentListScreen extends Screen
                 ->applyButton('Create Student')
             ,
 
-            Layout::modal('asyncEditStudentModal', Layout::rows([
+            Layout::modal('editStudentModal', Layout::rows([
+
+                Cropper::make('student.passport')
+                        ->title('Provide Student Photo')
+                        ->type('file')
+                        ->name('student.passport')
+                        ->placeholder('Enter student passport photo')
+                        ->width(270)
+                        ->height(270)
+                        ->required(),
 
                 Group::make([
                     Input::make('student.surname')
@@ -267,12 +280,7 @@ class StudentListScreen extends Screen
                 ]),
 
                 Group::make([
-                    Input::make('student.passport')
-                        ->title('Provide Student Photo')
-                        ->type('file')
-                        ->name('student.passport')
-                        ->placeholder('Enter student passport photo')
-                        ->required(),
+                    
 
                     Input::make('student.nin')
                         ->title('National Identification Number / Passport Number')
@@ -280,7 +288,8 @@ class StudentListScreen extends Screen
 
                 ]),
 
-            ]))->async('asyncGetStudent'),
+            ]))->async('asyncGetStudent')
+            ->size(Modal::SIZE_LG),
 
             Layout::modal('asyncViewStudentModal', Layout::columns([
                 Layout::view('student_profile', [
@@ -513,7 +522,14 @@ class StudentListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
+        return \Maatwebsite\Excel\Facades\Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
+    }
+
+    public function edit(Request $request, Student $student)
+    {
+        $student->fill($request->input('student'))->save();
+
+        Alert::success('Student record updated');
     }
 
 }
