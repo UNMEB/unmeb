@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
@@ -64,6 +65,8 @@ class PaperListScreen extends Screen
             Button::make('Export Data')
                 ->method('download')
                 ->rawClick(false)
+                ->class('btn btn-primary btn-sm link-primary')
+                ->icon('bs.download'),
         ];
     }
 
@@ -103,23 +106,25 @@ class PaperListScreen extends Screen
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (Paper $paper) {
-                        $editButton = ModalToggle::make('Edit Paper')
+
+                       return Group::make([
+                            ModalToggle::make('Edit Paper')
                             ->modal('editPaperModal')
                             ->modalTitle('Edit Paper ' . $paper->name)
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
                                 'paper' => $paper->id,
                             ])
-                            ->render();
+                            ->class('btn btn-sm btn-success'),
 
-                        $deleteButton = Button::make('Delete')
+                            Button::make('Delete')
                             ->confirm('Are you sure you want to delete this paper?')
                             ->method('delete', [
                                 'id' => $paper->id
                             ])
-                            ->render();
+                            ->class('btn btn-sm btn-danger')
 
-                        return "<div style='display: flex; justify-content: space-between;'>$editButton  $deleteButton</div>";
+                        ]);
                     })
 
 

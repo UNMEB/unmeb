@@ -54,7 +54,7 @@ class PlatformProvider extends OrchidServiceProvider
             ->permission('platform.students.list'),
 
             // Manage Staff
-            Menu::make(__('Manage Staff'))
+            Menu::make(__('Manage Staff & Examiners'))
             ->route('platform.staff')
             ->icon('fa.user-graduate')
             ->permission('platform.staff.list'),
@@ -113,8 +113,8 @@ class PlatformProvider extends OrchidServiceProvider
                 ->divider(),
 
             // Manage Administration
-            Menu::make('Administration')
-            ->icon('bs.briefcase')
+            Menu::make('Administer Database')
+            ->icon('bs.database')
             ->title('')
                 ->list([
 
@@ -180,8 +180,6 @@ class PlatformProvider extends OrchidServiceProvider
                 ])
                 ->permission('platform.finance.list'),
 
-           
-
             Menu::make('Reports')
                 ->icon('bs.archive')
                 ->title('Reports')
@@ -207,6 +205,10 @@ class PlatformProvider extends OrchidServiceProvider
                 ])
                 ->permission('platform.surcharges.list')
                 ->divider(),
+
+            Menu::make('Student Research')
+                ->icon('bs.archive')
+                ->route('platform.student_research'),
 
             Menu::make('Comments')
                 ->icon('fa.comments')
@@ -249,7 +251,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.students.export', 'Export students'),
 
             // Manage Staff
-            ItemPermission::group('Manage Staff')
+            ItemPermission::group('Manage Staff & Examiners')
                 ->addPermission('platform.staff.list', 'View staff')
                 ->addPermission(
                     'platform.staff.create',
@@ -273,8 +275,8 @@ class PlatformProvider extends OrchidServiceProvider
                 ),
 
             // Manage Administration
-            ItemPermission::group('Manage Administration')
-            ->addPermission('platform.administration.list', 'View administration'),
+            ItemPermission::group('Administer Database')
+            ->addPermission('platform.administration.list', 'Administer Database'),
 
             // Manage NSIN Student Registration
             ItemPermission::group('Manage NSIN Registrations')

@@ -392,12 +392,27 @@ class PendingTransactionListScreen extends Screen
 
     public function filter(Request $request)
     {
-        dd($request->all());
+        $institutionId = $request->input('institution_id');
+        $transactionType = $request->input('transaction_type');
+        $transactionMethod = $request->input('transaction_method');
+        $dateRange = $request->input('date_range');
+        
+        // Define the filter parameters
+        $filterParams = [];
+
+        if(!empty($institutionId)) {
+            $filterParams['filter[institution_name]'] = $institutionId;
+        }
+
+        $url = route('platform.systems.finance.pending', $filterParams);
+
+        return redirect()->to($url);
+
     }
 
     public function reset(Request $request)
     {
-
+        return redirect()->route('platform.systems.finance.pending');
     }
 
     public function export(Request $request)

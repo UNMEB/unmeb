@@ -375,13 +375,10 @@ class InstitutionListScreen extends Screen
             // Display a success message using SweetAlert
             Alert::success("Institution data imported successfully");
 
-            // Data import was successful
-            return redirect()->back()->with('success', 'Institutions data imported successfully.');
+            
         } catch (\Exception $e) {
             // Handle any exceptions that may occur during import
             Alert::error($e->getMessage());
-
-            return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
         }
     }
 
@@ -392,7 +389,7 @@ class InstitutionListScreen extends Screen
      */
     public function download(Request $request)
     {
-        // return Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
+        return Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
     }
 
     /**

@@ -22,7 +22,8 @@ class UserEditLayout extends Rows
             Cropper::make('user.picture')
             ->title('User Picture')
             ->width(270)
-            ->height(270),
+            ->height(270)
+            ->required(),
 
             Input::make('user.name')
                 ->type('text')

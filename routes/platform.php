@@ -71,6 +71,7 @@ use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 use App\Orchid\Screens\StudentAccessLogListScreen;
 use App\Orchid\Screens\AddStudentAssessmentFormScreen;
+use App\Orchid\Screens\StudentResearchListScreen;
 
 /*
 |--------------------------------------------------------------------------
@@ -444,5 +445,9 @@ Route::screen('assessment/marks', AddStudentAssessmentFormScreen::class)
 // Platform > Assessment > List
 Route::screen('assessment', ContinuousAssessmentListScreen::class)
     ->name('platform.assessment.list');
+
+// Platform > Student Research
+Route::screen('student_research', StudentResearchListScreen::class)
+    ->name('platform.student_research');
 
 
