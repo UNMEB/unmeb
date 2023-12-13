@@ -43,21 +43,21 @@ class PlatformProvider extends OrchidServiceProvider
 
             // Continuous Assessment
             Menu::make(__('Continuous Assessment'))
-            ->route('platform.assessment.list')
-            ->icon('fa.file-signature')
+                ->route('platform.assessment.list')
+                ->icon('fa.file-signature')
                 ->permission('platform.assessment.list'),
 
             // Manage Students
             Menu::make(__('Manage Students'))
-            ->route('platform.students')
-            ->icon('fa.user-graduate')
-            ->permission('platform.students.list'),
+                ->route('platform.students')
+                ->icon('fa.user-graduate')
+                ->permission('platform.students.list'),
 
             // Manage Staff
             Menu::make(__('Manage Staff & Examiners'))
-            ->route('platform.staff')
-            ->icon('fa.user-graduate')
-            ->permission('platform.staff.list'),
+                ->route('platform.staff')
+                ->icon('fa.user-graduate')
+                ->permission('platform.staff.list'),
 
             // Manage Student NSIN Registration
             Menu::make(__('Student NSIN Registration'))
@@ -75,7 +75,7 @@ class PlatformProvider extends OrchidServiceProvider
 
                     Menu::make(__('Approve NSIN Registrations'))
                         ->route('platform.registration.nsin.approve'),
-            ])
+                ])
                 ->permission('platform.registration.nsin.list'),
 
             // Manage Student Exam Registration
@@ -102,27 +102,27 @@ class PlatformProvider extends OrchidServiceProvider
                 ->route('platform.registration.periods.nsin')
                 ->title('Registration Periods')
 
-            ->icon('fa.calendar-clock')
-            ->permission('platform.registration.periods.nsin.list'),
+                ->icon('fa.calendar-clock')
+                ->permission('platform.registration.periods.nsin.list'),
 
             // Manage Exam Registration Periods
             Menu::make(__('Exam Registration Periods'))
                 ->route('platform.registration.periods.exam')
                 ->icon('fa.calendar-pen')
-            ->permission('platform.registration.periods.exam.list')
+                ->permission('platform.registration.periods.exam.list')
                 ->divider(),
 
             // Manage Administration
             Menu::make('Administer Database')
-            ->icon('bs.database')
-            ->title('')
+                ->icon('bs.database')
+                ->title('')
                 ->list([
 
                     Menu::make('Districts')
                         ->route('platform.districts'),
 
                     Menu::make('Institutions')
-                    ->route('platform.institutions'),
+                        ->route('platform.institutions'),
 
                     Menu::make('Programs')
                         ->route('platform.courses'),
@@ -135,7 +135,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ])
                 ->permission('platform.administration.list'),
 
-                Menu::make('Biometric Access')
+            Menu::make('Biometric Access')
                 ->icon('clock')
                 ->list([
                     Menu::make('Access Log')
@@ -148,7 +148,7 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make(__('Finance'))
                 ->icon('bs.book')
                 ->badge(function () {
-                $pendingTransactionCount = Transaction::where('status', 'pending')->count();
+                    $pendingTransactionCount = Transaction::where('status', 'pending')->count();
                     if ($pendingTransactionCount > 0) {
                         return $pendingTransactionCount;
                     }
@@ -159,8 +159,8 @@ class PlatformProvider extends OrchidServiceProvider
 
                     // Menu for Institution Accounts
                     Menu::make(__('Institution Accounts'))
-                    ->route('platform.systems.finance.accounts')
-                    ->permission('platform.finance.accounts.list'),
+                        ->route('platform.systems.finance.accounts')
+                        ->permission('platform.finance.accounts.list'),
 
                     // Completed Transactions
                     Menu::make('Institution Transactions')
@@ -170,13 +170,13 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make('Pending Transactions')
                         ->route('platform.systems.finance.pending')
                         ->badge(function () {
-                    $pendingTransactionCount = Transaction::where('status', 'pending')->count();
+                            $pendingTransactionCount = Transaction::where('status', 'pending')->count();
                             if ($pendingTransactionCount > 0) {
                                 return $pendingTransactionCount;
                             }
 
                             return null;
-                }, Color::DANGER)
+                        }, Color::DANGER)
                 ])
                 ->permission('platform.finance.list'),
 
@@ -186,10 +186,10 @@ class PlatformProvider extends OrchidServiceProvider
                 ->list([
                     Menu::make('Packing List Report')
                         ->route('platform.reports.packing_list'),
-                Menu::make('NSIN Registration Report')
-                ->route('platform.reports.nsin_registration'),
-                Menu::make('Exam Registration Report')
-                ->route('platform.reports.exam_registration'),
+                    Menu::make('NSIN Registration Report')
+                        ->route('platform.reports.nsin_registration'),
+                    Menu::make('Exam Registration Report')
+                        ->route('platform.reports.exam_registration'),
                     Menu::make('Financial Report'),
                 ])
                 ->permission('platform.reports.list')
@@ -199,9 +199,9 @@ class PlatformProvider extends OrchidServiceProvider
                 ->icon('bs.archive')
                 ->list([
                     Menu::make('Surcharges')
-                ->route('platform.surcharges'),
+                        ->route('platform.surcharges'),
                     Menu::make('Surcharge Fees')
-                ->route('platform.surcharge-fees'),
+                        ->route('platform.surcharge-fees'),
                 ])
                 ->permission('platform.surcharges.list')
                 ->divider(),
@@ -212,20 +212,25 @@ class PlatformProvider extends OrchidServiceProvider
 
             Menu::make('Comments')
                 ->icon('fa.comments')
-            ->route('platform.comments.list')
-            ->permission('platform.comments.list'),
+                ->route('platform.comments.list')
+                ->permission('platform.comments.list'),
 
             Menu::make(__('Users'))
                 ->icon('bs.people')
-            ->route('platform.systems.users')
-            ->permission('platform.systems.users')
+                ->route('platform.systems.users')
+                ->permission('platform.systems.users')
                 ->title(__('Access Controls')),
 
             Menu::make(__('Roles'))
                 ->icon('bs.shield')
                 ->route('platform.systems.roles')
-            ->permission('platform.systems.roles')
-                ->divider(),
+                ->permission('platform.systems.roles'),
+
+            Menu::make('Settings')
+                ->icon('fa.wrench')
+                ->route('platform.system.settings')
+                ->permissions('platform.system.settings')
+                ->divider()
         ];
     }
 
@@ -239,7 +244,7 @@ class PlatformProvider extends OrchidServiceProvider
         return [
             // Manage Continuous Assessment
             ItemPermission::group('Continuous Assessment')
-            ->addPermission('platform.assessment.list', 'Access continuous Assessment'),
+                ->addPermission('platform.assessment.list', 'Access continuous Assessment'),
 
             // Manage Students
             ItemPermission::group('Manage Students')
@@ -276,53 +281,53 @@ class PlatformProvider extends OrchidServiceProvider
 
             // Manage Administration
             ItemPermission::group('Administer Database')
-            ->addPermission('platform.administration.list', 'Administer Database'),
+                ->addPermission('platform.administration.list', 'Administer Database'),
 
             // Manage NSIN Student Registration
             ItemPermission::group('Manage NSIN Registrations')
-            ->addPermission('platform.registration.nsin.list', 'View NSIN Registrations')
-            ->addPermission('platform.registration.nsin.create', 'Create NSIN Registrations')
-            ->addPermission('platform.registration.nsin.update', 'Update NSIN Registrations')
-            ->addPermission('platform.registration.nsin.delete', 'Delete NSIN Registrations')
-            ->addPermission('platform.registration.nsin.import', 'Import NSIN Registrations')
-            ->addPermission('platform.registration.nsin.export', 'Export NSIN Registrations'),
+                ->addPermission('platform.registration.nsin.list', 'View NSIN Registrations')
+                ->addPermission('platform.registration.nsin.create', 'Create NSIN Registrations')
+                ->addPermission('platform.registration.nsin.update', 'Update NSIN Registrations')
+                ->addPermission('platform.registration.nsin.delete', 'Delete NSIN Registrations')
+                ->addPermission('platform.registration.nsin.import', 'Import NSIN Registrations')
+                ->addPermission('platform.registration.nsin.export', 'Export NSIN Registrations'),
 
             // Manage Exam Studet Registration
             ItemPermission::group('Manage Exam Registrations')
-            ->addPermission('platform.registration.exam.list', 'View Exam Registrations')
-            ->addPermission('platform.registration.exam.create', 'Create Exam Registrations')
-            ->addPermission('platform.registration.exam.update', 'Update Exam Registrations')
-            ->addPermission('platform.registration.exam.delete', 'Delete Exam Registrations')
-            ->addPermission('platform.registration.exam.import', 'Import Exam Registrations')
-            ->addPermission('platform.registration.exam.export', 'Export Exam Registrations'),
+                ->addPermission('platform.registration.exam.list', 'View Exam Registrations')
+                ->addPermission('platform.registration.exam.create', 'Create Exam Registrations')
+                ->addPermission('platform.registration.exam.update', 'Update Exam Registrations')
+                ->addPermission('platform.registration.exam.delete', 'Delete Exam Registrations')
+                ->addPermission('platform.registration.exam.import', 'Import Exam Registrations')
+                ->addPermission('platform.registration.exam.export', 'Export Exam Registrations'),
 
             // Manage NSIN Registration Periods
             ItemPermission::group('NSIN Registration Periods')
-            ->addPermission('platform.registration.periods.nsin.list', 'View NSIN Registration Periods')
-            ->addPermission('platform.registration.periods.nsin.create', 'Create NSIN Registration Periods')
-            ->addPermission('platform.registration.periods.nsin.update', 'Update NSIN Registration Periods')
-            ->addPermission('platform.registration.periods.nsin.delete', 'Delete NSIN Registration Periods'),
+                ->addPermission('platform.registration.periods.nsin.list', 'View NSIN Registration Periods')
+                ->addPermission('platform.registration.periods.nsin.create', 'Create NSIN Registration Periods')
+                ->addPermission('platform.registration.periods.nsin.update', 'Update NSIN Registration Periods')
+                ->addPermission('platform.registration.periods.nsin.delete', 'Delete NSIN Registration Periods'),
 
             // Manage Exam Registration Periods
             ItemPermission::group('Exam Registration Periods')
-            ->addPermission('platform.registration.periods.exam.list', 'View Exam Registration Periods')
-            ->addPermission('platform.registration.periods.exam.create', 'Create Exam Registration Periods')
-            ->addPermission('platform.registration.periods.exam.update', 'Update Exam Registration Periods')
-            ->addPermission('platform.registration.periods.exam.delete', 'Delete Exam Registration Periods'),
+                ->addPermission('platform.registration.periods.exam.list', 'View Exam Registration Periods')
+                ->addPermission('platform.registration.periods.exam.create', 'Create Exam Registration Periods')
+                ->addPermission('platform.registration.periods.exam.update', 'Update Exam Registration Periods')
+                ->addPermission('platform.registration.periods.exam.delete', 'Delete Exam Registration Periods'),
 
             // Manage Institution Finance
             ItemPermission::group('Manage Finance')
                 ->addPermission(
                     'platform.finance.list',
-                'Manage Finances'
+                    'Manage Finances'
                 )
                 ->addPermission('platform.finance.transactions.pending', 'View Pending Transactions')
                 ->addPermission('platform.finance.transactions.complete', 'View Complete Transaction')
                 ->addPermission('platform.finance.deposit', 'Deposit Funds')
                 ->addPermission('platform.finance.approve', 'Approve Deposits')
                 ->addPermission('platform.finance.transactions.reverse', 'Reverse Transactions')
-            ->addPermission('platform.finance.transactions.flag', 'Flag Transaction')
-            ->addPermission('platform.finance.accounts.list', 'View Institution Accounts'),
+                ->addPermission('platform.finance.transactions.flag', 'Flag Transaction')
+                ->addPermission('platform.finance.accounts.list', 'View Institution Accounts'),
 
             // Manage Report
             ItemPermission::group('Manage Reports')
@@ -336,16 +341,16 @@ class PlatformProvider extends OrchidServiceProvider
 
             // Manage Surcharges  Surcharge Fees
             ItemPermission::group('Manage Surcharges & Fees')
-            ->addPermission('platform.surcharges.list', 'Manage Surcharges & Fees')
-            ->addPermission('platform.surcharges.types.list', 'View Surcharges')
-            ->addPermission('platform.surcharges.types.create', 'Create Surcharges')
-            ->addPermission('platform.surcharges.types.update', 'Update Surcharges')
-            ->addPermission('platform.surcharges.types.delete', 'Delete Surcharges')
-            ->addPermission('platform.surcharges.fees.list', 'View Surcharge Fees')
-            ->addPermission('platform.surcharges.fees.create', 'Create Surcharge Fee')
-            ->addPermission('platform.surcharges.fees.update', 'Update Surcharge Fee')
-            ->addPermission('platform.surcharges.fees.delete', 'Delete Surcharge Fee')
-            ->addPermission('platform.surcharges.fees.export', 'Export Surcharge Fees'),
+                ->addPermission('platform.surcharges.list', 'Manage Surcharges & Fees')
+                ->addPermission('platform.surcharges.types.list', 'View Surcharges')
+                ->addPermission('platform.surcharges.types.create', 'Create Surcharges')
+                ->addPermission('platform.surcharges.types.update', 'Update Surcharges')
+                ->addPermission('platform.surcharges.types.delete', 'Delete Surcharges')
+                ->addPermission('platform.surcharges.fees.list', 'View Surcharge Fees')
+                ->addPermission('platform.surcharges.fees.create', 'Create Surcharge Fee')
+                ->addPermission('platform.surcharges.fees.update', 'Update Surcharge Fee')
+                ->addPermission('platform.surcharges.fees.delete', 'Delete Surcharge Fee')
+                ->addPermission('platform.surcharges.fees.export', 'Export Surcharge Fees'),
 
 
 
@@ -354,7 +359,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.systems.users', __('Users')),
 
             ItemPermission::group(__('Internals'))
-            ->addPermission('platform.internals.all_institutions', 'View all institutions')
+                ->addPermission('platform.internals.all_institutions', 'View all institutions')
         ];
     }
 }

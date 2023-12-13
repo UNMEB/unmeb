@@ -101,7 +101,7 @@ class UserProfileScreen extends Screen
     public function save(Request $request): void
     {
         $request->validate([
-            'user.name'  => 'required|string',
+            'user.name' => 'required|string',
             'user.picture' => 'required',
             'user.email' => [
                 'required',
@@ -120,8 +120,8 @@ class UserProfileScreen extends Screen
     {
         $guard = config('platform.guard', 'web');
         $request->validate([
-            'old_password' => 'required|current_password:'.$guard,
-            'password'     => 'required|confirmed|different:old_password',
+            'old_password' => 'required|current_password:' . $guard,
+            'password' => 'required|confirmed|different:old_password',
         ]);
 
         tap($request->user(), function ($user) use ($request) {
