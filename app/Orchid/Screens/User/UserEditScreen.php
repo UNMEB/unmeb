@@ -39,7 +39,7 @@ class UserEditScreen extends Screen
         $user->load(['roles']);
 
         return [
-            'user'       => $user,
+            'user' => $user,
             'permission' => $user->getStatusPermission(),
         ];
     }
@@ -164,7 +164,7 @@ class UserEditScreen extends Screen
         $user->save();
 
         $permissions = collect($request->get('permissions'))
-            ->map(fn ($value, $key) => [base64_decode($key) => $value])
+            ->map(fn($value, $key) => [base64_decode($key) => $value])
             ->collapse()
             ->toArray();
 

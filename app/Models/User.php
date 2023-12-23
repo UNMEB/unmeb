@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Laravel\Sanctum\HasApiTokens;
 use Orchid\Filters\Types\Like;
 use Orchid\Filters\Types\Where;
 use Orchid\Filters\Types\WhereDateStartEnd;
@@ -9,6 +10,7 @@ use Orchid\Platform\Models\User as Authenticatable;
 
 class User extends Authenticatable
 {
+    use HasApiTokens;
     /**
      * The attributes that are mass assignable.
      *
@@ -20,6 +22,7 @@ class User extends Authenticatable
         'password',
         'permissions',
         'picture',
+        'institution_id'
     ];
 
     /**
@@ -39,8 +42,8 @@ class User extends Authenticatable
      * @var array
      */
     protected $casts = [
-        'permissions'          => 'array',
-        'email_verified_at'    => 'datetime',
+        'permissions' => 'array',
+        'email_verified_at' => 'datetime',
     ];
 
     /**
@@ -49,9 +52,9 @@ class User extends Authenticatable
      * @var array
      */
     protected $allowedFilters = [
-        'id'         => Where::class,
-        'name'       => Like::class,
-        'email'      => Like::class,
+        'id' => Where::class,
+        'name' => Like::class,
+        'email' => Like::class,
         'updated_at' => WhereDateStartEnd::class,
         'created_at' => WhereDateStartEnd::class,
     ];
@@ -80,7 +83,7 @@ class User extends Authenticatable
         // Check if there is a picture and image exists in public path
         if ($this->picture) {
             // Return img tag
-            return '<img src="' . $this->picture .  '" width="50px">';
+            return '<img src="' . $this->picture . '" width="50px">';
         }
 
         // Return placeholder avatar

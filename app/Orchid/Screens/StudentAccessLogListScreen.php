@@ -3,8 +3,12 @@
 namespace App\Orchid\Screens;
 
 use App\Models\BiometricAccessLog;
+use App\Models\Course;
+use App\Models\Institution;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\DateRange;
+use Orchid\Screen\Fields\DateTimer;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
@@ -68,12 +72,20 @@ class StudentAccessLogListScreen extends Screen
         return [
             Layout::rows([
                 Group::make([
-                    Input::make('institution_name')
-                        ->title('Institution Name'),
+                    Relation::make('institution_id')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->title('institution Name'),
+
+                    Relation::make('course_id')
+                        ->fromModel(Course::class, 'course_name')
+                        ->title('Course Name'),
 
                     // Filter By Student Name
                     Input::make('student_name')
                         ->title('Student Name'),
+
+                    DateRange::make('date')
+                        ->title('Date Range'),
                 ]),
 
                 Group::make([
@@ -93,7 +105,7 @@ class StudentAccessLogListScreen extends Screen
                 TD::make('institution.institution_name', 'Institution'),
                 TD::make('course.course_name', 'Program'),
                 TD::make('paper.paper_name', 'Paper'),
-                TD::make('date','Date'),
+                TD::make('date', 'Date'),
             ])
 
         ];

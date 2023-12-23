@@ -213,13 +213,13 @@ class StudentListScreen extends Screen
             Layout::modal('editStudentModal', Layout::rows([
 
                 Cropper::make('student.passport')
-                        ->title('Provide Student Photo')
-                        ->type('file')
-                        ->name('student.passport')
-                        ->placeholder('Enter student passport photo')
-                        ->width(270)
-                        ->height(270)
-                        ->required(),
+                    ->title('Provide Student Photo')
+                    ->type('file')
+                    ->name('student.passport')
+                    ->placeholder('Enter student passport photo')
+                    ->width(270)
+                    ->height(270)
+                    ->required(),
 
                 Group::make([
                     Input::make('student.surname')
@@ -280,7 +280,7 @@ class StudentListScreen extends Screen
                 ]),
 
                 Group::make([
-                    
+
 
                     Input::make('student.nin')
                         ->title('National Identification Number / Passport Number')
@@ -289,7 +289,7 @@ class StudentListScreen extends Screen
                 ]),
 
             ]))->async('asyncGetStudent')
-            ->size(Modal::SIZE_LG),
+                ->size(Modal::SIZE_LG),
 
             Layout::modal('asyncViewStudentModal', Layout::columns([
                 Layout::view('student_profile', [
@@ -398,13 +398,13 @@ class StudentListScreen extends Screen
         $yearId = $nsinRegistrationPeriod->year_id;
         $month = $nsinRegistrationPeriod->month;
 
-        $fee = 20000 * count($studentIds);
+        $fee = config('settings.fess.nsin_registration') * count($studentIds);
 
         $institution = Institution::find($institutionId);
 
         if ($fee > $institution->account->balance) {
             Alert::error('Account balance too low to complete this transaction. Please top up to continue');
-            return back();
+            return;
         }
 
         // Find the NSIN registration

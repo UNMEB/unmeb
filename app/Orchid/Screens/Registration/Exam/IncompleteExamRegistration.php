@@ -170,7 +170,7 @@ class IncompleteExamRegistration extends Screen
         $yearOfStudy = $request->input('year_of_study');
         $trial = $request->input('trial');
 
-        $costPerPaper = 50000;
+        $costPerPaper = config('settings.fees.paper_registration');
 
         $totalCost = 0;
 
@@ -236,7 +236,7 @@ class IncompleteExamRegistration extends Screen
                 'trial' => $trial,
             ])->first();
 
-            if($existingRegistration != null) {
+            if ($existingRegistration != null) {
                 // Student already has a registration
 
             } else {
@@ -254,9 +254,9 @@ class IncompleteExamRegistration extends Screen
 
             // Register Student Papers
             $studentCoursePapers = DB::table('course_paper') // Use the actual pivot table name
-            ->where('course_id', $course->id)
-            ->whereIn('paper_id', $paperIds)
-            ->pluck('id');
+                ->where('course_id', $course->id)
+                ->whereIn('paper_id', $paperIds)
+                ->pluck('id');
 
             // dd($studentCoursePapers);
 

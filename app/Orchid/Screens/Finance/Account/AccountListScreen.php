@@ -121,19 +121,19 @@ class AccountListScreen extends Screen
 
             Layout::modal('exportAccounts', Layout::rows([
                 DateRange::make('date_range')
-                ->title('Filter By Date')
-                ->format('Y-m-d')
-                ->placeholder(''),
+                    ->title('Filter By Date')
+                    ->format('Y-m-d')
+                    ->placeholder(''),
             ]))
-            ->applyButton('Export Accounts'),
+                ->applyButton('Export Accounts'),
 
             Layout::rows([
                 Group::make([
                     Relation::make('institution_id')
-                    ->fromModel(Institution::class,'institution_name')
-                    ->chunk(20)
-                    ->title('Filter By Institution')
-                    ->placeholder('Start typing...'),
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->chunk(20)
+                        ->title('Filter By Institution')
+                        ->placeholder('Start typing...'),
                 ]),
 
                 Group::make([
@@ -155,7 +155,7 @@ class AccountListScreen extends Screen
                 }),
                 TD::make('balance', 'Account Balance')
                     ->render(function ($account) {
-                        if ($account->balance < 500000) {
+                        if ($account->balance < config('settings.finance.minimum_balance')) {
                             return '<p class="text-danger bold strong">Ush ' . number_format($account->balance, 2) . '</p>';
                         }
 
@@ -164,20 +164,20 @@ class AccountListScreen extends Screen
                     ->alignRight(),
 
                 TD::make('future_balance', 'Pending Balance')
-                ->render(function ($account) {
-                    if ($account->future_balance < 500000) {
-                        return '<p class="text-default bold strong">Ush ' . number_format($account->future_balance, 2) . '</p>';
-                    }
+                    ->render(function ($account) {
+                        if ($account->future_balance < config('settings.finance.minimum_balance')) {
+                            return '<p class="text-default bold strong">Ush ' . number_format($account->future_balance, 2) . '</p>';
+                        }
 
-                    return '<p class="text-default bold strong">Ush ' . number_format($account->future_balance, 2) . '</p>';
-                })
+                        return '<p class="text-default bold strong">Ush ' . number_format($account->future_balance, 2) . '</p>';
+                    })
                     ->alignRight(),
 
                 TD::make('last_transaction', 'Last Transaction')
                     ->alignRight()
                     ->render(function (Account $account) {
-                    $balance = !empty($account->lastTransaction()) ? (float)$account->lastTransaction()->amount : 0.0;
-                    return '<p class="text-default bold strong">Ush ' . number_format($balance, 2) . '</p>';
+                        $balance = !empty($account->lastTransaction()) ? (float) $account->lastTransaction()->amount : 0.0;
+                        return '<p class="text-default bold strong">Ush ' . number_format($balance, 2) . '</p>';
                     }),
 
                 TD::make('last_transacted_at', __('Last Transacted At'))
@@ -205,7 +205,7 @@ class AccountListScreen extends Screen
         if ($this->currentUser()->inRole('system-admin')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
-            $institution =  $this->currentUser()->institution;
+            $institution = $this->currentUser()->institution;
         }
 
         $accountId = $institution->account->id;
@@ -245,7 +245,7 @@ class AccountListScreen extends Screen
     {
         // Retrieve data from the request
         $institutionId = $request->input('institution_id');
-        
+
         // Define the filter parameters
         $filterParams = [];
 
@@ -253,7 +253,7 @@ class AccountListScreen extends Screen
         if (!empty($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
-        
+
         // Generate the URL with the filter parameters using the "institutions" route
         $url = route('platform.systems.finance.accounts', $filterParams);
 
