@@ -118,16 +118,20 @@ class StudentListScreen extends Screen
             Layout::rows([
 
                 Group::make([
+                    Select::make('institution_id')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->title('Filter By Institution Name')
+                        ->empty('Non Selected'),
 
                     Input::make('name')
-                        ->title('Search by Name'),
+                        ->title('Filter By Name'),
 
                     Relation::make('district_id')
                         ->fromModel(District::class, 'district_name')
-                        ->title('District of origin'),
+                        ->title('Filter By District of origin'),
 
                     Select::make('gender')
-                        ->title('Gender')
+                        ->title('Filter By Gender')
                         ->options([
                             'Male' => 'Male',
                             'Female' => 'Female'
@@ -482,27 +486,32 @@ class StudentListScreen extends Screen
      */
     public function filter(Request $request)
     {
+        $institutionId = $request->input('institution_id');
         $name = $request->input('name');
         $gender = $request->input('gender');
         $district = $request->input('district_id');
 
-        $filters = [];
+        $filterParams = [];
+
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
 
         if (!empty($name)) {
-            $filters['filter[name]'] = $name;
+            $filterParams['filter[name]'] = $name;
         }
 
         if (!empty($gender)) {
-            $filters['filter[gender]'] = $gender;
+            $filterParams['filter[gender]'] = $gender;
         }
 
         if (!empty($district)) {
-            $filters['filter[district_id]'] = $district;
+            $filterParams['filter[district_id]'] = $district;
         }
 
-        $url = route('platform.students', $filters);
+        $url = route('platform.students', $filterParams);
 
-        return Redirect::to($url);
+        return redirect()->to($url);
     }
 
     /**

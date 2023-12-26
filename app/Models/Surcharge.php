@@ -12,7 +12,7 @@ class Surcharge extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable;
 
-    public function surchargeFees()
+    public function fees()
     {
         return $this->hasMany(SurchargeFee::class);
     }

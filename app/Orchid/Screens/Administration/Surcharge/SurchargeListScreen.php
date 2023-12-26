@@ -94,10 +94,14 @@ class SurchargeListScreen extends Screen
                     }),
 
                 TD::make('actions', 'Actions')
-                    ->width(180)
+                    ->width(360)
                     ->alignCenter()
                     ->render(function (Surcharge $surcharge) {
                         return  Group::make([
+                            Link::make('View Fees')
+                            ->route('platform.surcharge.fees', $surcharge->id)
+                            ->class('btn btn-primary btn-sm'),
+                            
                             ModalToggle::make('Edit')
                                 ->modal('editSurchargeModal')
                                 ->modalTitle('Edit Surcharge ')

@@ -3,32 +3,50 @@
 namespace App\Orchid\Screens\Administration\Surcharge;
 
 use App\Imports\SurchargeFeeImport;
+use App\Models\Course;
+use App\Models\Surcharge;
 use App\Models\SurchargeFee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\Currency;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
+use Orchid\Support\Color;
 use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
 class SurchargeFeeListScreen extends Screen
 {
+
+    /**
+     * @var Surcharge
+     */
+
+    public $surcharge;
+
+    public function __construct(Surcharge $surcharge)
+    {
+        $this->surcharge = $surcharge;
+    }
+
     /**
      * Fetch data to be displayed on the screen.
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Surcharge $surcharge): iterable
     {
-        $query = SurchargeFee::with(['course', 'surcharge'])
+        $query = $surcharge->fees()
             ->paginate();
 
         return [
+            'surcharge' => $surcharge,
             'surcharge_fees' => $query
         ];
     }
@@ -70,15 +88,15 @@ class SurchargeFeeListScreen extends Screen
                 TD::make('id', 'ID')
                     ->width('100'),
 
-                TD::make('surcharge', __('Surcharge'))->render(function (SurchargeFee $surchargeFee) {
-                    return optional($surchargeFee->surcharge)->surcharge_name;
+                TD::make('surcharge', __('Surcharge'))->render(function (SurchargeFee $fee) {
+                    return optional($fee->surcharge)->surcharge_name;
                 }),
 
-                TD::make('course', __('Program'))->render(function (SurchargeFee $surchargeFee) {
-                    return $surchargeFee->course->course_name;
+                TD::make('course', __('Program'))->render(function (SurchargeFee $fee) {
+                    return $fee->course->course_name;
                 }),
 
-                TD::make('fee', 'Program Fee')
+                TD::make('course_fee', 'Program Fee')
                     ->render(function ($data) {
                         return !empty($data->course_fee) ? number_format($data->course_fee) : 0;
                     }),
@@ -92,6 +110,19 @@ class SurchargeFeeListScreen extends Screen
                     ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
                     ->sort(),
+
+                TD::make('actions', 'Actions')
+                    ->align(TD::ALIGN_CENTER)
+                    ->render(function (SurchargeFee $fee) {
+                        return ModalToggle::make('Edit Course Fee')
+                            ->modal('editSurchargeFeeModal')
+                            ->modalTitle('Edit Course Fee ')
+                            ->method('edit')
+                            ->type(Color::PRIMARY)
+                            ->asyncParameters([
+                                'fee' => $fee->id,
+                            ]);
+                    })
             ]),
 
             Layout::modal('uploadSurchargeFeesModal', Layout::rows([
@@ -101,6 +132,38 @@ class SurchargeFeeListScreen extends Screen
             ]))
                 ->title('Upload Surcharge Fees')
                 ->applyButton('Upload Surcharge Fees'),
+
+            Layout::modal('editSurchargeFeeModal', Layout::rows([
+
+                Input::make('fee.surcharge.surcharge_name')
+                    ->disabled(true)
+                    ->horizontal()
+                    ->title('Surcharge'),
+
+                Input::make('fee.course.course_name')
+                    ->disabled(true)
+                    ->horizontal()
+                    ->title('Course'),
+
+                Input::make('fee.course_fee')
+                    ->title('Course Fee')
+                    ->type('number')
+                    ->placeholder('Enter course fee amount')
+                    ->horizontal(),
+            ]))
+                ->title('Update Surcharge Fee')
+                ->applyButton('Update Surcharge Fee')
+                ->async('asyncGetSurchargeFee'),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function asyncGetSurchargeFee(SurchargeFee $fee): iterable
+    {
+        return [
+            'fee' => $fee,
         ];
     }
 
@@ -151,5 +214,22 @@ class SurchargeFeeListScreen extends Screen
 
             return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
         }
+    }
+
+    public function edit(Request $request, SurchargeFee $fee)
+    {
+        $courseFee = $request->input('fee.course_fee');
+        $courseId = $fee->id;
+        $surchargeFee = SurchargeFee::findOrFail($courseId);
+        if ($surchargeFee != null) {
+            $surchargeFee->course_fee = $courseFee;
+            $surchargeFee->save();
+
+            Alert::success('Surcharge Fee Updated');
+
+            return;
+        }
+
+        Alert::error('Unable to find requested surcharge fee. Please check and try again');
     }
 }

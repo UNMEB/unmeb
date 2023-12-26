@@ -217,16 +217,23 @@ Route::screen('administration/surcharges', SurchargeListScreen::class)
             )
     );
 
-// Platform > Administration > Surcharge Fees
-Route::screen('administration/surcharge-fees', SurchargeFeeListScreen::class)
-    ->name('platform.surcharge-fees')
-    ->breadcrumbs(
-        fn(Trail $trail) => $trail
-            ->parent('platform.index')
-            ->push(
-                __('Surcharge Fees'),
-            )
-    );
+// // Platform > Administration > Surcharge Fees
+// Route::screen('administration/surcharge-fees', SurchargeFeeListScreen::class)
+//     ->name('platform.surcharge-fees')
+//     ->breadcrumbs(
+//         fn(Trail $trail) => $trail
+//             ->parent('platform.index')
+//             ->push(
+//                 __('Surcharge Fees'),
+//             )
+//     );
+
+// Platform > Administration > Surcharge > Fees
+Route::screen('administration/{surcharge}/fees', SurchargeFeeListScreen::class)
+    ->name('platform.surcharge.fees')
+    ->breadcrumbs(fn(Trail $trail, $surcharge) => $trail
+        ->parent('platform.surcharges')
+        ->push($surcharge->surcharge_name, route('platform.surcharge.fees', $surcharge)));
 
 // Platform > Comments
 Route::screen('comments', CommentListScreen::class)

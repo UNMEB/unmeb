@@ -197,12 +197,7 @@ class PlatformProvider extends OrchidServiceProvider
 
             Menu::make('Surcharges & Fees')
                 ->icon('bs.archive')
-                ->list([
-                    Menu::make('Surcharges')
-                        ->route('platform.surcharges'),
-                    Menu::make('Surcharge Fees')
-                        ->route('platform.surcharge-fees'),
-                ])
+                ->route('platform.surcharges')
                 ->permission('platform.surcharges.list')
                 ->divider(),
 
