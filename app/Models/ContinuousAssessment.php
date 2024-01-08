@@ -78,17 +78,23 @@ class ContinuousAssessment extends Model
 
     public function getTotalTheoryMarkAttribute()
     {
-        $firstAssignment = $this->theory_marks['first_assignment_marks'];
-        $secondAssignment = $this->theory_marks['second_assignment_marks'];
-        $averageAssignment = ($firstAssignment + $secondAssignment) /2;
+        // Check if $this->theory_marks is set and not null
+        if ($this->theory_marks !== null && is_array($this->theory_marks)) {
+            $firstAssignment = isset($this->theory_marks['first_assignment_marks']) ? $this->theory_marks['first_assignment_marks'] : 0;
+            $secondAssignment = isset($this->theory_marks['second_assignment_marks']) ? $this->theory_marks['second_assignment_marks'] : 0;
+            $averageAssignment = ($firstAssignment + $secondAssignment) / 2;
 
-        $firstTest = $this->theory_marks['first_test_marks'];
-        $secondTest = $this->theory_marks['second_test_marks'];
-        $averageTest = ($firstTest + $secondTest) /2;
+            $firstTest = isset($this->theory_marks['first_test_marks']) ? $this->theory_marks['first_test_marks'] : 0;
+            $secondTest = isset($this->theory_marks['second_test_marks']) ? $this->theory_marks['second_test_marks'] : 0;
+            $averageTest = ($firstTest + $secondTest) / 2;
 
-        $average = ($averageAssignment + $averageTest);
+            $average = ($averageAssignment + $averageTest);
 
-        return $average;
+            return $average;
+        } else {
+            // Handle the case where $this->theory_marks is null or not an array
+            return 0; // or any default value or appropriate action
+        }
     }
 
     public function getTotalPracticalMarkAttribute()
