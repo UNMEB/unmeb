@@ -6,6 +6,7 @@ namespace App\Orchid\Screens\Administration\Paper;
 use App\Exports\PaperExport;
 use App\Imports\PaperImport;
 use App\Models\Paper;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
@@ -107,22 +108,22 @@ class PaperListScreen extends Screen
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (Paper $paper) {
 
-                       return Group::make([
+                        return Group::make([
                             ModalToggle::make('Edit Paper')
-                            ->modal('editPaperModal')
-                            ->modalTitle('Edit Paper ' . $paper->name)
-                            ->method('edit') // You can define your edit method here
-                            ->asyncParameters([
-                                'paper' => $paper->id,
-                            ])
-                            ->class('btn btn-sm btn-success'),
+                                ->modal('editPaperModal')
+                                ->modalTitle('Edit Paper ' . $paper->name)
+                                ->method('edit') // You can define your edit method here
+                                ->asyncParameters([
+                                    'paper' => $paper->id,
+                                ])
+                                ->class('btn btn-sm btn-success'),
 
                             Button::make('Delete')
-                            ->confirm('Are you sure you want to delete this paper?')
-                            ->method('delete', [
-                                'id' => $paper->id
-                            ])
-                            ->class('btn btn-sm btn-danger')
+                                ->confirm('Are you sure you want to delete this paper?')
+                                ->method('delete', [
+                                    'id' => $paper->id
+                                ])
+                                ->class('btn btn-sm btn-danger')
 
                         ]);
                     })
@@ -146,7 +147,7 @@ class PaperListScreen extends Screen
                         'Paper III',
                         'Paper IV',
                         'Paper V',
-                    'Paper VI',
+                        'Paper VI',
                     ])
                     ->title('Paper')
                     ->placeholder('Select paper'),
@@ -180,14 +181,15 @@ class PaperListScreen extends Screen
                         'Paper III',
                         'Paper IV',
                         'Paper V',
-                    'Paper VI',
+                        'Paper VI',
                     ])
                     ->title('Paper')
                     ->placeholder('Select paper'),
 
                 Input::make('paper.abbrev')
-                    ->title('Year of Study')
-                    ->placeholder('Enter abbreviation'),
+                    ->title('Paper Abbreviation')
+                    ->placeholder('Enter abbreviation')
+                    ->max(2),
 
                 Input::make('paper.code')
                     ->title('Paper Code')
@@ -221,23 +223,27 @@ class PaperListScreen extends Screen
      */
     public function create(Request $request)
     {
-        $request->validate([
-            'paper.paper_name' => 'required',
-            'paper.code' => 'required',
-            'paper.yaer_of_study' => 'required',
-            'paper.paper' => 'required',
-            'paper.abbrev' => 'required',
-        ]);
+        try {
+            $request->validate([
+                'paper.paper_name' => 'required',
+                'paper.code' => 'required',
+                'paper.year_of_study' => 'required',
+                'paper.paper' => 'required',
+                'paper.abbrev' => 'required'
+            ]);
 
-        $paper = new Paper();
-        $paper->name = $request->input('paper.paper_name');
-        $paper->code = $request->input('paper.code');
-        $paper->year = $request->input('paper.year_of_study');
-        $paper->paper = $request->input('paper.paper');
-        $paper->abbrev = $request->input('paper.abbrev');
-        $paper->save();
+            $paper = new Paper();
+            $paper->paper_name = $request->input('paper.paper_name');
+            $paper->code = $request->input('paper.code');
+            $paper->year_of_study = $request->input('paper.year_of_study');
+            $paper->paper = $request->input('paper.paper');
+            $paper->abbrev = $request->input('paper.abbrev');
+            $paper->save();
 
-        Alert::success("Paper was created");
+            Alert::success("Paper was created");
+        } catch (Exception $e) {
+            Alert::error($e->getMessage());
+        }
     }
 
     /**

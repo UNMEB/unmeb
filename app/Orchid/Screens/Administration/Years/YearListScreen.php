@@ -127,7 +127,7 @@ class YearListScreen extends Screen
                     })
             ]),
             Layout::modal('createYearModal', Layout::rows([
-                Input::make('year.name')
+                Input::make('year.year')
                     ->title('Year Name')
                     ->placeholder('Enter year name')
                     ->help('The name of the year e.g 2012')
@@ -136,7 +136,7 @@ class YearListScreen extends Screen
                 ->applyButton('Create Year'),
 
             Layout::modal('editYearModal', Layout::rows([
-                Input::make('year.name')
+                Input::make('year.year')
                     ->type('text')
                     ->title('Year Name')
                     ->help('Year e.g 2012')
@@ -144,8 +144,8 @@ class YearListScreen extends Screen
 
                 Select::make('year.flag')
                     ->options([
-                        1  => 'Active',
-                        0  => 'Inactive',
+                        1 => 'Active',
+                        0 => 'Inactive',
                     ])
                     ->title('Flag')
                     ->help('Status for Active/Inactive year flag')
@@ -182,11 +182,11 @@ class YearListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'year.name' => 'required|numeric'
+            'year.year' => 'required|numeric'
         ]);
 
         $year = new Year();
-        $year->name = $request->input('year.name');
+        $year->year = $request->input('year.year');
         $year->save();
 
         Alert::success("Year was created");
@@ -200,12 +200,12 @@ class YearListScreen extends Screen
     public function edit(Request $request, Year $year): void
     {
         $request->validate([
-            'year.name'
+            'year.year'
         ]);
 
         $year->fill($request->input('year'))->save();
 
-        Alert::info(__('Year was updated.'));
+        Alert::info(__('Year info updated.'));
     }
 
     /**

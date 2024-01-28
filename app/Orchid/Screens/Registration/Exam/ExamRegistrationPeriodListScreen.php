@@ -3,6 +3,7 @@
 namespace App\Orchid\Screens\Registration\Exam;
 
 use App\Models\RegistrationPeriod;
+use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -12,6 +13,7 @@ use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
+use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
 class ExamRegistrationPeriodListScreen extends Screen
@@ -24,7 +26,8 @@ class ExamRegistrationPeriodListScreen extends Screen
     public function query(): iterable
     {
         $query = RegistrationPeriod::query()
-            ->orderBy('flag', 'desc');;
+            ->orderBy('flag', 'desc');
+        ;
         return [
             'periods' => $query->paginate()
         ];
@@ -49,16 +52,16 @@ class ExamRegistrationPeriodListScreen extends Screen
     {
         return [
             ModalToggle::make('Add Period')
-            ->modal('createPeriodModal')
-            ->method('create')
-            ->icon('plus'),
+                ->modal('createPeriodModal')
+                ->method('create')
+                ->icon('plus'),
             ModalToggle::make('Import Periods')
-            ->modal('uploadPeriodsModal')
-            ->method('upload')
-            ->icon('upload'),
+                ->modal('uploadPeriodsModal')
+                ->method('upload')
+                ->icon('upload'),
             Button::make('Export Data')
-            ->method('download')
-            ->rawClick(false)
+                ->method('download')
+                ->rawClick(false)
         ];
     }
 
@@ -75,24 +78,16 @@ class ExamRegistrationPeriodListScreen extends Screen
                 TD::make('reg_start_date', 'Start Date'),
                 TD::make('reg_end_date', 'End Date'),
                 TD::make('academic_year', 'Academic Year'),
-                TD::make('flag', 'Is Active')->render(fn ($data) => $data->flag == 1 ? 'Active' : 'Inactive'),
-                TD::make('created_at', __('Created On'))
-                ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT)
-                    ->sort(),
+                TD::make('flag', 'Is Active')->render(fn($data) => $data->flag == 1 ? 'Active' : 'Inactive'),
 
-                TD::make('updated_at', __('Last Updated'))
-                ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT)
-                    ->sort(),
                 TD::make(__('Actions'))
                     ->width(200)
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (RegistrationPeriod $period) {
                         $editButton = ModalToggle::make('Edit Period')
-                        ->modal('editPeriodModal')
-                        ->modalTitle('Edit Period ' . $period->year)
+                            ->modal('editPeriodModal')
+                            ->modalTitle('Edit Period ' . $period->academic_year)
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
                                 'period' => $period->id,
@@ -118,53 +113,35 @@ class ExamRegistrationPeriodListScreen extends Screen
             Layout::modal('createPeriodModal', Layout::rows([
 
                 DateTimer::make('period.reg_start_date')
-                ->title('Registration Start Date')
-                ->horizontal(),
+                    ->title('Registration Start Date')
+                    ->horizontal(),
 
                 DateTimer::make('period.reg_end_date')
-                ->title('Registration End Date')
-                ->horizontal(),
+                    ->title('Registration End Date')
+                    ->horizontal(),
 
                 // Academic Year
                 Select::make('period.academic_year')
-                ->title('Academic Year')
-                ->options([
-                    '2021-2022' => '2021-2022',
-                    '2022-2023' => '2022-2023',
-                    '2023-2024' => '2023-2024',
-                    '2024-2025' => '2024-2025',
-                    '2025-2026' => '2025-2026',
-                    '2026-2027' => '2026-2027',
-                    '2027-2028' => '2027-2028',
-                    '2028-2029' => '2028-2029',
-                    '2029-2030' => '2029-2030',
-                ])
-                    ->horizontal(),
-
-                Select::make('period.month')
-                ->options([
-                    'January'  => 'January',
-                    'February'  => 'February',
-                    'March'  => 'March',
-                    'April'  => 'April',
-                    'May'  => 'May',
-                    'June'  => 'June',
-                    'July'  => 'July',
-                    'August'  => 'August',
-                    'September'  => 'September',
-                    'October'  => 'October',
-                    'November'  => 'November',
-                    'December'  => 'December',
-                ])
-                    ->title('Period Month')
+                    ->title('Academic Year')
+                    ->options([
+                        '2021-2022' => '2021-2022',
+                        '2022-2023' => '2022-2023',
+                        '2023-2024' => '2023-2024',
+                        '2024-2025' => '2024-2025',
+                        '2025-2026' => '2025-2026',
+                        '2026-2027' => '2026-2027',
+                        '2027-2028' => '2027-2028',
+                        '2028-2029' => '2028-2029',
+                        '2029-2030' => '2029-2030',
+                    ])
                     ->horizontal(),
 
 
                 Select::make('period.flag')
-                ->options([
-                    1  => 'Active',
-                    0  => 'Inactive',
-                ])
+                    ->options([
+                        1 => 'Active',
+                        0 => 'Inactive',
+                    ])
                     ->title('Flag')
                     ->help('Status for Active/Inactive period flag')
                     ->horizontal()
@@ -174,40 +151,81 @@ class ExamRegistrationPeriodListScreen extends Screen
                 ->applyButton('Create Period'),
 
             Layout::modal('editPeriodModal', Layout::rows([
-
-                Relation::make('period.year_id')
-                ->title('Period Year')
-                ->fromModel(Year::class, 'year', 'id')
+                DateTimer::make('period.reg_start_date')
+                    ->title('Registration Start Date')
                     ->horizontal(),
 
-                Select::make('period.month')
-                ->title('Period Month')
-                ->options([
-                    'January'  => 'January',
-                    'February'  => 'February',
-                    'March'  => 'March',
-                    'April'  => 'April',
-                    'May'  => 'May',
-                    'June'  => 'June',
-                    'July'  => 'July',
-                    'August'  => 'August',
-                    'September'  => 'September',
-                    'October'  => 'October',
-                    'November'  => 'November',
-                    'December'  => 'December',
-                ])
+                DateTimer::make('period.reg_end_date')
+                    ->title('Registration End Date')
                     ->horizontal(),
+
+                // Academic Year
+                Select::make('period.academic_year')
+                    ->title('Academic Year')
+                    ->options([
+                        '2021-2022' => '2021-2022',
+                        '2022-2023' => '2022-2023',
+                        '2023-2024' => '2023-2024',
+                        '2024-2025' => '2024-2025',
+                        '2025-2026' => '2025-2026',
+                        '2026-2027' => '2026-2027',
+                        '2027-2028' => '2027-2028',
+                        '2028-2029' => '2028-2029',
+                        '2029-2030' => '2029-2030',
+                    ])
+                    ->horizontal(),
+
 
                 Select::make('period.flag')
-                ->options([
-                    1  => 'Active',
-                    0  => 'Inactive',
-                ])
+                    ->options([
+                        1 => 'Active',
+                        0 => 'Inactive',
+                    ])
                     ->title('Flag')
                     ->help('Status for Active/Inactive period flag')
                     ->horizontal()
                     ->empty('No select')
             ]))->async('asyncGetPeriod'),
         ];
+    }
+
+    public function asyncGetPeriod(RegistrationPeriod $period): iterable
+    {
+        return [
+            'period' => $period,
+        ];
+    }
+
+    public function create(Request $request)
+    {
+        $request->validate([
+            'period.reg_start_date' => 'required',
+            'period.reg_end_date' => 'required',
+            'period.academic_year' => 'required',
+            'period.flag' => 'required'
+        ]);
+
+        $period = new RegistrationPeriod();
+        $period->reg_start_date = $request->input('period.reg_start_date');
+        $period->reg_end_date = $request->input('period.reg_end_date');
+        $period->academic_year = $request->input('period.academic_year');
+        $period->flag = $request->input('period.flag');
+        $period->save();
+
+        Alert::success("Exam registration period saved");
+    }
+
+    public function edit(Request $request, RegistrationPeriod $period): void
+    {
+        $request->validate([
+            'period.reg_start_date' => 'required',
+            'period.reg_end_date' => 'required',
+            'period.academic_year' => 'required',
+            'period.flag' => 'required'
+        ]);
+
+        $period->fill($request->input('period'))->save();
+
+        Alert::info(__('Exam registration period updated.'));
     }
 }

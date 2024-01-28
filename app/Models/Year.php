@@ -10,4 +10,8 @@ use Orchid\Screen\AsSource;
 class Year extends Model
 {
     use HasFactory, AsSource, OrderByLatest;
+
+    protected $fillable = [
+        'year'
+    ];
 }

@@ -14,6 +14,15 @@ class RegistrationPeriod extends Model
 
     public function getStartAndEndDateAttribute()
     {
-        return $this->reg_start_date . " - ". $this->reg_end_date;
+        return $this->reg_start_date . " - " . $this->reg_end_date;
     }
+
+    protected $fillable = [
+        'reg_start_date',
+        'reg_end_date',
+        'academic_year',
+        'flag'
+    ];
+
+    public $timestamps = false;
 }
