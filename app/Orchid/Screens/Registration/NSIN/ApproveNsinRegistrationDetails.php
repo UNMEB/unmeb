@@ -73,7 +73,7 @@ class ApproveNsinRegistrationDetails extends Screen
      */
     public function name(): ?string
     {
-        return 'Approve/Reject Student NSIN Registration';
+        return 'Student NSIN Applications';
     }
 
     public function description(): ?string

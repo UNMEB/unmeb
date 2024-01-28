@@ -64,6 +64,10 @@ class PlatformProvider extends OrchidServiceProvider
                 ->title('Registration')
                 ->icon('fa.screen-users')
                 ->list([
+
+                    Menu::make(__('NSIN Applications'))
+                        ->route('platform.registration.nsin.approve'),
+
                     Menu::make(__('Incomplete NSIN Registrations'))
                         ->route('platform.registration.nsin.incomplete'),
 
@@ -73,8 +77,7 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make(__('Rejected NSIN Registrations'))
                         ->route('platform.registration.nsin.rejected'),
 
-                    Menu::make(__('Approve NSIN Registrations'))
-                        ->route('platform.registration.nsin.approve'),
+
                 ])
                 ->permission('platform.registration.nsin.list'),
 
