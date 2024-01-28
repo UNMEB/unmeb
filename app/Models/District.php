@@ -14,4 +14,6 @@ class District extends Model
     protected $fillable = [
         'district_name'
     ];
+
+    public $timestamps = false;
 }

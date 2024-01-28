@@ -99,27 +99,27 @@ class DistrictListScreen extends Screen
                     ->cantHide()
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (District $district) {
-                    return Group::make([
-                        ModalToggle::make('Edit District')
-                            ->modal('editDistrictModal')
-                            ->modalTitle('Edit ' . $district->name)
-                            ->method('edit') // You can define your edit method here
-                            ->asyncParameters([
-                                'district' => $district->id,
-                            ])
-                            ->class('btn btn-primary btn-sm'),
+                        return Group::make([
+                            ModalToggle::make('Edit District')
+                                ->modal('editDistrictModal')
+                                ->modalTitle('Edit ' . $district->district_name)
+                                ->method('edit') // You can define your edit method here
+                                ->asyncParameters([
+                                    'district' => $district->id,
+                                ])
+                                ->class('btn btn-primary btn-sm'),
 
-                        Button::make('Delete')
-                            ->confirm('Are you sure you want to delete this district?')
-                            ->method('delete', [
-                                'id' => $district->id
-                            ])
+                            Button::make('Delete')
+                                ->confirm('Are you sure you want to delete this district?')
+                                ->method('delete', [
+                                    'id' => $district->id
+                                ])
                                 ->class('btn btn-danger btn-sm')
                         ])->fullWidth();
                     }),
             ]),
             Layout::modal('createDistrictModal', Layout::rows([
-                Input::make('district.name')
+                Input::make('district.district_name')
                     ->title('District Name')
                     ->placeholder('Enter district name')
                     ->help('The name of the district e.g Masaka')
@@ -128,7 +128,7 @@ class DistrictListScreen extends Screen
                 ->applyButton('Create District'),
 
             Layout::modal('editDistrictModal', Layout::rows([
-                Input::make('district.name')
+                Input::make('district.district_name')
                     ->type('text')
                     ->title('District Name')
                     ->help('District e.g 2012')
@@ -163,11 +163,11 @@ class DistrictListScreen extends Screen
     public function create(Request $request)
     {
         $request->validate([
-            'district.name' => 'required|numeric'
+            'district.district_name' => 'required'
         ]);
 
         $district = new District();
-        $district->name = $request->input('district.name');
+        $district->district_name = $request->input('district.district_name');
         $district->save();
 
         Alert::success("District was created");
@@ -181,7 +181,7 @@ class DistrictListScreen extends Screen
     public function edit(Request $request, District $district): void
     {
         $request->validate([
-            'district.name'
+            'district.district_name'
         ]);
 
         $district->fill($request->input('district'))->save();

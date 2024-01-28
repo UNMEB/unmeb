@@ -33,7 +33,7 @@ class AppSettingListScreen extends Screen
      */
     public function query(): iterable
     {
-        dd(config('config.settings'));
+        // dd(config('config.settings'));
 
         return [
             'email.smtp_host' => config('settings.email.smtp_host'),
@@ -102,10 +102,11 @@ class AppSettingListScreen extends Screen
             ])
                 ->title('Email Configuration (SMTP Settings)')
                 ->description('Setup email delivery settings for UNMEB')
-                ->commands(Button::make('Save')
-                    ->method('save')
-                    ->icon('bs.check-circle')
-                    ->class('btn btn-success')
+                ->commands(
+                    Button::make('Save')
+                        ->method('save')
+                        ->icon('bs.check-circle')
+                        ->class('btn btn-success')
                 ),
 
             Layout::block([
@@ -120,10 +121,11 @@ class AppSettingListScreen extends Screen
             ])
                 ->title('Administration Settings')
                 ->description('Definition for fixed constants for various variables')
-                ->commands(Button::make('Save')
-                    ->method('save')
-                    ->icon('bs.check-circle')
-                    ->class('btn btn-success')
+                ->commands(
+                    Button::make('Save')
+                        ->method('save')
+                        ->icon('bs.check-circle')
+                        ->class('btn btn-success')
                 ),
 
 
