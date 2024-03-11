@@ -12,6 +12,7 @@ class Year extends Model
     use HasFactory, AsSource, OrderByLatest;
 
     protected $fillable = [
-        'year'
+        'year',
+        'flag'
     ];
 }

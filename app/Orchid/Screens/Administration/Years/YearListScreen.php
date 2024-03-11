@@ -34,7 +34,7 @@ class YearListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'years' => Year::paginate()
+            'years' => Year::latest()->paginate()
         ];
     }
 
@@ -200,7 +200,8 @@ class YearListScreen extends Screen
     public function edit(Request $request, Year $year): void
     {
         $request->validate([
-            'year.year'
+            'year.year',
+            'year.flag'
         ]);
 
         $year->fill($request->input('year'))->save();
