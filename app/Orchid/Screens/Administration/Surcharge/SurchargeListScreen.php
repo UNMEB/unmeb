@@ -99,9 +99,9 @@ class SurchargeListScreen extends Screen
                     ->render(function (Surcharge $surcharge) {
                         return  Group::make([
                             Link::make('View Fees')
-                            ->route('platform.surcharge.fees', $surcharge->id)
-                            ->class('btn btn-primary btn-sm'),
-                            
+                                ->route('platform.surcharge.fees', $surcharge->id)
+                                ->class('btn btn-primary btn-sm'),
+
                             ModalToggle::make('Edit')
                                 ->modal('editSurchargeModal')
                                 ->modalTitle('Edit Surcharge ')
@@ -121,7 +121,7 @@ class SurchargeListScreen extends Screen
             ]),
 
             Layout::modal('createSurchargeModal', Layout::rows([
-                Input::make('surcharge.name')
+                Input::make('surcharge.surcharge_name')
                     ->title('Surcharge Name')
                     ->placeholder('Enter name of surcharge')
                     ->horizontal(),
@@ -130,7 +130,7 @@ class SurchargeListScreen extends Screen
                 ->applyButton('Create Surcharge'),
 
             Layout::modal('editSurchargeModal', Layout::rows([
-                Input::make('surcharge.name')
+                Input::make('surcharge.surcharge_name')
                     ->title('Surcharge Name')
                     ->placeholder('Enter name of surcharge')
                     ->horizontal(),

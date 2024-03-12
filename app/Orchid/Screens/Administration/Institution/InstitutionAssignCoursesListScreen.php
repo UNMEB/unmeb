@@ -43,7 +43,7 @@ class InstitutionAssignCoursesListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Assign Courses';
+        return 'Assign Programs';
     }
 
     /**

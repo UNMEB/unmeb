@@ -5,14 +5,13 @@ namespace App\Orchid\Screens\Registration\NSIN;
 use App\Models\Institution;
 use App\Models\NsinStudentRegistration;
 use App\Models\Student;
+use App\Orchid\Screens\TDCheckbox;
 use Illuminate\Http\Request;
 use Orchid\Screen\Screen;
 use Illuminate\Support\Str;
-use Log;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
-use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\TD;
@@ -35,11 +34,6 @@ class ApproveNsinRegistrationDetails extends Screen
         $this->nsinRegistrationId = $data['nsin_registration_id'] ?? null;
     }
 
-    /**
-     * Fetch data to be displayed on the screen.
-     *
-     * @return array
-     */
     public function query(): iterable
     {
         $students = Student::select(
@@ -66,11 +60,6 @@ class ApproveNsinRegistrationDetails extends Screen
         ];
     }
 
-    /**
-     * The name of the screen displayed in the header.
-     *
-     * @return string|null
-     */
     public function name(): ?string
     {
         return 'Student NSIN Applications';
@@ -88,99 +77,73 @@ class ApproveNsinRegistrationDetails extends Screen
         return null;
     }
 
-    /**
-     * The screen's action buttons.
-     *
-     * @return \Orchid\Screen\Action[]
-     */
     public function commandBar(): iterable
     {
-        return [];
+        return [
+            ModalToggle::make("Approve/Reject NSIN Applications")->modal('approveRejectModal')
+                ->method('bulkAction', [
+                    'nsin_registration_id' => $this->nsinRegistrationId,
+                    'course_id' => $this->courseId,
+                    'institution_id' => $this->institutionId
+                ]),
+        ];
     }
 
-    /**
-     * The screen's layout elements.
-     *
-     * @return \Orchid\Screen\Layout[]|string[]
-     */
     public function layout(): iterable
     {
         return [
             Layout::table('students', [
-
+                TDCheckbox::make('student_ids', 'Student ID')
+                    ->checkboxSet('form', 'screen-modal-form-approveRejectModal'),
                 TD::make('id', 'ID'),
-                // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
-                TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
+                TD::make('district_id', 'District')->render(fn (Student $student) => $student->district->district_name),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
                 TD::make('nsin', 'NSIN'),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email'),
                 TD::make('remarks', 'Remarks'),
-                TD::make('action', 'Actions')->render(function ($row) {
-                    return Group::make([
-                        Button::make('Approve')
-                            ->type(Color::SUCCESS)
-                            ->method('approve', [
-                                'id' => $row->id,
-                                'nsin_registration_id' => $this->nsinRegistrationId,
-                                'course_id' => $this->courseId,
-                                'institution_id' => $this->institutionId
-                            ])->canSee($row->verify == 0),
-
-                        ModalToggle::make('Reject')
-                            ->modal('rejectRegistrationModal')
-                            ->modalTitle('Reject NSIN Registration')
-                            ->method('reject', [
-                                'id' => $row->id,
-                                'nsin_registration_id' => $this->nsinRegistrationId,
-                                'course_id' => $this->courseId,
-                                'institution_id' => $this->institutionId
-                            ])
-                            ->type(Color::DANGER),
-                    ]);
+                TD::make('Status', 'Status')->render(function ($row) {
+                    return $row->verify == 1 ? 'Approved' : '';
                 })
             ]),
 
-            Layout::modal('rejectRegistrationModal', [
-
-                Layout::view('student_info', [
-                    'name' => null,
-                    'message' => 'Reject NSIN registration for '
-                ]),
-
-                Layout::rows([
-
-                    TextArea::make('remarks')
-                        ->title('Reason for Rejecting Student')
-                        ->placeholder('Enter reason for rejection...')
-                        ->required()
-                ])
-            ])->async('asyncGetStudent')
-
+            Layout::modal('approveRejectModal', Layout::rows([
+                Select::make('action')
+                    ->options([
+                        'approve' => 'Approve',
+                        'reject' => 'Reject'
+                    ])
+                    ->title('Select Action')
+                    ->required(),
+                TextArea::make('remarks')
+                    ->title('Reason')
+                    ->required()
+            ]))
         ];
     }
 
-    public function asyncGetStudent(Student $student): iterable
+    public function bulkAction(Request $request)
     {
-        return [
-            'student' => $student,
-            'name' => $student->fullName,
-        ];
-    }
 
-    public function approve(Request $request, $id)
-    {
-        return $this->processRegistration($request, $id, 'approve');
-    }
+        $data = $request->all();
+        $studentIds = $request->get('student-ids');
 
-    public function reject(Request $request, $id)
-    {
-        return $this->processRegistration($request, $id, 'reject');
+        if (empty($studentIds)) {
+            Alert::error("Please select students to perform the action.");
+            return redirect()->back();
+        }
+
+        foreach ($studentIds as $studentId) {
+            $this->processRegistration($request, $studentId, $request->get('action'));
+        }
+
+        Alert::success('Action performed successfully.');
+        return redirect()->back();
     }
 
     public function processRegistration(Request $request, $id, $action)
@@ -195,14 +158,16 @@ class ApproveNsinRegistrationDetails extends Screen
 
         if ($nsinStudentRegistration != null) {
             if ($action === 'approve') {
-                $nsinStudentRegistration->update(['verify' => 1]);
+                $nsinStudentRegistration->update([
+                    'verify' => 1,
+                    'remarks' => $data['remarks']
+                ]);
                 Alert::success('Student NSIN Registration approved');
             } elseif ($action === 'reject') {
                 $nsinStudentRegistration->update([
                     'verify' => 0,
                     'remarks' => $data['remarks']
                 ]);
-                $nsinStudentRegistration->save();
                 Alert::success('Student NSIN Registration rejected');
             }
 
@@ -212,5 +177,4 @@ class ApproveNsinRegistrationDetails extends Screen
         Alert::error("Unable to $action student at the moment");
         return redirect()->back();
     }
-
 }
