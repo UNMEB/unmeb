@@ -91,7 +91,7 @@ class PlatformScreen extends Screen
                 'biometric_enrollment' => BiometricEnrollment::count(),
                 'pending_nsin' => number_format($pendingNsin),
                 'verified_nsin' => number_format($verifiedNsin),
-                'account_balance' => number_format(Account::sum('balance'))
+                'account_balance' => number_format((float) Account::sum('balance'), 0)
             ],
             'student_registration_by_course' => $studentRegistrationByCourse,
             'student_registration_by_institution' => $studentRegistrationByInstitution,
