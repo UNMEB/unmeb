@@ -50,7 +50,7 @@
 
     <link rel='stylesheet' href='https://pivottable.js.org/dist/pivot.css'>
 
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
 
 </head>
 
