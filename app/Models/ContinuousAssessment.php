@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Scopes\InstitutionScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Filters\Filterable;
@@ -102,6 +103,9 @@ class ContinuousAssessment extends Model
         return is_array($this->practical_marks) ? array_sum($this->practical_marks) : 0;
     }
 
-
-
+    protected static function booted()
+    {
+        $user = auth()->user() ?? null;
+        static::addGlobalScope(new InstitutionScope($user));
+    }
 }

@@ -1,0 +1,12 @@
+{
+  "resources/js/app.js": {
+    "file": "assets/app-02317797.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  },
+  "resources/js/bulk_select.js": {
+    "file": "assets/bulk_select-4ed993c7.js",
+    "isEntry": true,
+    "src": "resources/js/bulk_select.js"
+  }
+}
