@@ -18,7 +18,7 @@
             xAxis: {
                 categories: data.map(item => item.course),
                 title: {
-                    text: 'Courses'
+                    text: 'Programs'
                 }
             },
             yAxis: {
