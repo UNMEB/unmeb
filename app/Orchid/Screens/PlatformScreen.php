@@ -154,7 +154,7 @@ class PlatformScreen extends Screen
             ];
         } else if ($this->currentUser()->inRole('institution')) {
             $metrics = [
-                'Account Balance' => 'metrics.account_balance',
+                'Account Balance (UGX)' => 'metrics.account_balance',
                 'Total Programs' => 'metrics.courses',
                 'Total Staff' => 'metrics.staff',
                 'Total Students' => 'metrics.students',
