@@ -57,7 +57,7 @@ class AddNewStudentForm extends Listener
 
                 Group::make([
                     Input::make('student.nin')
-                        ->title('National Identification Number / Passport Number')
+                        ->title('National Identification Number / Passport Number / Learners Identification Number')
                         ->required(),
                 ]),
 
