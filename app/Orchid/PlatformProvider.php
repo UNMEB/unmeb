@@ -85,7 +85,7 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make(__('Student Exam Registration'))
                 ->icon('fa.cubes')
                 ->list([
-                    Menu::make(__('Incomplete Exam Registrations'))
+                    Menu::make(__('Exam Registrations'))
                         ->route('platform.registration.exam.incomplete'),
 
                     Menu::make(__('Accepted Exam Registrations'))
