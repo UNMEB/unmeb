@@ -31,7 +31,9 @@ class InstitutionScope implements Scope
 
             // Check if the user has access to the institution
             if (!$hasAccess) {
-                $builder->where('institution_id', $institutionId);
+                // $builder->where('institution_id', $institutionId);
+
+                $builder->where($model->getTable() . '.institution_id', $institutionId);
             }
         }
     }

@@ -200,6 +200,7 @@ class StaffEditScreen extends Screen
                         Input::make('staff.experience')
                             ->title('Level of Experience')
                             ->type('number')
+                            ->min(0)
                             ->placeholder('Level of Experience'),
                     ]),
 

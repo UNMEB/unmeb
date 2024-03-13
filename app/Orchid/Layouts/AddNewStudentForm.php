@@ -165,12 +165,16 @@ class AddNewStudentForm extends Listener
      */
     public function handle(Repository $repository, Request $request): Repository
     {
+
         $previousNSIN = $request->get('previous_nsin');
 
         if ($previousNSIN != null) {
+
             // Prepopulate our form
             $student = Student::firstWhere('nsin', $previousNSIN);
             $this->student = $student;
+
+            dd($this->student);
         }
 
         return $repository
