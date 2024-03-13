@@ -54,6 +54,11 @@ class IncompleteExamRegistration extends Screen
             ->groupBy('i.id', 'i.institution_name', 'r.id', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             ->orderBy('r.updated_at', 'desc');
 
+        if (!auth()->user()->hasAccess('platform.internals.all_institutions')) {
+            $query->where('institution_id', auth()->user()->institution_id);
+        }
+
+
         return [
             'results' => $query->paginate(),
         ];
@@ -267,7 +272,6 @@ class IncompleteExamRegistration extends Screen
                 $studentPaperRegistration->course_paper_id = $coursePaperId;
                 $studentPaperRegistration->save();
             }
-
         }
 
         if ($bill > $accountBalance) {
@@ -319,7 +323,6 @@ class IncompleteExamRegistration extends Screen
         $url = route('platform.registration.exam.incomplete', $filterParams);
 
         return redirect()->to($url);
-
     }
 
     public function reset(Request $request)
@@ -334,7 +337,6 @@ class IncompleteExamRegistration extends Screen
         if (Storage::disk('public')->exists('public/incomplete_exam_registrations.csv')) {
 
             return Storage::disk('public')->download('public/incomplete_exam_registrations.csv');
-
         } else {
             GenerateCSV::dispatch();
 

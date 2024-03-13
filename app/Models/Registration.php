@@ -14,7 +14,7 @@ use Orchid\Screen\AsSource;
 
 class Registration extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution;
+    use HasFactory, AsSource, Filterable, Sortable;
 
     protected $allowedFilters = [
         'institution_name' => Like::class,
@@ -41,9 +41,9 @@ class Registration extends Model
         return $query->where('completed', 0);
     }
 
-    protected static function booted()
-    {
-        $user = auth()->user() ?? null;
-        static::addGlobalScope(new InstitutionScope($user));
-    }
+    // protected static function booted()
+    // {
+    //     $user = auth()->user() ?? null;
+    //     static::addGlobalScope(new InstitutionScope($user));
+    // }
 }
