@@ -142,8 +142,8 @@ class AddNewStudentForm extends Listener
                     ->name('student.passport')
                     ->placeholder('Enter student passport photo')
                     ->required()
-                    ->width(1080)
-                    ->height(1080),
+                    ->width(480)
+                    ->height(480),
 
 
 
