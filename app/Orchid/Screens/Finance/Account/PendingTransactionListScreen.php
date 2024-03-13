@@ -34,9 +34,9 @@ class PendingTransactionListScreen extends Screen
     public function query(): iterable
     {
         $transactions = Transaction::with('institution', 'account')->where('status', 'pending')
-        ->filters()
+            ->filters()
             ->defaultSort('id', 'desc')
-            ->get();
+            ->paginate();
         return [
             'transactions' => $transactions
         ];
@@ -61,10 +61,10 @@ class PendingTransactionListScreen extends Screen
     {
         return [
             ModalToggle::make('Deposit Funds')
-            ->modal('depositFundsModal')
-            ->method('deposit')
-            ->icon('wallet')
-            ->class('btn btn-sm btn-success link-success'),
+                ->modal('depositFundsModal')
+                ->method('deposit')
+                ->icon('wallet')
+                ->class('btn btn-sm btn-success link-success'),
 
             Button::make('Export Transactions')
                 ->method('export')
@@ -86,9 +86,9 @@ class PendingTransactionListScreen extends Screen
                 Group::make([
                     // Filter By Institution
                     Select::make('institution_id')
-                    ->title('Filter By Institution')
-                    ->fromModel(Institution::class, 'institution_name')
-                    ->empty('Select Option'),
+                        ->title('Filter By Institution')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->empty('Select Option'),
 
                     // Filter By Transaction Type
                     Select::make('transaction_type')
@@ -220,9 +220,6 @@ class PendingTransactionListScreen extends Screen
                             ])
                             ->class('btn btn-sm btn-warning'),
                     ])->autoWidth();
-
-
-
                 })->alignCenter()
                     ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'))
             ]),
@@ -242,7 +239,7 @@ class PendingTransactionListScreen extends Screen
                         ->placeholder('Start typing')
                 ])
             ])->async('asyncGetTransaction')
-            ->applyButton('Approve Transaction'),
+                ->applyButton('Approve Transaction'),
 
             Layout::modal('declineTransactionModal', [
 
@@ -259,7 +256,7 @@ class PendingTransactionListScreen extends Screen
                         ->placeholder('Start typing')
                 ])
             ])->async('asyncGetTransaction')
-            ->applyButton('Decline Transaction'),
+                ->applyButton('Decline Transaction'),
 
             Layout::modal('flagTransactionModal', [
 
@@ -276,7 +273,7 @@ class PendingTransactionListScreen extends Screen
                         ->placeholder('Start typing')
                 ])
             ])->async('asyncGetTransaction')
-            ->applyButton('Flag Transaction')
+                ->applyButton('Flag Transaction')
         ];
     }
 
@@ -396,18 +393,17 @@ class PendingTransactionListScreen extends Screen
         $transactionType = $request->input('transaction_type');
         $transactionMethod = $request->input('transaction_method');
         $dateRange = $request->input('date_range');
-        
+
         // Define the filter parameters
         $filterParams = [];
 
-        if(!empty($institutionId)) {
+        if (!empty($institutionId)) {
             $filterParams['filter[institution_name]'] = $institutionId;
         }
 
         $url = route('platform.systems.finance.pending', $filterParams);
 
         return redirect()->to($url);
-
     }
 
     public function reset(Request $request)
