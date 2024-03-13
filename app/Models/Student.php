@@ -46,7 +46,7 @@ class Student extends Model
         'gender' => Like::class,
         'district_id' => Where::class,
         'name' => StudentNameFilter::class,
-        
+
     ];
 
     public function district()
@@ -62,9 +62,9 @@ class Student extends Model
     public function getAvatarAttribute()
     {
         // Check if there is a passport and image exists in public path
-        if ($this->passport && file_exists(public_path('photos/' . $this->passport))) {
+        if ($this->passport) {
             // Return img tag
-            return '<img src="' . asset('photos/' . $this->passport) .  '" width="50px">';
+            return '<img src="' . $this->passport .  '" width="50px">';
         }
 
         // Return placeholder avatar

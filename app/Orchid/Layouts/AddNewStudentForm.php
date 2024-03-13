@@ -126,8 +126,7 @@ class AddNewStudentForm extends Listener
                         ->title('District')
                         ->fromModel(District::class, 'district_name')
                         ->empty('Non Selected')
-                        ->value($this->student->district_id ?? null)
-                        ->required(),
+                        ->value($this->student->district_id ?? null),
 
                     Input::make('student.location')
                         ->title('Address')
@@ -144,8 +143,6 @@ class AddNewStudentForm extends Listener
                     ->required()
                     ->width(480)
                     ->height(480),
-
-
 
             ])
         ];
