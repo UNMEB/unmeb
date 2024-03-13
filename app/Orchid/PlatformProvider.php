@@ -60,7 +60,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->permission('platform.staff.list'),
 
             // Manage Student NSIN Registration
-            Menu::make(__('Student NSIN Registration'))
+            Menu::make(__('NSIN Registration'))
                 ->title('Registration')
                 ->icon('fa.screen-users')
                 ->list([

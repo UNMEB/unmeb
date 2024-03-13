@@ -43,10 +43,10 @@ class AddNewStudentForm extends Listener
             Layout::rows([
 
                 Select::make('new_registration')
-                    ->title('New / Continuing Student')
+                    ->title('New / Extension Student')
                     ->options([
                         'New' => 'New Student',
-                        'Continuing' => 'Continuing Student'
+                        'Continuing' => 'Extension Student'
                     ])
                     ->empty('Non Selected')
                     ->required(),
@@ -165,16 +165,12 @@ class AddNewStudentForm extends Listener
      */
     public function handle(Repository $repository, Request $request): Repository
     {
-
         $previousNSIN = $request->get('previous_nsin');
 
         if ($previousNSIN != null) {
-
             // Prepopulate our form
             $student = Student::firstWhere('nsin', $previousNSIN);
             $this->student = $student;
-
-            dd($this->student);
         }
 
         return $repository
