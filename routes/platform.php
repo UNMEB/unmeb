@@ -336,7 +336,7 @@ Route::screen('registration/exam/incomplete', IncompleteExamRegistration::class)
     ->name('platform.registration.exam.incomplete')
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
-        ->push(__('Incomplete Exam Registrations'), route('platform.registration.exam.incomplete')));
+        ->push(__('Exam Registrations'), route('platform.registration.exam.incomplete')));
 
 
 // Platform > Registration > Exam > Accepted > Details
