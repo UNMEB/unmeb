@@ -169,7 +169,7 @@ class AddNewStudentForm extends Listener
 
         if ($previousNSIN != null) {
             // Prepopulate our form
-            $student = Student::firstWhere('nsin', $previousNSIN);
+            $student = Student::withoutGlobalScopes()->firstWhere('nsin', $previousNSIN);
             $this->student = $student;
         }
 
