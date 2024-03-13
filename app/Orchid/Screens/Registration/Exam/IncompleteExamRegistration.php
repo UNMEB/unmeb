@@ -50,7 +50,7 @@ class IncompleteExamRegistration extends Screen
             ->join('registrations as r', 'i.id', '=', 'r.institution_id')
             ->join('courses as c', 'r.course_id', '=', 'c.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->select('i.id AS institution_id', 'i.institution_name', 'r.id as registration_id', 'c.id as course_id', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
+            // ->select('i.id AS institution_id', 'i.institution_name', 'r.id as registration_id', 'c.id as course_id', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             ->groupBy('i.id', 'i.institution_name', 'r.id', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             ->orderBy('r.updated_at', 'desc');
 
@@ -134,21 +134,21 @@ class IncompleteExamRegistration extends Screen
                 TD::make('registration_id', 'ID'),
                 TD::make('institution_name', 'Institution Name'),
                 TD::make('course_name', 'Course Name'),
-                TD::make('register_count', 'All Registrations')
-                    ->render(function ($data) {
-                        $regs = StudentRegistration::query()
-                            ->where('registration_id', $data->registration_id)
-                            ->count();
-                        return $regs;
-                    }),
-                TD::make('register_count', 'Pending Registrations')
-                    ->render(function ($data) {
-                        $regs = StudentRegistration::query()
-                            ->where('registration_id', $data->registration_id)
-                            ->where('sr_flag', 0)
-                            ->count();
-                        return $regs;
-                    }),
+                // TD::make('register_count', 'All Registrations')
+                //     ->render(function ($data) {
+                //         $regs = StudentRegistration::query()
+                //             ->where('registration_id', $data->registration_id)
+                //             ->count();
+                //         return $regs;
+                //     }),
+                // TD::make('register_count', 'Pending Registrations')
+                //     ->render(function ($data) {
+                //         $regs = StudentRegistration::query()
+                //             ->where('registration_id', $data->registration_id)
+                //             ->where('sr_flag', 0)
+                //             ->count();
+                //         return $regs;
+                //     }),
                 TD::make('actions', 'Actions')->render(function ($data) {
                     return Link::make('View Details')
                         ->class('btn btn-primary btn-sm link-primary')
