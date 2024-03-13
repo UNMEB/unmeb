@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
+use Orchid\Screen\Fields\Cropper;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Picture;
@@ -60,8 +61,6 @@ class AddNewStudentForm extends Listener
                         ->title('National Identification Number / Passport Number / Learners Identification Number')
                         ->required(),
                 ]),
-
-
 
                 Group::make([
                     Input::make('student.surname')
@@ -138,7 +137,7 @@ class AddNewStudentForm extends Listener
                 ]),
 
 
-                Picture::make('student.passport')
+                Cropper::make('student.passport')
                     ->title('Provide Student Photo')
                     ->name('student.passport')
                     ->placeholder('Enter student passport photo')
