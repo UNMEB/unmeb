@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->decimal('amount', 15, 2);
-            $table->enum('method', ['bank', 'mobile_money'])->nullable();
+            $table->enum('method', ['bank', 'agent_banking'])->nullable();
             $table->enum('type', ['credit', 'debit']);
             $table->string('status')->default('pending');
             $table->foreignId('account_id');

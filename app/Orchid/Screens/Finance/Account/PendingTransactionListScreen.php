@@ -84,11 +84,17 @@ class PendingTransactionListScreen extends Screen
 
             Layout::rows([
                 Group::make([
-                    // Filter By Institution
-                    Select::make('institution_id')
-                        ->title('Filter By Institution')
+                    // // Filter By Institution
+                    // Select::make('institution_id')
+                    //     ->title('Filter By Institution')
+                    //     ->fromModel(Institution::class, 'institution_name')
+                    //     ->empty('Select Option'),
+
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
                         ->fromModel(Institution::class, 'institution_name')
-                        ->empty('Select Option'),
+                        ->applyScope('userInstitutions')
+                        ->chunk(20),
 
                     // Filter By Transaction Type
                     Select::make('transaction_type')
@@ -104,7 +110,7 @@ class PendingTransactionListScreen extends Screen
                         ->title('Filter By Transaction Method')
                         ->options([
                             'bank' => 'Bank Transfer',
-                            'mobile' => 'Mobile Money',
+                            'agent_banking' => 'Agent Banking',
                         ])
                         ->empty('Select Option'),
 
@@ -156,7 +162,7 @@ class PendingTransactionListScreen extends Screen
                     ->title('Select payment method')
                     ->options([
                         'bank' => 'Bank Payment',
-                        'mobile_money' => 'Mobile Money'
+                        'agent_banking' => 'Agent Banking'
                     ])
                     ->empty('None Selected'),
             ]))
@@ -172,7 +178,7 @@ class PendingTransactionListScreen extends Screen
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
                 }),
                 TD::make('method', 'Transaction Method')->render(function ($data) {
-                    return $data->method == 'bank' ? 'Bank Transfer/Payment' : 'Mobile Money';
+                    return $data->method == 'bank' ? 'Bank Transfer/Payment' : 'Agent Banking';
                 }),
                 TD::make('amount', 'Amount')->render(function ($data) {
                     return 'Ush ' . number_format($data->amount);
@@ -398,7 +404,7 @@ class PendingTransactionListScreen extends Screen
         $filterParams = [];
 
         if (!empty($institutionId)) {
-            $filterParams['filter[institution_name]'] = $institutionId;
+            $filterParams['filter[institution_id]'] = $institutionId;
         }
 
         $url = route('platform.systems.finance.pending', $filterParams);

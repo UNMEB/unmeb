@@ -72,7 +72,6 @@ class AccountListScreen extends Screen
                 ->class('btn btn-success btn-sm link-success')
                 ->rawClick(false),
         ];
-
     }
 
     public function description(): string
@@ -112,7 +111,7 @@ class AccountListScreen extends Screen
                     ->title('Select payment method')
                     ->options([
                         'bank' => 'Bank Payment',
-                        'mobile_money' => 'Mobile Money'
+                        'agent_banking' => 'Agent Banking'
                     ])
                     ->empty('None Selected'),
             ]))

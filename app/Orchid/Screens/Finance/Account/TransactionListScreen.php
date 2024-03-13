@@ -95,7 +95,7 @@ class TransactionListScreen extends Screen
                     ->title('Select payment method')
                     ->options([
                         'bank' => 'Bank Payment',
-                        'mobile_money' => 'Mobile Money'
+                        'agent_banking' => 'Agent Banking'
                     ])
                     ->empty('None Selected'),
             ]))
@@ -111,7 +111,7 @@ class TransactionListScreen extends Screen
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
                 }),
                 TD::make('method', 'Transaction Method')->render(function ($data) {
-                    return $data->method == 'bank' ? 'Bank Transfer/Payment' : 'Mobile Money';
+                    return $data->method == 'bank' ? 'Bank Transfer/Payment' : 'Agent Banking';
                 }),
                 TD::make('amount', 'Amount')->render(function ($data) {
                     return 'Ush ' . number_format($data->amount);
