@@ -41,13 +41,27 @@ class AddNewStudentForm extends Listener
         return [
             Layout::rows([
 
-                Picture::make('student.passport')
-                    ->title('Provide Student Photo')
-                    ->name('student.passport')
-                    ->placeholder('Enter student passport photo')
+                Select::make('new_registration')
+                    ->title('New / Continuing Student')
+                    ->options([
+                        'New' => 'New Student',
+                        'Continuing' => 'Continuing Student'
+                    ])
+                    ->empty('Non Selected')
+                    ->required(),
+
+                Input::make('previous_nsin')
+                    ->title('Previous NSIN')
                     ->required()
-                    ->width(1080)
-                    ->height(1080),
+                    ->canSee($this->query->get('new_registration') == 'Continuing'),
+
+                Group::make([
+                    Input::make('student.nin')
+                        ->title('National Identification Number / Passport Number')
+                        ->required(),
+                ]),
+
+
 
                 Group::make([
                     Input::make('student.surname')
@@ -74,22 +88,6 @@ class AddNewStudentForm extends Listener
                     ->fromModel(Institution::class, 'institution_name')
                     ->applyScope('userInstitutions')
                     ->chunk(20),
-
-                Select::make('new_registration')
-                    ->title('New / Continuing Student')
-                    ->options([
-                        'New' => 'New Student',
-                        'Continuing' => 'Continuing Student'
-                    ])
-                    ->empty('Non Selected')
-                    ->required(),
-
-                Input::make('previous_nsin')
-                    ->title('Previous NSIN')
-                    ->required()
-                    ->canSee($this->query->get('new_registration') == 'Continuing'),
-
-
 
                 Group::make([
                     Select::make('student.gender')
@@ -139,14 +137,14 @@ class AddNewStudentForm extends Listener
                         ->required(),
                 ]),
 
-                Group::make([
 
-
-                    Input::make('student.nin')
-                        ->title('National Identification Number / Passport Number')
-                        ->required(),
-
-                ]),
+                Picture::make('student.passport')
+                    ->title('Provide Student Photo')
+                    ->name('student.passport')
+                    ->placeholder('Enter student passport photo')
+                    ->required()
+                    ->width(1080)
+                    ->height(1080),
 
 
 

@@ -153,14 +153,14 @@ class StudentListScreen extends Screen
             Layout::table('students', [
                 TD::make('id', 'ID'),
                 // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
                 TD::make('district.district_name', 'District'),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
-                TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
+                TD::make('nsin', 'NSIN')->render(fn (Student $student) => $student->nsin),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email')->defaultHidden(),
                 TD::make('old', __('Old Student'))
@@ -176,7 +176,7 @@ class StudentListScreen extends Screen
                 TD::make(__('Actions'))
                     ->align(TD::ALIGN_CENTER)
                     ->width('100px')
-                    ->render(fn(Student $student) => DropDown::make()
+                    ->render(fn (Student $student) => DropDown::make()
                         ->icon('bs.three-dots-vertical')
                         ->list([
                             ModalToggle::make('Details')
@@ -211,8 +211,7 @@ class StudentListScreen extends Screen
             Layout::modal('createStudentModal', AddNewStudentForm::class)
                 ->size(Modal::SIZE_LG)
                 ->title('Create Student')
-                ->applyButton('Create Student')
-            ,
+                ->applyButton('Create Student'),
 
             Layout::modal('editStudentModal', Layout::rows([
 
@@ -540,5 +539,4 @@ class StudentListScreen extends Screen
 
         Alert::success('Student record updated');
     }
-
 }
