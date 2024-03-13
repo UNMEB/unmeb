@@ -85,32 +85,32 @@ class StaffEditScreen extends Screen
             Layout::block(
                 Layout::rows([
                     Group::make([
-                        Cropper::make('staff.picture')
-                        ->title('Staff Member Photo')
-                        ->width('270')
-                        ->height('270')
-                        ->required(),
+                        Picture::make('staff.picture')
+                            ->title('Staff Member Photo')
+                            ->width('270')
+                            ->height('270')
+                            ->required(),
 
-                    
+
                     ]),
 
                     Group::make([
 
                         Input::make('staff.staff_name')
-                        ->title('Staff Name')
-                        ->placeholder('Enter staff name'),
+                            ->title('Staff Name')
+                            ->placeholder('Enter staff name'),
 
                         Input::make('staff.telephone')
-                        ->title('Phone Number')
-                        ->type('tel')
-                        ->min('10')
-                        ->max('12')
-                        ->placeholder('Enter Phone Number'),
+                            ->title('Phone Number')
+                            ->type('tel')
+                            ->min('10')
+                            ->max('12')
+                            ->placeholder('Enter Phone Number'),
 
-                    Input::make('staff.email')
-                        ->title('Email Address')
-                        ->type('email')
-                        ->placeholder('Enter email address'),
+                        Input::make('staff.email')
+                            ->title('Email Address')
+                            ->type('email')
+                            ->placeholder('Enter email address'),
                     ]),
                 ])
             )

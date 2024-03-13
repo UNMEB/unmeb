@@ -7,9 +7,9 @@ use App\Models\Institution;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
-use Orchid\Screen\Fields\Cropper;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Picture;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Layouts\Listener;
@@ -41,13 +41,13 @@ class AddNewStudentForm extends Listener
         return [
             Layout::rows([
 
-                Cropper::make('student.passport')
+                Picture::make('student.passport')
                     ->title('Provide Student Photo')
                     ->name('student.passport')
                     ->placeholder('Enter student passport photo')
                     ->required()
-                    ->width(270)
-                    ->height(270),
+                    ->width(1080)
+                    ->height(1080),
 
                 Group::make([
                     Input::make('student.surname')

@@ -39,7 +39,7 @@ use Illuminate\Support\Str;
 
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
-
+use Orchid\Screen\Fields\Picture;
 
 class StudentListScreen extends Screen
 {
@@ -216,7 +216,7 @@ class StudentListScreen extends Screen
 
             Layout::modal('editStudentModal', Layout::rows([
 
-                Cropper::make('student.passport')
+                Picture::make('student.passport')
                     ->title('Provide Student Photo')
                     ->type('file')
                     ->name('student.passport')

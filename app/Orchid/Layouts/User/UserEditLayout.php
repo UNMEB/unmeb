@@ -6,8 +6,8 @@ namespace App\Orchid\Layouts\User;
 
 use App\Models\Institution;
 use Orchid\Screen\Field;
-use Orchid\Screen\Fields\Cropper;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Picture;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Layouts\Rows;
 
@@ -29,7 +29,7 @@ class UserEditLayout extends Rows
                 ->fromModel(Institution::class, 'institution_name', 'id')
                 ->required(),
 
-            Cropper::make('user.picture')
+            Picture::make('user.picture')
                 ->title('User Picture')
                 ->width(270)
                 ->height(270)
