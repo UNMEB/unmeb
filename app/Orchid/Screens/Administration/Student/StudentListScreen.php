@@ -89,10 +89,7 @@ class StudentListScreen extends Screen
                 ->method('save')
                 ->icon('plus'),
 
-            ModalToggle::make('Register Student For NSIN')
-                ->modal('registerStudentModal')
-                ->method('register')
-                ->icon('plus'),
+           
 
             ModalToggle::make('Import Students')
                 ->modal('uploadStudentsModal')
@@ -212,8 +209,7 @@ class StudentListScreen extends Screen
                         ])),
             ]),
 
-            Layout::modal('registerStudentModal', RegisterStudentsForNinForm::class)
-                ->title('Register Students For NSIN'),
+            
 
             Layout::modal('createStudentModal', AddNewStudentForm::class)
                 ->size(Modal::SIZE_LG)

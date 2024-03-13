@@ -6,11 +6,13 @@ use App\Models\Course;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\Year;
+use App\Orchid\Layouts\RegisterStudentsForNinForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
@@ -60,7 +62,7 @@ class ApproveNsinRegistration extends Screen
      */
     public function name(): ?string
     {
-        return 'Approve NSIN Registrations';
+        return 'NSIN Registrations';
     }
 
     /**
@@ -70,7 +72,12 @@ class ApproveNsinRegistration extends Screen
      */
     public function commandBar(): iterable
     {
-        return [];
+        return [
+            ModalToggle::make('Register Student For NSIN')
+                ->modal('registerStudentModal')
+                ->method('register')
+                ->icon('plus'),
+        ];
     }
 
     /**
@@ -137,12 +144,15 @@ class ApproveNsinRegistration extends Screen
                     fn ($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
                         ->route('platform.registration.nsin.approve.details', [
-                        'institution_id' => $data->institution_id,
-                        'course_id' => $data->course_id,
-                        'nsin_registration_id' => $data->id
-                    ])
+                            'institution_id' => $data->institution_id,
+                            'course_id' => $data->course_id,
+                            'nsin_registration_id' => $data->id
+                        ])
                 )
-            ])
+            ]),
+
+            Layout::modal('registerStudentModal', RegisterStudentsForNinForm::class)
+                ->title('Register Students For NSIN'),
         ];
     }
 
@@ -190,5 +200,4 @@ class ApproveNsinRegistration extends Screen
     {
         return redirect()->route('platform.registration.nsin.approve');
     }
-
 }
