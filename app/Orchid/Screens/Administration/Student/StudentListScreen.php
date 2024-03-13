@@ -118,10 +118,16 @@ class StudentListScreen extends Screen
             Layout::rows([
 
                 Group::make([
-                    Select::make('institution_id')
+                    // Select::make('institution_id')
+                    //     ->fromModel(Institution::class, 'institution_name')
+                    //     ->title('Filter By Institution Name')
+                    //     ->empty('Non Selected'),
+
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
                         ->fromModel(Institution::class, 'institution_name')
-                        ->title('Filter By Institution Name')
-                        ->empty('Non Selected'),
+                        ->applyScope('userInstitutions')
+                        ->chunk(20),
 
                     Input::make('name')
                         ->title('Filter By Name'),
@@ -160,19 +166,20 @@ class StudentListScreen extends Screen
                 TD::make('district.district_name', 'District'),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
+                TD::make('nin', 'NIN')->render(fn (Student $student) => $student->nin),
                 TD::make('nsin', 'NSIN')->render(fn (Student $student) => $student->nsin),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email')->defaultHidden(),
-                TD::make('old', __('Old Student'))
-                    ->render(function ($student) {
-                        if ($student->flag === 1) {
-                            return __('Yes'); // You can replace 'Yes' with your custom label
-                        } else {
-                            return __('No'); // You can replace 'No' with your custom label
-                        }
-                    }),
+                // TD::make('old', __('Old Student'))
+                //     ->render(function ($student) {
+                //         if ($student->flag === 1) {
+                //             return __('Yes'); // You can replace 'Yes' with your custom label
+                //         } else {
+                //             return __('No'); // You can replace 'No' with your custom label
+                //         }
+                //     }),
                 TD::make('date_time', 'Registration Date'),
-                TD::make('district.district_name', 'District'),
+                // TD::make('district.district_name', 'District'),
                 TD::make(__('Actions'))
                     ->align(TD::ALIGN_CENTER)
                     ->width('100px')

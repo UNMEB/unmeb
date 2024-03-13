@@ -22,12 +22,18 @@ class UserEditLayout extends Rows
     {
         return [
 
+            // Relation::make('user.institution_id')
+            //     ->title('Insitution')
+            //     ->placeholder('Select User Institution')
+            //     ->help('Select institution user is assigned to')
+            //     ->fromModel(Institution::class, 'institution_name', 'id')
+            //     ->required(),
+
             Relation::make('user.institution_id')
-                ->title('Insitution')
-                ->placeholder('Select User Institution')
-                ->help('Select institution user is assigned to')
+                ->title('Select Institution')
                 ->fromModel(Institution::class, 'institution_name', 'id')
-                ->required(),
+                ->applyScope('userInstitutions')
+                ->chunk(20),
 
             Picture::make('user.picture')
                 ->title('User Picture')
