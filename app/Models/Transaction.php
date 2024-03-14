@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Filters\Filterable;
+use Orchid\Filters\Types\Where;
 use Orchid\Screen\AsSource;
 
 class Transaction extends Model
@@ -22,6 +23,12 @@ class Transaction extends Model
         'institution_id',
         'deposited_by',
         'comment'
+    ];
+
+    protected $allowedFilters = [
+        'institution_id' => Where::class,
+        'transaction_type' => Where::class,
+        'transaction_method' => Where::class,
     ];
 
     public function account()
@@ -64,4 +71,3 @@ class Transaction extends Model
         });
     }
 }
-

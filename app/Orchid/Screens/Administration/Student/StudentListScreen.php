@@ -89,7 +89,7 @@ class StudentListScreen extends Screen
                 ->method('save')
                 ->icon('plus'),
 
-           
+
 
             ModalToggle::make('Import Students')
                 ->modal('uploadStudentsModal')
@@ -200,21 +200,25 @@ class StudentListScreen extends Screen
                                     'student' => $student->id
                                 ]),
 
-                            Button::make(__('Delete'))
+                            Button::make(__('Remove'))
                                 ->icon('bs.trash3')
-                                ->confirm(__('Once the account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.'))
+                                ->confirm(__('Are you sure, you want to remove this student record.'))
                                 ->method('remove', [
                                     'id' => $student->id,
                                 ]),
                         ])),
             ]),
 
-            
+
 
             Layout::modal('createStudentModal', AddNewStudentForm::class)
                 ->size(Modal::SIZE_LG)
                 ->title('Create Student')
                 ->applyButton('Create Student'),
+
+            Layout::modal('uploadStudentsModal', Layout::rows([
+                Link::make('Download Bulk Student Upload Template')
+            ])),
 
             Layout::modal('editStudentModal', Layout::rows([
 
@@ -488,6 +492,7 @@ class StudentListScreen extends Screen
      */
     public function filter(Request $request)
     {
+
         $institutionId = $request->input('institution_id');
         $name = $request->input('name');
         $gender = $request->input('gender');
