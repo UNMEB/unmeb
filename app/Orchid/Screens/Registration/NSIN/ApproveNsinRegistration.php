@@ -5,6 +5,9 @@ namespace App\Orchid\Screens\Registration\NSIN;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
+use App\Models\NsinRegistrationPeriod;
+use App\Models\NsinStudentRegistration;
+use App\Models\Transaction;
 use App\Models\Year;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
 use Illuminate\Http\Request;
@@ -18,6 +21,7 @@ use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
+use Orchid\Support\Facades\Alert;
 use Orchid\Support\Facades\Layout;
 
 class ApproveNsinRegistration extends Screen
@@ -199,5 +203,94 @@ class ApproveNsinRegistration extends Screen
     public function reset(Request $request)
     {
         return redirect()->route('platform.registration.nsin.approve');
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function register(Request $request)
+    {
+        $nrpID = $request->get('nsin_registration_period_id');
+        $institutionId = $request->get('institution_id');
+        $courseId = $request->get('course_id');
+        $studentIds = $request->get('student_ids');
+
+        $nsinRegistrationPeriod = NsinRegistrationPeriod::find($nrpID);
+
+        $yearId = $nsinRegistrationPeriod->year_id;
+        $month = $nsinRegistrationPeriod->month;
+
+        $fee = config('settings.fess.nsin_registration') * count($studentIds);
+
+        $institution = Institution::find($institutionId);
+
+        if ($fee > $institution->account->balance) {
+            Alert::error('Account balance too low to complete this transaction. Please top up to continue');
+            return;
+        }
+
+        // Find the NSIN registration
+        $nsinRegistration = NsinRegistration::where([
+            'year_id' => $yearId,
+            'month' => $month,
+            'institution_id' => $institutionId,
+            'course_id' => $courseId,
+        ])->first();
+
+        if ($nsinRegistration) {
+            // Increment the amount
+            $nsinRegistration->amount = $nsinRegistration->amount + $fee;
+
+            // Save
+            $nsinRegistration->save();
+        } else {
+            $nsinRegistration = new NsinRegistration();
+            $nsinRegistration->year_id = $yearId;
+            $nsinRegistration->month = $month;
+            $nsinRegistration->institution_id = $institutionId;
+            $nsinRegistration->course_id = $courseId;
+            $nsinRegistration->amount = $fee;
+            $nsinRegistration->save();
+        }
+
+        // For each student in the list create a NsinStudentRegistration if not already registered
+        foreach ($studentIds as $studentId) {
+            // Check if the student is already registered for the same period, institution, and course
+            $existingRegistration = NsinStudentRegistration::where([
+                'nsin_registration_id' => $nsinRegistration->id,
+                'student_id' => $studentId,
+                'verify' => 0
+            ])->first();
+
+            if (!$existingRegistration) {
+                $nsinStudentRegistration = new NsinStudentRegistration();
+                $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
+                $nsinStudentRegistration->student_id = $studentId;
+                $nsinStudentRegistration->verify = 0;
+                $nsinStudentRegistration->save();
+            }
+        }
+
+        // Create Transaction
+        $newBalanace = $institution->account->balance - $fee;
+        $institution->account->update([
+            'balance' => $newBalanace,
+        ]);
+
+        $transaction = new Transaction([
+            'amount' => $fee,
+            'type' => 'debit',
+            'account_id' => $institution->account->id,
+            'institution_id' => $institution->id,
+            'initiated_by' => auth()->user()->id,
+            'status' => 'approved',
+            'comment' => 'SYSTEM ' . now() . ':: NSIN Registration',
+        ]);
+
+        $transaction->save();
+
+        Alert::success('Registration successful');
     }
 }
