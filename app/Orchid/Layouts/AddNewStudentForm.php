@@ -82,12 +82,6 @@ class AddNewStudentForm extends Listener
                         ->placeholder('Enter Other name'),
                 ]),
 
-                // Relation::make('institution_id')
-                //     ->title('Select Institution')
-                //     ->fromModel(Institution::class, 'institution_name')
-                //     ->applyScope('userInstitutions')
-                //     ->chunk(20),
-
                 Relation::make('institution_id')
                     ->title('Select Institution')
                     ->placeholder('Select User Institution')
