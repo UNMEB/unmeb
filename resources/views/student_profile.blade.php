@@ -19,7 +19,7 @@ $studentRegistration = DB::table('nsin_student_registrations')
     <div class="card-body">
         <div class="row">
             <div class="col-md-3">
-                {!! $student->avatar !!}
+                {!! $student->avatar2 !!}
             </div>
 
             <div class="col-md-9">

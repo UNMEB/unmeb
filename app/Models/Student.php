@@ -74,9 +74,9 @@ class Student extends Model
     public function getAvatar2Attribute()
     {
         // Check if there is a passport and image exists in public path
-        if ($this->passport && file_exists(public_path('photos/' . $this->passport))) {
+        if ($this->passport) {
             // Return img tag
-            return '<img src="' . asset('photos/' . $this->passport) .  '" style="width: 180px; border-radius: 10px;">';
+            return '<img src="' . $this->passport .  '" style="width: 180px; border-radius: 10px;">';
         }
 
         // Return placeholder avatar
