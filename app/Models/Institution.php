@@ -38,7 +38,7 @@ class Institution extends Model
     public function courses()
     {
         return $this->belongsToMany(Course::class, 'institution_course', 'institution_id', 'course_id')
-        ->withPivot('flag');
+            ->withPivot('flag');
     }
 
     public function staff()
@@ -79,7 +79,4 @@ class Institution extends Model
 
         return $query;
     }
-
-
-
 }

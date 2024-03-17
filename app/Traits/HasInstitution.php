@@ -24,6 +24,15 @@ trait HasInstitution
     public static function bootHasInstitution()
     {
         static::addGlobalScope(function ($query) {
+
+            $user = auth()->user() ?? null;
+
+            $hasAccess = $user->hasAccess('platform.internals.all_institutions');
+            $institutionId = $user->institution_id;
+
+            if (!$hasAccess) {
+                $query->where('institution_id', $institutionId);
+            }
         });
     }
 }

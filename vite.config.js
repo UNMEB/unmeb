@@ -9,7 +9,7 @@ let host = "unmeb.test";
 export default defineConfig({
     plugins: [
         laravel({
-            input: [],
+            input: ["resources/js/multi-select.js"],
             refresh: true,
         }),
     ],

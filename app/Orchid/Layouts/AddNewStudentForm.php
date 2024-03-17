@@ -7,7 +7,6 @@ use App\Models\Institution;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
-use Orchid\Screen\Fields\Cropper;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Picture;
@@ -87,6 +86,7 @@ class AddNewStudentForm extends Listener
                     ->placeholder('Select User Institution')
                     ->fromModel(Institution::class, 'institution_name', 'id')
                     ->applyScope('userInstitutions')
+                    ->value(auth()->user()->institution_id ?? null)
                     ->required(),
 
                 Group::make([
@@ -107,6 +107,7 @@ class AddNewStudentForm extends Listener
                         ->type('date')
                         ->placeholder('Enter date of birth')
                         ->required()
+                        ->noCalendar()
                         ->value($this->student->dob ?? ''),
                 ]),
 
@@ -137,7 +138,7 @@ class AddNewStudentForm extends Listener
                 ]),
 
 
-                Cropper::make('student.passport')
+                Picture::make('student.passport')
                     ->title('Provide Student Photo')
                     ->name('student.passport')
                     ->placeholder('Enter student passport photo')

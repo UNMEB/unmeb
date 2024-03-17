@@ -66,7 +66,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->list([
 
                     Menu::make(__('NSIN Applications'))
-                        ->route('platform.registration.nsin.approve'),
+                        ->route('platform.registration.nsin.applications.list'),
 
                     Menu::make(__('Incomplete NSIN Registrations'))
                         ->route('platform.registration.nsin.incomplete'),
@@ -283,6 +283,7 @@ class PlatformProvider extends OrchidServiceProvider
 
             // Manage NSIN Student Registration
             ItemPermission::group('Manage NSIN Registrations')
+                ->addPermission('platform.registration.nsin.applications.list', 'View NSIN Applications')
                 ->addPermission('platform.registration.nsin.list', 'View NSIN Registrations')
                 ->addPermission('platform.registration.nsin.create', 'Create NSIN Registrations')
                 ->addPermission('platform.registration.nsin.update', 'Update NSIN Registrations')

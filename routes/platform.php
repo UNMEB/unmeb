@@ -73,6 +73,8 @@ use App\Orchid\Screens\StudentAccessLogListScreen;
 use App\Orchid\Screens\AddStudentAssessmentFormScreen;
 use App\Orchid\Screens\StudentResearchListScreen;
 use App\Orchid\Screens\AppSettingListScreen;
+use App\Orchid\Screens\NewNsinApplicationsScreen;
+use App\Orchid\Screens\NsinApplicationListScreen;
 use Illuminate\Support\Facades\URL;
 
 /*
@@ -272,6 +274,13 @@ Route::screen('students', StudentListScreen::class)
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(__('Students'), route('platform.students')));
+
+// NSIN Applications
+Route::screen('registrations/nsin/applications/list', NsinApplicationListScreen::class)
+    ->name('platform.registration.nsin.applications.list');
+
+Route::screen('registrations/nsin/applications/new', NewNsinApplicationsScreen::class)
+    ->name('platform.registration.nsin.applications.new');
 
 // Platform > Registration > NSIN > Incomplete > Details
 Route::screen('registrations/nsin/incomplete/details', IncompleteNsinRegistrationDetails::class)
