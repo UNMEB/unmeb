@@ -18,6 +18,15 @@ $(function () {
             $headerCheckbox.prop("checked", allChecked);
         };
 
+        // Function to prevent negative values in number inputs
+        const preventNegativeValues = function () {
+            $('input[type="number"]').on("input", function () {
+                if ($(this).val() < 0) {
+                    $(this).val(0);
+                }
+            });
+        };
+
         $elms.each(function () {
             const $checkbox = $(this);
             const id = $checkbox.data("id");
@@ -28,6 +37,9 @@ $(function () {
 
         // Event listener for header checkbox
         $(".multiselect-header").on("change", selectAll);
+
+        // Call the function to prevent negative values
+        preventNegativeValues();
     };
 
     document.addEventListener("turbo:load", multiselect);
