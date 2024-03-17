@@ -193,5 +193,7 @@ class NewNsinApplicationsScreen extends Screen
         $transaction->save();
 
         Alert::success('Registration successful');
+
+        redirect(route('platform.registration.nsin.applications.list'));
     }
 }
