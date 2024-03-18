@@ -142,7 +142,7 @@ class AddNewStudentForm extends Listener
 
                     Select::make('student.country_id')
                         ->title('District')
-                        ->fromModel(Country::class, 'nicename')
+                        ->fromModel(Country::class, 'name')
                         ->empty('Non Selected')
                         ->value($this->student->district_id ?? null),
 
