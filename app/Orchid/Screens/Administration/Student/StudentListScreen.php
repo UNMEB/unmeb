@@ -163,7 +163,7 @@ class StudentListScreen extends Screen
                 TD::make('district.district_name', 'District'),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
-                TD::make('nin', 'NIN')->render(fn(Student $student) => $student->nin),
+                TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
                 TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email')->defaultHidden(),
