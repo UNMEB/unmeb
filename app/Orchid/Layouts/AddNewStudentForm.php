@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Layouts;
 
+use App\Models\Country;
 use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
@@ -57,6 +58,14 @@ class AddNewStudentForm extends Listener
                     ->canSee($this->query->get('new_registration') == 'Continuing'),
 
                 Group::make([
+                    Input::make('student.nin')
+                        ->title('National Identification Number / Passport Number / Learners Identification Number')
+                        ->required(),
+
+                    Input::make('student.lin')
+                        ->title('National Identification Number / Passport Number / Learners Identification Number')
+                        ->required(),
+
                     Input::make('student.nin')
                         ->title('National Identification Number / Passport Number / Learners Identification Number')
                         ->required(),
@@ -130,6 +139,13 @@ class AddNewStudentForm extends Listener
                 ]),
 
                 Group::make([
+
+                    Select::make('student.country_id')
+                        ->title('District')
+                        ->fromModel(Country::class, 'nicename')
+                        ->empty('Non Selected')
+                        ->value($this->student->district_id ?? null),
+
                     Select::make('student.district_id')
                         ->title('District')
                         ->fromModel(District::class, 'district_name')
