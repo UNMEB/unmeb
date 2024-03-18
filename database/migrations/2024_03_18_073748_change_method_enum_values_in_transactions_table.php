@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->dropColumn('method'); // Drop the existing column
 
             // Add a new column with updated enum values
-            $table->enum('method', ['bank', 'agent_banking'])->after('previous_column_after_which_you_want_to_place_this_column');
+            $table->enum('method', ['bank', 'agent_banking']);
         });
     }
 
@@ -27,7 +27,7 @@ return new class extends Migration {
             $table->dropColumn('method'); // Drop the updated column
 
             // Add back the old column with previous enum values
-            $table->enum('method', ['bank', 'mobile_money'])->after('previous_column_after_which_you_want_to_place_this_column');
+            $table->enum('method', ['bank', 'mobile_money']);
         });
     }
 };
