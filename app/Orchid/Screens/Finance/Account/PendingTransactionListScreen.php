@@ -57,7 +57,7 @@ class PendingTransactionListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Deposit Funds')
@@ -66,10 +66,11 @@ class PendingTransactionListScreen extends Screen
                 ->icon('wallet')
                 ->class('btn btn-sm btn-success link-success'),
 
-            Button::make('Export Transactions')
-                ->method('export')
-                ->rawClick()
-                ->class('btn btn-sm btn-primary link-primary')
+            ModalToggle::make('Generate Statement')
+                ->modal('createStatementModal')
+                ->method('createStatement')
+                ->icon('archive')
+                ->class('btn btn-sm btn-primary'),
         ];
     }
 
@@ -305,7 +306,7 @@ class PendingTransactionListScreen extends Screen
         if ($this->currentUser()->inRole('system-admin')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
-            $institution =  $this->currentUser()->institution;
+            $institution = $this->currentUser()->institution;
         }
 
         $accountId = $institution->account->id;
@@ -403,7 +404,7 @@ class PendingTransactionListScreen extends Screen
         // Define the filter parameters
         $filterParams = [];
 
-        if (!empty($institutionId)) {
+        if (!empty ($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
 
