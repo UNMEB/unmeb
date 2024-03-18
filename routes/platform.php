@@ -65,6 +65,7 @@ use App\Orchid\Screens\Reports\NSINRegistrationReportScreen;
 use App\Orchid\Screens\Reports\RegistrationReportScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
+use App\Orchid\Screens\SelectStudentsFormScreen;
 use App\Orchid\Screens\UNMEBInformationScreen;
 use App\Orchid\Screens\User\UserEditScreen;
 use App\Orchid\Screens\User\UserListScreen;
@@ -96,6 +97,9 @@ Route::screen('/main', PlatformScreen::class)
 
 // UNMEB Updates Screen
 Route::screen('updates', UNMEBInformationScreen::class)->name('platform.updates');
+
+// Select Students Form Screen
+Route::screen('select_students', SelectStudentsFormScreen::class)->name('platform.actions.select_students_form');
 
 // Logbook & Research Guidelines Screen
 Route::screen('logbooks', LogbookPurchaseScreen::class)->name('platform.system.finance.logbooks');

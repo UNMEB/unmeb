@@ -113,9 +113,10 @@ class AppSettingListScreen extends Screen
                 Layout::rows([
                     Input::make('fees.nsin_registration')->title('NSIN Registration Fee')
                         ->type('number')
+                        ->min(1)
                         ->required(),
-                    Input::make('fees.paper_registration')->title('Exam Registration Cost Per Paper')->type('number')->required(),
-                    Input::make('finance.minimum_balance')->title('Minimum Institution Account Balance')->type('number')->required(),
+                    Input::make('fees.paper_registration')->title('Exam Registration Cost Per Paper')->type('number')->required()->min(1),
+                    Input::make('finance.minimum_balance')->title('Minimum Institution Account Balance')->type('number')->required()->min(1),
 
                 ])
             ])

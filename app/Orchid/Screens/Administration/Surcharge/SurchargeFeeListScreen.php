@@ -66,7 +66,7 @@ class SurchargeFeeListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Import Surcharge Fees')
@@ -98,7 +98,7 @@ class SurchargeFeeListScreen extends Screen
 
                 TD::make('course_fee', 'Program Fee')
                     ->render(function ($data) {
-                        return !empty($data->course_fee) ? number_format($data->course_fee) : 0;
+                        return !empty ($data->course_fee) ? number_format($data->course_fee) : 0;
                     }),
 
                 TD::make('created_at', __('Created On'))
@@ -148,6 +148,7 @@ class SurchargeFeeListScreen extends Screen
                 Input::make('fee.course_fee')
                     ->title('Course Fee')
                     ->type('number')
+                    ->min(1)
                     ->placeholder('Enter course fee amount')
                     ->horizontal(),
             ]))

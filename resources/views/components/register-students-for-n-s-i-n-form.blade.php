@@ -50,7 +50,7 @@
                         <label>
 
                             <input type="checkbox" class="multiselect-header" name="select_all">
-                            Register
+                            Select All
                         </label>
                     </th>
                 </tr>

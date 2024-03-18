@@ -8,15 +8,15 @@
     <title>
         @yield('title', config('app.name'))
         @hasSection('title')
-        - {{ config('app.name') }}
+            - {{ config('app.name') }}
         @endif
     </title>
     <meta name="csrf_token" content="{{ csrf_token() }}" id="csrf_token">
     <meta name="auth" content="{{ Auth::check() }}" id="auth">
     @if (\Orchid\Support\Locale::currentDir(app()->getLocale()) == 'rtl')
-    <link rel="stylesheet" type="text/css" href="{{ mix('/css/orchid.rtl.css', 'vendor/orchid') }}">
+        <link rel="stylesheet" type="text/css" href="{{ mix('/css/orchid.rtl.css', 'vendor/orchid') }}">
     @else
-    <link rel="stylesheet" type="text/css" href="{{ mix('/css/orchid.css', 'vendor/orchid') }}">
+        <link rel="stylesheet" type="text/css" href="{{ mix('/css/orchid.css', 'vendor/orchid') }}">
     @endif
 
     @stack('head')
@@ -25,7 +25,7 @@
     <meta name="dashboard-prefix" content="{{ Dashboard::prefix() }}">
 
     @if (!config('platform.turbo.cache', false))
-    <meta name="turbo-cache-control" content="no-cache">
+        <meta name="turbo-cache-control" content="no-cache">
     @endif
 
     <script src="{{ mix('/js/manifest.js', 'vendor/orchid') }}" type="text/javascript"></script>
@@ -33,17 +33,17 @@
     <script src="{{ mix('/js/orchid.js', 'vendor/orchid') }}" type="text/javascript"></script>
 
     @foreach (Dashboard::getResource('stylesheets') as $stylesheet)
-    <link rel="stylesheet" href="{{ $stylesheet }}">
+        <link rel="stylesheet" href="{{ $stylesheet }}">
     @endforeach
 
     @stack('stylesheets')
 
     @foreach (Dashboard::getResource('scripts') as $scripts)
-    <script src="{{ $scripts }}" defer type="text/javascript"></script>
+        <script src="{{ $scripts }}" defer type="text/javascript"></script>
     @endforeach
 
     @if (!empty(config('platform.vite', [])))
-    @vite(config('platform.vite'))
+        @vite(config('platform.vite'))
     @endif
 
 
@@ -51,6 +51,8 @@
     <link rel='stylesheet' href='https://pivottable.js.org/dist/pivot.css'>
 
     <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
+
+
 
 </head>
 
@@ -70,10 +72,10 @@
         @include('platform::partials.toast')
     </div>
 
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/exporting.js"></script>
-    <script src="https://code.highcharts.com/modules/export-data.js"></script>
-    <script src="https://code.highcharts.com/modules/accessibility.js"></script>
+    {{-- <script src="https://code.highcharts.com/highcharts.js"></script> --}}
+    {{-- <script src="https://code.highcharts.com/modules/exporting.js"></script> --}}
+    {{-- <script src="https://code.highcharts.com/modules/export-data.js"></script> --}}
+    {{-- <script src="https://code.highcharts.com/modules/accessibility.js"></script> --}}
 
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
     <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js'></script>
@@ -84,10 +86,7 @@
     https://cdn.jsdelivr.net/npm/blobjs@1.1.1/Blob.min.js
     "></script> --}}
 
-
-
-
-
+    @include('sweetalert::alert')
 
     @stack('scripts')
 

@@ -51,7 +51,7 @@ class CourseListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Add Program')
@@ -100,27 +100,27 @@ class CourseListScreen extends Screen
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (Course $course) {
 
-                    return Group::make([
-                        Link::make('Assign Papers')
-                            ->route('platform.courses.assign', $course->id)
-                            ->class('btn btn-success btn-sm link-success'),
+                        return Group::make([
+                            Link::make('Assign Papers')
+                                ->route('platform.courses.assign', $course->id)
+                                ->class('btn btn-success btn-sm link-success'),
 
-                        ModalToggle::make('Edit Program')
-                            ->modal('editCourseModal')
-                        ->modalTitle('Edit Program ' . $course->name)
-                            ->method('edit') // You can define your edit method here
-                            ->asyncParameters([
-                                'course' => $course->id,
-                            ])
-                        ->class('btn btn-primary btn-sm link-primary'),
+                            ModalToggle::make('Edit Program')
+                                ->modal('editCourseModal')
+                                ->modalTitle('Edit Program ' . $course->name)
+                                ->method('edit') // You can define your edit method here
+                                ->asyncParameters([
+                                    'course' => $course->id,
+                                ])
+                                ->class('btn btn-primary btn-sm link-primary'),
 
-                        Button::make('Delete')
-                        ->confirm('Are you sure you want to delete this program?')
-                            ->method('delete', [
-                                'id' => $course->id
-                            ])
-                            ->class('btn btn-danger btn-sm link-danger'),
-                    ])->fullWidth();
+                            Button::make('Delete')
+                                ->confirm('Are you sure you want to delete this program?')
+                                ->method('delete', [
+                                    'id' => $course->id
+                                ])
+                                ->class('btn btn-danger btn-sm link-danger'),
+                        ])->fullWidth();
                     })
 
 
@@ -137,6 +137,7 @@ class CourseListScreen extends Screen
 
                 Input::make('course.duration')
                     ->type('number')
+                    ->min(1)
                     ->title('Program Duration')
                     ->placeholder('Enter course duration'),
 
@@ -155,6 +156,7 @@ class CourseListScreen extends Screen
 
                 Input::make('course.duration')
                     ->type('number')
+                    ->min(1)
                     ->title('Program Duration')
                     ->placeholder('Enter course duration'),
             ]))->async('asyncGetCourse'),

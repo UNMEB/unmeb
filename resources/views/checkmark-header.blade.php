@@ -1,4 +1,4 @@
-<th @empty(!$width) width="{{$width}}" @endempty class="text-{{$align}}" data-column="{{ $slug }}">
+{{-- <th @empty(!$width) width="{{$width}}" @endempty class="text-{{$align}}" data-column="{{ $slug }}">
   <div data-controller="bulkselect" class="cb-checker" data-bulkselect-id="{{$id}}">
     <label class="d-block" title="{{$title}}">
       <input type="checkbox" class="form-check-input cb-bulk">
@@ -6,4 +6,11 @@
     </label>
     <x-orchid-popover :content="$popover" />
   </div>
+</th> --}}
+
+<th @empty(!$width) width="{{ $width }}" @endempty class="text-{{ $align }}"
+    data-column="{{ $slug }}">
+    <label class="d-block" title="{{ $title }}">
+        <input type="checkbox" class="form-check-input multiselect-header" name="select_all">
+    </label>
 </th>

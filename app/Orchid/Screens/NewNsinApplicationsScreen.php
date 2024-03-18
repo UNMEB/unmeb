@@ -56,6 +56,7 @@ class NewNsinApplicationsScreen extends Screen
             ->orWhere('nsp.id', '<>', $this->nsinRegistrationPeriodId)
             ->select('students.*')
             ->limit(100)
+            ->orderBy('surname', 'asc')
             ->get();
 
         return [
@@ -83,7 +84,7 @@ class NewNsinApplicationsScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }

@@ -37,7 +37,7 @@ class LogbookPurchaseScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Purchase Now')
@@ -70,6 +70,7 @@ class LogbookPurchaseScreen extends Screen
                     Input::make('number_of_students')
                         ->title('Number of students')
                         ->placeholder('Select number of students')
+                        ->min(1)
                         ->type('number')
                 ])
             ])->applyButton('Select Students'),
@@ -79,6 +80,15 @@ class LogbookPurchaseScreen extends Screen
 
     public function purchase(Request $request)
     {
-        dd($request->all());
+        $numberOfStudents = $request->get('number_of_students');
+        $institutionId = $request->get('institution_id');
+
+        $url = route('platform.actions.select_students_form', [
+            'institution_id' => $institutionId,
+            'number_of_students' => $numberOfStudents,
+            'action' => 'PURCHASE_LOGBOOKS'
+        ]);
+
+        return redirect()->to($url);
     }
 }

@@ -65,7 +65,7 @@ class StaffEditScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Button::make(__('Save'))
@@ -143,6 +143,7 @@ class StaffEditScreen extends Screen
                         Input::make('staff.reg_no')
                             ->title('Registration Number')
                             ->type('numeric')
+                            ->min(1)
                             ->placeholder('Registration Number'),
                     ]),
 
@@ -197,7 +198,7 @@ class StaffEditScreen extends Screen
                         Input::make('staff.experience')
                             ->title('Level of Experience')
                             ->type('number')
-                            ->min(0)
+                            ->min(1)
                             ->placeholder('Level of Experience'),
                     ]),
 
