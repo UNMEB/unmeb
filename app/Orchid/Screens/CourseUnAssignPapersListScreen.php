@@ -1,22 +1,14 @@
 <?php
 
-namespace App\Orchid\Screens\Administration\Course;
+namespace App\Orchid\Screens;
 
 use App\Models\Course;
 use App\Models\Paper;
-use App\Orchid\Layouts\FormAssignPapers;
 use App\Orchid\Layouts\FormUnAssignPapers;
 use Illuminate\Http\Request;
-use Orchid\Screen\Actions\Button;
-use Orchid\Screen\Actions\Link;
-use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Screen;
-use Orchid\Screen\TD;
-use Orchid\Support\Color;
-use Orchid\Support\Facades\Alert;
-use Orchid\Support\Facades\Layout;
 
-class CourseAssignPapersListScreen extends Screen
+class CourseUnAssignPapersListScreen extends Screen
 {
     /**
      * @var Course
@@ -30,17 +22,14 @@ class CourseAssignPapersListScreen extends Screen
      */
     public function query(Course $course): iterable
     {
+        $this->course = $course;
 
         session()->put("course_id", $course->id);
-
         $assignedPapers = $course->papers()->paginate();
-        $paperIdsAssigned = $course->papers->pluck('id')->all();
-        $papersNotAssigned = Paper::whereNotIn('id', $paperIdsAssigned)->paginate();
 
         return [
             'course' => $course,
             'assigned_papers' => $assignedPapers,
-            'unassigned_papers' => $papersNotAssigned,
         ];
     }
 
@@ -51,7 +40,12 @@ class CourseAssignPapersListScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Assign Papers';
+        return $this->course->course_name;
+    }
+
+    public function description(): string|null
+    {
+        return 'Remove papers assigned to this course';
     }
 
     /**
@@ -72,12 +66,7 @@ class CourseAssignPapersListScreen extends Screen
     public function layout(): iterable
     {
         return [
-                // Layout::tabs([
-                //     'Assigned Papers' => FormAssignPapers::class,
-                //     'Assign Papers' => FormUnAssignPapers::class,
-                // ])
-
-            FormAssignPapers::class
+            FormUnAssignPapers::class,
         ];
     }
 
@@ -123,5 +112,4 @@ class CourseAssignPapersListScreen extends Screen
             }
         }
     }
-
 }

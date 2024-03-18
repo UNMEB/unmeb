@@ -24,6 +24,7 @@ use App\Orchid\Screens\Assessment\InstitutionAssessmentListScreen;
 use App\Orchid\Screens\Biometric\StudentEnrollmentListScreen;
 use App\Orchid\Screens\Biometric\StudentVerificationListScreen;
 use App\Orchid\Screens\Comment\CommentListScreen;
+use App\Orchid\Screens\CourseUnAssignPapersListScreen;
 use App\Orchid\Screens\Examples\ExampleActionsScreen;
 use App\Orchid\Screens\Examples\ExampleCardsScreen;
 use App\Orchid\Screens\Examples\ExampleChartsScreen;
@@ -180,6 +181,14 @@ Route::screen('administration/courses/{course}/assign', CourseAssignPapersListSc
     ->breadcrumbs(fn(Trail $trail, $course) => $trail
         ->parent('platform.courses')
         ->push($course->course_name, route('platform.courses.assign', $course)));
+
+
+// Platform > Administration > Courses > Assign Papers
+Route::screen('administration/courses/{course}/unassign', CourseUnAssignPapersListScreen::class)
+    ->name('platform.courses.unassign')
+    ->breadcrumbs(fn(Trail $trail, $course) => $trail
+        ->parent('platform.courses')
+        ->push($course->course_name, route('platform.courses.unassign', $course)));
 
 
 // Platform > Administration > Programs

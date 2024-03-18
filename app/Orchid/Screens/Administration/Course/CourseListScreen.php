@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -96,32 +97,62 @@ class CourseListScreen extends Screen
                     ->sort(),
 
                 TD::make(__('Actions'))
-                    ->cantHide()
                     ->align(TD::ALIGN_CENTER)
-                    ->render(function (Course $course) {
+                    ->width('100px')
+                    ->render(
+                        fn(Course $course) => DropDown::make()
+                            ->icon('bs.three-dots-vertical')
+                            ->list([
 
-                        return Group::make([
-                            Link::make('Assign Papers')
-                                ->route('platform.courses.assign', $course->id)
-                                ->class('btn btn-success btn-sm link-success'),
+                                Link::make('Assign Papers')
+                                    ->route('platform.courses.assign', $course->id),
 
-                            ModalToggle::make('Edit Program')
-                                ->modal('editCourseModal')
-                                ->modalTitle('Edit Program ' . $course->name)
-                                ->method('edit') // You can define your edit method here
-                                ->asyncParameters([
-                                    'course' => $course->id,
-                                ])
-                                ->class('btn btn-primary btn-sm link-primary'),
+                                Link::make('Remove Papers')
+                                    ->route('platform.courses.unassign', $course->id),
 
-                            Button::make('Delete')
-                                ->confirm('Are you sure you want to delete this program?')
-                                ->method('delete', [
-                                    'id' => $course->id
-                                ])
-                                ->class('btn btn-danger btn-sm link-danger'),
-                        ])->fullWidth();
-                    })
+                                ModalToggle::make('Edit Program')
+                                    ->modal('editCourseModal')
+                                    ->modalTitle('Edit Program ' . $course->name)
+                                    ->method('edit') // You can define your edit method here
+                                    ->asyncParameters([
+                                        'course' => $course->id,
+                                    ]),
+
+                                Button::make('Delete')
+                                    ->confirm('Are you sure you want to delete this program?')
+                                    ->method('delete', [
+                                        'id' => $course->id
+                                    ]),
+                            ])
+                    )
+
+                // TD::make(__('Actions'))
+                //     ->cantHide()
+                //     ->align(TD::ALIGN_CENTER)
+                //     ->render(function (Course $course) {
+
+                //         return Group::make([
+                // Link::make('Assign Papers')
+                //     ->route('platform.courses.assign', $course->id)
+                //     ->class('btn btn-success btn-sm link-success'),
+
+                // ModalToggle::make('Edit Program')
+                //     ->modal('editCourseModal')
+                //     ->modalTitle('Edit Program ' . $course->name)
+                //     ->method('edit') // You can define your edit method here
+                //     ->asyncParameters([
+                //         'course' => $course->id,
+                //     ])
+                //     ->class('btn btn-primary btn-sm link-primary'),
+
+                // Button::make('Delete')
+                //     ->confirm('Are you sure you want to delete this program?')
+                //     ->method('delete', [
+                //         'id' => $course->id
+                //     ])
+                //     ->class('btn btn-danger btn-sm link-danger'),
+                //         ])->fullWidth();
+                //     })
 
 
             ]),
