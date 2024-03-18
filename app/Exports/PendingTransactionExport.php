@@ -9,8 +9,8 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 class PendingTransactionExport implements FromCollection, WithHeadings
 {
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         return Transaction::with('approvedBy')
@@ -26,12 +26,12 @@ class PendingTransactionExport implements FromCollection, WithHeadings
                 'transactions.status',
                 'transactions.approved_by',
                 'transactions.comment',
-                'transaction.created_at'
+                'transactions.created_at'
             )
             ->latest('transactions.created_at')
             ->get()
             ->map(function ($transaction) {
-                $transaction->amount = number_format($transaction->amount,0,'.','');
+                $transaction->amount = number_format($transaction->amount, 0, '.', '');
                 $transaction->approved_by = $transaction->approvedBy->name;
                 return $transaction;
             });
@@ -39,7 +39,8 @@ class PendingTransactionExport implements FromCollection, WithHeadings
     /**
      * @return array
      */
-    public function headings(): array {
+    public function headings(): array
+    {
         return [
             'Transaction ID',
             'Institution',
