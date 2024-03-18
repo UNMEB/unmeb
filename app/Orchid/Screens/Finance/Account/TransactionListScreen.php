@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
@@ -109,6 +110,17 @@ class TransactionListScreen extends Screen
             ]))
                 ->title('Deposit Funds')
                 ->applyButton('Deposit Funds'),
+
+            Layout::rows([
+                Group::make([
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->applyScope('userInstitutions')
+                        ->chunk(20),
+
+                ]),
+            ]),
 
             Layout::table('transactions', [
                 TD::make('id', 'Transaction ID'),
