@@ -81,7 +81,7 @@ class StudentListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Add New Student')
@@ -325,6 +325,9 @@ class StudentListScreen extends Screen
                 'required',
                 Rule::unique(Student::class, 'email')->ignore($student),
             ],
+            'students.nin' => 'required_without_all:students.lin,students.passport_number',
+            'students.lin' => 'required_without_all:students.nin,students.passport_number',
+            'students.passport_number' => 'required_without_all:students.nin,students.lin',
         ]);
 
         $student->fill($request->input('students'))->save();
