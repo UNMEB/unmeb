@@ -119,6 +119,24 @@ class TransactionListScreen extends Screen
                         ->applyScope('userInstitutions')
                         ->chunk(20),
 
+                    // Filter By Transaction Type
+                    Select::make('transaction_type')
+                        ->title('Filter By Transaction Type')
+                        ->options([
+                            'credit' => 'Credit',
+                            'debit' => 'Debit',
+                        ])
+                        ->empty('Select Option'),
+
+                    // Filter By Transaction Method
+                    Select::make('transaction_method')
+                        ->title('Filter By Transaction Method')
+                        ->options([
+                            'bank' => 'Bank Transfer',
+                            'agent_banking' => 'Agent Banking',
+                        ])
+                        ->empty('Select Option'),
+
                 ]),
             ]),
 
