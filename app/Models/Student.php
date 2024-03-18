@@ -38,7 +38,10 @@ class Student extends Model
         'telephone',
         'email',
         'old',
-        'date_time'
+        'date_time',
+        'nin',
+        'lin',
+        'passport_number'
     ];
 
     protected $allowedFilters = [
@@ -59,12 +62,33 @@ class Student extends Model
         return $this->surname . ' ' . $this->firstname . ' ' . $this->othername;
     }
 
+    // Accessor to determine the identifier
+    public function getIdentifierAttribute()
+    {
+        // Check if all identifiers are provided
+        if ($this->nin && $this->lin && $this->passport_number) {
+            return $this->nin; // If all are provided, prioritize nin
+        }
+
+        // If not all are provided, prioritize according to availability
+        if ($this->nin) {
+            return $this->nin;
+        } elseif ($this->lin) {
+            return $this->lin;
+        } elseif ($this->passport_number) {
+            return $this->passport_number;
+        }
+
+        // If none is provided, return null or any default value you prefer
+        return null;
+    }
+
     public function getAvatarAttribute()
     {
         // Check if there is a passport and image exists in public path
         if ($this->passport) {
             // Return img tag
-            return '<img src="' . $this->passport .  '" width="50px">';
+            return '<img src="' . $this->passport . '" width="50px">';
         }
 
         // Return placeholder avatar
@@ -76,7 +100,7 @@ class Student extends Model
         // Check if there is a passport and image exists in public path
         if ($this->passport) {
             // Return img tag
-            return '<img src="' . $this->passport .  '" style="width: 180px; border-radius: 10px;">';
+            return '<img src="' . $this->passport . '" style="width: 180px; border-radius: 10px;">';
         }
 
         // Return placeholder avatar

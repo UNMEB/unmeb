@@ -12,7 +12,7 @@ class Country extends Model
      *
      * @var string
      */
-    protected $table = 'country';
+    protected $table = 'countries';
 
     /**
      * The primary key associated with the table.

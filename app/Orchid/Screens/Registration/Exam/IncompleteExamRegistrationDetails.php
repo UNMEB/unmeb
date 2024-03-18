@@ -76,7 +76,7 @@ class IncompleteExamRegistrationDetails extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
@@ -127,7 +127,7 @@ class IncompleteExamRegistrationDetails extends Screen
                 ])->autoWidth()
                     ->alignEnd(),
             ])->title("Filter Students"),
-            
+
             Layout::table('students', [
 
                 TD::make('id', 'ID'),
@@ -164,13 +164,13 @@ class IncompleteExamRegistrationDetails extends Screen
         // Prepare the filters array with only new filter parameters
         $filters = [];
 
-        if (!empty($name)) {
+        if (!empty ($name)) {
             $filters['filter[name]'] = $name;
         }
-        if (!empty($gender)) {
+        if (!empty ($gender)) {
             $filters['filter[gender]'] = $gender;
         }
-        if (!empty($district)) {
+        if (!empty ($district)) {
             $filters['filter[district_id]'] = $district;
         }
 
