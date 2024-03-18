@@ -31,10 +31,20 @@ class RegisterStudentsForNSINForm extends Listener
      */
     protected function layouts(): iterable
     {
+        $user = auth()->user();
+        $institution = $user->institution; // Assuming 'institution' is the method defining the BelongsTo relationship
+
+        if ($institution) {
+            $balance = $institution->account->balance;
+        } else {
+            // Handle the case where user is not associated with any institution
+            $balance = null; // Or provide a default value
+        }
+
         return [
             Layout::view('components.register-students-for-n-s-i-n-form', [
                 'students' => $this->students,
-                'balance' => auth()->user()->institution()->account()->balance
+                'balance' => $balance,
             ])
         ];
     }

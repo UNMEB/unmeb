@@ -52,6 +52,7 @@ class IncompleteExamRegistration extends Screen
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
             // ->select('i.id AS institution_id', 'i.institution_name', 'r.id as registration_id', 'c.id as course_id', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             // ->groupBy('i.id', 'i.institution_name', 'r.id', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
+
             ->orderBy('r.updated_at', 'desc');
 
         if (!auth()->user()->hasAccess('platform.internals.all_institutions')) {
@@ -312,11 +313,11 @@ class IncompleteExamRegistration extends Screen
 
         $filterParams = [];
 
-        if (!empty($institutionName)) {
+        if (!empty ($institutionName)) {
             $filterParams['filter[institution_name]'] = $institutionName;
         }
 
-        if (!empty($courseName)) {
+        if (!empty ($courseName)) {
             $filterParams['filter[course_name]'] = $courseName;
         }
 
