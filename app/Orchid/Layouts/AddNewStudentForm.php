@@ -88,7 +88,7 @@ class AddNewStudentForm extends Listener
                         ->placeholder('Enter Other name'),
                 ]),
 
-                Relation::make('institution_id')
+                Relation::make('student.institution_id')
                     ->title('Select Institution')
                     ->placeholder('Select User Institution')
                     ->fromModel(Institution::class, 'institution_name', 'id')
@@ -96,7 +96,7 @@ class AddNewStudentForm extends Listener
                     ->value(auth()->user()->institution_id ?? null)
                     ->required(),
 
-                Relation::make('course_id')
+                Relation::make('student.assigned_program')
                     ->title('Select Program')
                     ->placeholder('Select Program')
                     ->fromModel(Course::class, 'course_name'),
