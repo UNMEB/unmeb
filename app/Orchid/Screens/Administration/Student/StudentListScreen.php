@@ -364,7 +364,7 @@ class StudentListScreen extends Screen
             'student.dob' => 'required',
             'student.passport' => 'required',
             'student.telephone' => 'required',
-            'student.email' => 'required|email|unique',
+            'student.email' => 'required|email',
             'student.district_id' => 'required',
             'students.dob' => [
                 'required',
