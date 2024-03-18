@@ -321,16 +321,6 @@ class StudentListScreen extends Screen
 
     public function saveStudent(Request $request, Student $student): void
     {
-        // $request->validate([
-        //     'students.email' => [
-        //         'required',
-        //         Rule::unique(Student::class, 'email')->ignore($student),
-        //     ],
-        //     'students.nin' => 'required_without_all:students.lin,students.passport_number',
-        //     'students.lin' => 'required_without_all:students.nin,students.passport_number',
-        //     'students.passport_number' => 'required_without_all:students.nin,students.lin',
-        // ]);
-
         $request->validate([
             'students.email' => [
                 'required',
@@ -342,29 +332,6 @@ class StudentListScreen extends Screen
                     $age = Carbon::parse($value)->age;
                     if ($age < 18) {
                         $fail('The student must be at least 18 years old.');
-                    }
-                },
-            ],
-            'students.nin' => [
-                'nullable',
-                'string',
-            ],
-            'students.lin' => [
-                'nullable',
-                'string',
-            ],
-            'students.passport_number' => [
-                'nullable',
-                'string',
-            ],
-            'students.nin_or_lin_or_passport' => [
-                function ($attribute, $value, $fail) use ($request) {
-                    $nin = $request->input('students.nin');
-                    $lin = $request->input('students.lin');
-                    $passportNumber = $request->input('students.passport_number');
-
-                    if (empty($nin) && empty($lin) && empty($passportNumber)) {
-                        $fail('At least one of NIN, LIN, or Passport Number is required.');
                     }
                 },
             ],
