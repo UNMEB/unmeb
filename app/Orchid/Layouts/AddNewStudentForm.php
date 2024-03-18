@@ -150,7 +150,7 @@ class AddNewStudentForm extends Listener
                         ->value($this->student->district_id ?? null),
 
                     Input::make('student.location')
-                        ->title('Address')
+                        ->title('Home Address')
                         ->placeholder('Enter student address')
                         ->value($this->student->location ?? null)
                         ->required(),
