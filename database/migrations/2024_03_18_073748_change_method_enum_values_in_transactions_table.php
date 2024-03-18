@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('your_table_name', function (Blueprint $table) {
+        Schema::table('transactions', function (Blueprint $table) {
             $table->dropColumn('method'); // Drop the existing column
 
             // Add a new column with updated enum values
@@ -23,7 +23,7 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('your_table_name', function (Blueprint $table) {
+        Schema::table('transactions', function (Blueprint $table) {
             $table->dropColumn('method'); // Drop the updated column
 
             // Add back the old column with previous enum values
