@@ -52,7 +52,14 @@
 
     <!-- <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"> -->
 
-
+    <style>
+        .picture-preview {
+            max-height: calc(var(--cropper-height, 350)* 1px) !important;
+            max-width: calc(var(--cropper-width, 350)* 1px) !important;
+            -o-object-fit: cover;
+            object-fit: cover;
+        }
+    </style>
 
 </head>
 
@@ -89,6 +96,8 @@
     @include('sweetalert::alert')
 
     @stack('scripts')
+
+
 
 
 </body>
