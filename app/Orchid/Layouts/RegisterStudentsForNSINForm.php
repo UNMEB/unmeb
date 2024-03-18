@@ -33,7 +33,8 @@ class RegisterStudentsForNSINForm extends Listener
     {
         return [
             Layout::view('components.register-students-for-n-s-i-n-form', [
-                'students' => $this->students
+                'students' => $this->students,
+                'balance' => auth()->user()->institution()->account()->balance
             ])
         ];
     }
