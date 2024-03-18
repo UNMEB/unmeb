@@ -58,7 +58,15 @@ class TransactionListScreen extends Screen
             ModalToggle::make('Deposit Funds')
                 ->modal('depositFundsModal')
                 ->method('deposit')
-                ->icon('wallet'),
+                ->icon('wallet')
+                ->class('btn btn-sm btn-success link-success'),
+
+            ModalToggle::make('Generate Statement')
+                ->modal('createStatementModal')
+                ->method('createStatement')
+                ->icon('archive')
+                ->class('btn btn-sm btn-primary'),
+
         ];
     }
 
