@@ -16,7 +16,7 @@ use Orchid\Support\Facades\Layout;
 class RegisterStudentsForNinForm extends Listener
 {
 
-    public $courses  = null;
+    public $courses = [];
     public $students = [];
     public $institutionId;
 
@@ -70,19 +70,19 @@ class RegisterStudentsForNinForm extends Listener
                     ->title('Select Program')
                     ->empty('No Course Selected')
                     ->options($this->courses)
-                ->canSee($this->courses != null)
-                ->required(),
+                    ->canSee(!empty ($this->courses))
+                    ->required(),
 
                 // Select Students
                 Relation::make('student_ids')
                     ->fromModel(Student::class, 'id')
                     ->title('Select students to register for NSIN')
                     ->multiple()
-                ->displayAppend('studentWithNin')
+                    ->displayAppend('studentWithNin')
                     ->searchColumns('surname', 'othername', 'firstname')
-                ->applyScope('filterByInstitution', [
-                    'id' => $this->institutionId
-                ])
+                    ->applyScope('filterByInstitution', [
+                        'id' => $this->institutionId
+                    ])
                     ->chunk(100),
             ])
         ];
