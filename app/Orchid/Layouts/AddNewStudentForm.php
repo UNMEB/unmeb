@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Layouts;
 
+use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
 use App\Models\Student;
@@ -88,6 +89,11 @@ class AddNewStudentForm extends Listener
                     ->applyScope('userInstitutions')
                     ->value(auth()->user()->institution_id ?? null)
                     ->required(),
+
+                Relation::make('course_id')
+                    ->title('Select Program')
+                    ->placeholder('Select Program')
+                    ->fromModel(Course::class, 'course_name'),
 
                 Group::make([
                     Select::make('student.gender')
