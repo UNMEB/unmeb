@@ -52,7 +52,7 @@ class TransactionListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Deposit Funds')
@@ -106,7 +106,7 @@ class TransactionListScreen extends Screen
                 TD::make('id', 'Transaction ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
                     return $data->institution->institution_name;
-                }),
+                })->canSee($this->currentUser()->inRole('system-admin')),
                 TD::make('type', 'Transaction Type')->render(function ($data) {
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
                 }),
@@ -157,7 +157,7 @@ class TransactionListScreen extends Screen
         $receiptData = [
             'amount' => 'Ush ' . number_format($amount),
             'amountInWords' => Str::title($amountInWords),
-            'address'   => $address,
+            'address' => $address,
             'approvedBy' => $transaction->approvedBy->name ?? 'UNMEB OSRS',
             'institution' => $transaction->institution->institution_name,
         ];
@@ -179,7 +179,7 @@ class TransactionListScreen extends Screen
         if ($this->currentUser()->inRole('system-admin')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
-            $institution =  $this->currentUser()->institution;
+            $institution = $this->currentUser()->institution;
         }
 
         $accountId = $institution->account->id;
