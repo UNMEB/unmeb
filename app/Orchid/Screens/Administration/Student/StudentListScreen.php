@@ -364,11 +364,17 @@ class StudentListScreen extends Screen
             'student.dob' => 'required',
             'student.passport' => 'required',
             'student.telephone' => 'required',
-            'student.email' => 'required',
+            'student.email' => 'required|email|unique',
             'student.district_id' => 'required',
-            'student.nin' => 'required',
-            'student.lin' => 'required',
-            'student.passport_number' => 'required',
+            'students.dob' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    $age = Carbon::parse($value)->age;
+                    if ($age < 18) {
+                        $fail('The student must be at least 18 years old.');
+                    }
+                },
+            ],
         ]);
 
         $student = null;
