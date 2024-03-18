@@ -54,8 +54,8 @@
 
     <style>
         .picture-preview {
-            max-height: calc(var(--cropper-height, 350)* 1px) !important;
-            max-width: calc(var(--cropper-width, 350)* 1px) !important;
+            max-height: calc(var(--cropper-height, 250)* 1px) !important;
+            max-width: calc(var(--cropper-width, 250)* 1px) !important;
             -o-object-fit: cover;
             object-fit: cover;
         }
