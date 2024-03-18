@@ -59,16 +59,13 @@ class AddNewStudentForm extends Listener
 
                 Group::make([
                     Input::make('student.nin')
-                        ->title('National Identification Number / Passport Number / Learners Identification Number')
-                        ->required(),
+                        ->title('National Identification Number'),
+
+                    Input::make('student.passport_number')
+                        ->title('Passport Number'),
 
                     Input::make('student.lin')
-                        ->title('National Identification Number / Passport Number / Learners Identification Number')
-                        ->required(),
-
-                    Input::make('student.nin')
-                        ->title('National Identification Number / Passport Number / Learners Identification Number')
-                        ->required(),
+                        ->title('Learners Identification Number'),
                 ]),
 
                 Group::make([
@@ -141,7 +138,7 @@ class AddNewStudentForm extends Listener
                 Group::make([
 
                     Select::make('student.country_id')
-                        ->title('District')
+                        ->title('Country')
                         ->fromModel(Country::class, 'name')
                         ->empty('Non Selected')
                         ->value($this->student->district_id ?? null),

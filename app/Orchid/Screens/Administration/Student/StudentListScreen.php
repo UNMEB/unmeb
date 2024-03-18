@@ -156,15 +156,15 @@ class StudentListScreen extends Screen
             Layout::table('students', [
                 TD::make('id', 'ID'),
                 // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
                 TD::make('district.district_name', 'District'),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
-                TD::make('nin', 'NIN')->render(fn (Student $student) => $student->nin),
-                TD::make('nsin', 'NSIN')->render(fn (Student $student) => $student->nsin),
+                TD::make('nin', 'NIN')->render(fn(Student $student) => $student->nin),
+                TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
                 TD::make('telephone', 'Phone Number'),
                 TD::make('email', 'Email')->defaultHidden(),
                 // TD::make('old', __('Old Student'))
@@ -180,7 +180,7 @@ class StudentListScreen extends Screen
                 TD::make(__('Actions'))
                     ->align(TD::ALIGN_CENTER)
                     ->width('100px')
-                    ->render(fn (Student $student) => DropDown::make()
+                    ->render(fn(Student $student) => DropDown::make()
                         ->icon('bs.three-dots-vertical')
                         ->list([
                             ModalToggle::make('Details')
@@ -356,6 +356,8 @@ class StudentListScreen extends Screen
             'student.email' => 'required',
             'student.district_id' => 'required',
             'student.nin' => 'required',
+            'student.lin' => 'required',
+            'student.passport_number' => 'required',
         ]);
 
         $student = null;
@@ -413,19 +415,19 @@ class StudentListScreen extends Screen
 
         $filterParams = [];
 
-        if (!empty($institutionId)) {
+        if (!empty ($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
 
-        if (!empty($name)) {
+        if (!empty ($name)) {
             $filterParams['filter[name]'] = $name;
         }
 
-        if (!empty($gender)) {
+        if (!empty ($gender)) {
             $filterParams['filter[gender]'] = $gender;
         }
 
-        if (!empty($district)) {
+        if (!empty ($district)) {
             $filterParams['filter[district_id]'] = $district;
         }
 
