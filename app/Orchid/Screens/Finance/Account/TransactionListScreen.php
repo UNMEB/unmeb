@@ -138,6 +138,17 @@ class TransactionListScreen extends Screen
                         ->empty('Select Option'),
 
                 ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
             ]),
 
             Layout::table('transactions', [
