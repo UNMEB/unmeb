@@ -24,7 +24,7 @@
                 <!-- Replace 'Institution Name' with the actual name of the institution -->
                 <h5 class="card-title">Institution Name</h5>
                 <!-- Replace 'Balance' with the actual balance for the institution -->
-                <p class="card-text">Balance: $1000</p>
+                <p class="card-text">Balance: {{ $balance }}</p>
             </div>
         </div>
 

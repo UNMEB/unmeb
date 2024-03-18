@@ -44,7 +44,7 @@ class RegisterStudentsForNSINForm extends Listener
         return [
             Layout::view('components.register-students-for-n-s-i-n-form', [
                 'students' => $this->students,
-                'balance' => $balance,
+                'balance' => "UGX " . number_format($balance, 0),
             ])
         ];
     }
