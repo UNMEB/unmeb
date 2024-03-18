@@ -11,10 +11,11 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('transactions', function (Blueprint $table) {
-            $table->dropColumn('method'); // Drop the existing column
+            $table->dropColumn('method');
+        });
 
-            // Add a new column with updated enum values
-            $table->enum('method', ['bank', 'agent_banking']);
+        Schema::table('transactions', function (Blueprint $table) {
+            $table->enum('method', ['bank', 'agent_banking'])->default('bank');
         });
     }
 
