@@ -6,7 +6,12 @@ use App\Models\Course;
 use App\Models\Paper;
 use App\Orchid\Layouts\FormUnAssignPapers;
 use Illuminate\Http\Request;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
+use Orchid\Support\Facades\Layout;
 
 class CourseUnAssignPapersListScreen extends Screen
 {
@@ -66,6 +71,53 @@ class CourseUnAssignPapersListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::rows([
+                Group::make([
+                    Input::make('paper_name')
+                        ->title('Paper Name'),
+
+                    Select::make('paper')
+                        ->options([
+                            'Paper I',
+                            'Paper II',
+                            'Paper III',
+                            'Paper IV',
+                            'Paper V',
+                            'Paper VI',
+                        ])
+                        ->title('Paper')
+                        ->placeholder('Select paper'),
+
+                    Select::make('paper_code')
+                        ->title('Paper Code')
+                        ->options([
+
+                        ]),
+
+                    Select::make('year_of_study')
+                        ->empty('None Selected')
+                        ->title('Select Year of Study')
+                        ->options([
+                            'Year 1 Semester 1' => 'Year 1 Semester 1',
+                            'Year 1 Semester 2' => 'Year 1 Semester 2',
+                            'Year 2 Semester 1' => 'Year 2 Semester 1',
+                            'Year 3 Semester 2' => 'Year 2 Semester 2',
+                            'Year 3 Semester 1' => 'Year 3 Semester 1',
+                        ])
+
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title('Filter Papers'),
             FormUnAssignPapers::class,
         ];
     }

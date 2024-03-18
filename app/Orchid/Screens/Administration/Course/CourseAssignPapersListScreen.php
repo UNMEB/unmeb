@@ -10,6 +10,9 @@ use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Color;
@@ -72,11 +75,53 @@ class CourseAssignPapersListScreen extends Screen
     public function layout(): iterable
     {
         return [
-                // Layout::tabs([
-                //     'Assigned Papers' => FormAssignPapers::class,
-                //     'Assign Papers' => FormUnAssignPapers::class,
-                // ])
+            Layout::rows([
+                Group::make([
+                    Input::make('paper_name')
+                        ->title('Paper Name'),
 
+                    Select::make('paper')
+                        ->options([
+                            'Paper I',
+                            'Paper II',
+                            'Paper III',
+                            'Paper IV',
+                            'Paper V',
+                            'Paper VI',
+                        ])
+                        ->title('Paper')
+                        ->placeholder('Select paper'),
+
+                    Select::make('paper_code')
+                        ->title('Paper Code')
+                        ->options([
+
+                        ]),
+
+                    Select::make('year_of_study')
+                        ->empty('None Selected')
+                        ->title('Select Year of Study')
+                        ->options([
+                            'Year 1 Semester 1' => 'Year 1 Semester 1',
+                            'Year 1 Semester 2' => 'Year 1 Semester 2',
+                            'Year 2 Semester 1' => 'Year 2 Semester 1',
+                            'Year 3 Semester 2' => 'Year 2 Semester 2',
+                            'Year 3 Semester 1' => 'Year 3 Semester 1',
+                        ])
+
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title('Filter Papers'),
             FormAssignPapers::class
         ];
     }
