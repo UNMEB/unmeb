@@ -16,7 +16,7 @@
                     align: 'left'
                 },
                 xAxis: {
-                    categories: {!! json_encode($gender_distribution_by_course->pluck('course_name')) !!}
+                    categories: {!! json_encode($gender_distribution_by_course->pluck('course')) !!}
                 },
                 yAxis: {
                     type: 'logarithmic',
@@ -26,11 +26,11 @@
                 },
                 series: [{
                         name: 'Male',
-                        data: {!! json_encode($gender_distribution_by_course->where('gender', 'Male')->pluck('gender_count')) !!}
+                        data: {!! json_encode($gender_distribution_by_course->pluck('male_count')) !!}
                     },
                     {
                         name: 'Female',
-                        data: {!! json_encode($gender_distribution_by_course->where('gender', 'Female')->pluck('gender_count')) !!}
+                        data: {!! json_encode($gender_distribution_by_course->pluck('female_count')) !!}
                     }
                 ],
                 exporting: {
