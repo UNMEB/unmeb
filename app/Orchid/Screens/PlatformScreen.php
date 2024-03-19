@@ -76,9 +76,27 @@ class PlatformScreen extends Screen
         $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
 
 
+        // $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+        //     ->join('courses', 'registrations.course_id', '=', 'courses.id')
+        //     ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
+        //     ->groupBy('registrations.course_id')
+        //     ->orderBy('registrations.course_id', 'asc');
+
+        // if ($this->currentUser()->inRole('institution')) {
+        //     $query1->where('registrations.institution_id', $this->currentUser()->institution_id);
+        // }
+
+        // $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
+
         $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
-            ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
+            ->join('students', 'student_registrations.student_id', '=', 'students.id')
+            ->select(
+                'courses.course_name AS course',
+                DB::raw('COUNT(*) as count_of_students'),
+                DB::raw('SUM(CASE WHEN students.gender = "Male" THEN 1 ELSE 0 END) AS male_count'),
+                DB::raw('SUM(CASE WHEN students.gender = "Female" THEN 1 ELSE 0 END) AS female_count')
+            )
             ->groupBy('registrations.course_id')
             ->orderBy('registrations.course_id', 'asc');
 
@@ -87,6 +105,7 @@ class PlatformScreen extends Screen
         }
 
         $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
+
 
         $query2 = Student::select('courses.course_name', 'students.gender', \DB::raw('COUNT(*) as gender_count'))
             ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
