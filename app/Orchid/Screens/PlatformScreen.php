@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Orchid\Screens;
 
 use App\Models\Account;
+use App\Models\NsinRegistrationPeriod;
+use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\Ticket;
@@ -70,6 +72,10 @@ class PlatformScreen extends Screen
         $open_tickets_count = Ticket::whereNull('completed_at')->count();
         $closed_tickets_count = $tickets_count - $open_tickets_count;
 
+        $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
+        $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
+
+
         $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
             ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
@@ -86,9 +92,8 @@ class PlatformScreen extends Screen
             ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
             ->groupBy('courses.course_name', 'students.gender')
             ->orderBy('courses.course_name', 'asc')
-            ->where('nsin_registrations.institution_id', $this->currentUser()->institution_id);
-
-
+            ->where('nsin_registrations.institution_id', $this->currentUser()->institution_id)
+            ->where('nsin_registrations.year_id', $activeNsinPeriod->year_id);
 
         return [
             'student_registration_by_course' => $query1->get(),
