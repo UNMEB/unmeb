@@ -26,11 +26,11 @@
                 },
                 series: [{
                         name: 'Male',
-                        data: {!! json_encode($gender_distribution_by_course->pluck('male_count')) !!}
+                        data: {!! json_encode($gender_distribution_by_course->pluck('count_of_students')) !!}
                     },
                     {
                         name: 'Female',
-                        data: {!! json_encode($gender_distribution_by_course->pluck('female_count')) !!}
+                        data: {!! json_encode($gender_distribution_by_course->pluck('count_of_students')) !!}
                     }
                 ],
                 exporting: {

@@ -105,7 +105,6 @@ class PlatformScreen extends Screen
 
         $query2->where('registrations.registration_period_id', $activeExamPeriod->id);
 
-
         // $query2 = Student::select('courses.course_name', 'students.gender', \DB::raw('COUNT(*) as gender_count'))
         //     ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
         //     ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
