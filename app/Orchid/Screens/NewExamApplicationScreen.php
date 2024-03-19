@@ -51,8 +51,6 @@ class NewExamApplicationScreen extends Screen
     public function query(): iterable
     {
 
-        // dd(session()->get('institution_id'));
-
         // Retrieve institution and course IDs from session
         $institutionId = session()->get('institution_id');
         $courseId = session()->get('course_id');
@@ -118,15 +116,15 @@ class NewExamApplicationScreen extends Screen
 
     public function submit(Request $request)
     {
-        $examRegistrationPeriodId = $request->input('exam_registration_period_id');
-        $institutionId = $request->input('institution_id');
-        $courseId = $request->input('course_id');
-        $paperIds = $request->input('paper_ids');
-        $studentIds = $request->input('student_ids');
+        $examRegistrationPeriodId = session()->get('exam_registration_period_id');
+        $institutionId = session()->get('institution_id');
+        $courseId = session()->get('course_id');
+        $paperIds = session()->get('paper_ids');
+        $studentIds = collect($request->get('students'));
         $numberOfPapers = count($paperIds);
-        $numberOfStudents = count($request->input('student_ids'));
-        $yearOfStudy = $request->input('year_of_study');
-        $trial = $request->input('trial');
+        $numberOfStudents = count($studentIds);
+        $yearOfStudy = session()->get('year_of_study');
+        $trial = session()->get('trial');
 
         $costPerPaper = config('settings.fees.paper_registration');
 
@@ -196,7 +194,7 @@ class NewExamApplicationScreen extends Screen
 
             if ($existingRegistration != null) {
                 // Student already has a registration
-
+                // continue;
             } else {
                 $courseCodes = Paper::whereIn('id', $paperIds)->pluck('code');
 
