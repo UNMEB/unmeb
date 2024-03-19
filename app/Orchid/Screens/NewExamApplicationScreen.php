@@ -10,6 +10,7 @@ use App\Models\Student;
 use App\Models\StudentPaperRegistration;
 use App\Models\StudentRegistration;
 use App\Models\SurchargeFee;
+use App\Models\Transaction;
 use App\Orchid\Layouts\RegisterStudentsForExamsTable;
 use DB;
 use Illuminate\Http\Request;
@@ -132,6 +133,8 @@ class NewExamApplicationScreen extends Screen
 
         // Get the institution
         $institution = Institution::find($institutionId);
+
+        dd($institution);
 
         // Get the course
         $course = Course::find($courseId);
