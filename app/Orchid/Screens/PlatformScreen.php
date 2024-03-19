@@ -4,86 +4,18 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
-use App\Models\Account;
-use App\Models\BiometricEnrollment;
-use App\Models\Course;
-use App\Models\Institution;
-use App\Models\NsinStudentRegistration;
-use App\Models\Staff;
 use App\Models\Student;
 use App\Models\StudentRegistration;
-use App\Models\Transaction;
 use App\Models\User;
-use App\View\Components\Chart;
 use App\View\Components\GenderDistributionByCourseChart;
-use App\View\Components\GenderDistributionChart;
-use App\View\Components\InstitutionDistributionByCategoryChart;
-use App\View\Components\InstitutionDistributionByTypeChart;
 use App\View\Components\StudentRegistrationByCourseBarChart;
-use App\View\Components\StudentRegistrationByInstitution;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use DB;
 use Orchid\Screen\Actions\Button;
-use Orchid\Screen\Fields\DateRange;
-use Orchid\Screen\Fields\Group;
-use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
 
 class PlatformScreen extends Screen
 {
-    /**
-     * Fetch data to be displayed on the screen.
-     *
-     * @return array
-     */
-    public function query(): iterable
-    {
-
-        $institutionId = $this->currentUser()->institution_id;
-        // $account = Account::where('institution_id', $institutionId)->first();
-        // // dd($account);
-
-        return [
-            'metrics' => [
-                'account_balance' => number_format((float) Account::where('institution_id', $institutionId)->sum('balance'), 0),
-                'account_expenditure' => number_format((float) Transaction::where('institution_id', $institutionId)
-                    ->where('type', 'debit')
-                    ->sum('amount'), 0),
-            ]
-        ];
-    }
-
-    /**
-     * The name of the screen displayed in the header.
-     */
-    public function name(): ?string
-    {
-        $institution = $this->currentUser()->institution;
-
-        if ($institution) {
-            return $institution->institution_name;
-        }
-
-        return 'Uganda Nurses And Midwives Examination Board';
-    }
-
-    /**
-     * The description of the screen displayed in the header
-     */
-    public function description(): ?string
-    {
-
-        $institution = $this->currentUser()->institution;
-
-        if ($institution) {
-            return 'View your institution statistics, manage student and staff data, handle registration and transactions';
-        }
-
-        return 'View metrics, charts and various reports of Institutions, Programs, Papers, Staff, Students, and registration data.';
-    }
-
-
     /**
      * The screen's action buttons.
      *
@@ -99,25 +31,48 @@ class PlatformScreen extends Screen
     }
 
     /**
+     * Fetch data to be displayed on the screen.
+     *
+     * @return array
+     */
+    public function query(): iterable
+    {
+        $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+            ->join('courses', 'registrations.course_id', '=', 'courses.id')
+            ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
+            ->groupBy('registrations.course_id')
+            ->orderBy('registrations.course_id', 'asc');
+
+        if ($this->currentUser()->inRole('institution')) {
+            $query1->where('registrations.institution_id', $this->currentUser()->institution_id);
+        }
+
+        $query2 = Student::select('courses.course_name', 'students.gender', \DB::raw('COUNT(*) as gender_count'))
+            ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
+            ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
+            ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
+            ->groupBy('courses.course_name', 'students.gender')
+        ;
+
+
+        return [
+            'student_registration_by_course' => $query1->get(),
+            'gender_distribution_by_course' => collect($query2->get()),
+        ];
+    }
+
+    /**
      * The screen's layout elements.
      *
      * @return \Orchid\Screen\Layout[]
      */
     public function layout(): iterable
     {
-        $metrics = [];
-
-        $graphs = [];
-
-        if ($this->currentUser()->inRole('institution')) {
-            $metrics = [
-                'Account Balance (UGX)' => 'metrics.account_balance',
-                'Total Expenditure' => 'metrics.account_expenditure',
-            ];
-        }
-
         return [
-            Layout::metrics($metrics),
+            Layout::columns([
+                Layout::component(StudentRegistrationByCourseBarChart::class),
+                Layout::component(GenderDistributionByCourseChart::class)
+            ])
         ];
     }
 
@@ -125,5 +80,4 @@ class PlatformScreen extends Screen
     {
         return auth()->user();
     }
-
 }
