@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
+use App\Models\Account;
 use App\Models\Student;
 use App\Models\StudentRegistration;
+use App\Models\Ticket;
+use App\Models\Transaction;
 use App\Models\User;
 use App\View\Components\GenderDistributionByCourseChart;
 use App\View\Components\StudentRegistrationByCourseBarChart;
@@ -16,6 +19,29 @@ use Orchid\Support\Facades\Layout;
 
 class PlatformScreen extends Screen
 {
+
+    /**
+     * The name of the screen displayed in the header.
+     */
+    public function name(): ?string
+    {
+        $institution = $this->currentUser()->institution;
+
+        if ($institution) {
+            return $institution->institution_name;
+        }
+
+        return 'Uganda Nurses And Midwives Examination Board';
+    }
+
+    /**
+     * Display header description.
+     */
+    public function description(): ?string
+    {
+        return 'View metrics, charts and various reports of Institutions, Programs, Papers, Staff, Students, and registration data.';
+    }
+
     /**
      * The screen's action buttons.
      *
@@ -37,6 +63,13 @@ class PlatformScreen extends Screen
      */
     public function query(): iterable
     {
+
+        $institutionId = $this->currentUser()->institution_id;
+
+        $tickets_count = Ticket::count();
+        $open_tickets_count = Ticket::whereNull('completed_at')->count();
+        $closed_tickets_count = $tickets_count - $open_tickets_count;
+
         $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
             ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
@@ -58,6 +91,19 @@ class PlatformScreen extends Screen
         return [
             'student_registration_by_course' => $query1->get(),
             'gender_distribution_by_course' => collect($query2->get()),
+            'metrics' => [
+                'account_balance' => number_format((float) Account::where('institution_id', $institutionId)->sum('balance'), 0),
+                'pending_balance' => number_format((float) Transaction::where('institution_id', $institutionId)
+                    ->where('type', 'credit')
+                    ->where('status', 'PENDING')
+                    ->sum('amount'), 0),
+                'account_expenditure' => number_format((float) Transaction::where('institution_id', $institutionId)
+                    ->where('type', 'debit')
+                    ->sum('amount'), 0),
+                'tickets' => $tickets_count,
+                'open_tickets' => $open_tickets_count,
+                'closed_tickets' => $closed_tickets_count,
+            ],
         ];
     }
 
@@ -68,7 +114,25 @@ class PlatformScreen extends Screen
      */
     public function layout(): iterable
     {
+        $metrics = [];
+
+        $supportMetrics = [
+            'Total Support Tickets' => 'metrics.tickets',
+            'Open Tickets' => 'metrics.open_tickets',
+            'Closed Tickets' => 'metrics.closed_tickets',
+        ];
+
+        if ($this->currentUser()->inRole('institution')) {
+            $metrics = [
+                'Account Balance (UGX)' => 'metrics.account_balance',
+                'Pending Balance' => 'metrics.pending_balance',
+                'Total Expenditure' => 'metrics.account_expenditure',
+            ];
+        }
+
         return [
+            Layout::metrics($metrics),
+            Layout::metrics($supportMetrics),
             Layout::columns([
                 Layout::component(StudentRegistrationByCourseBarChart::class),
                 Layout::component(GenderDistributionByCourseChart::class)
