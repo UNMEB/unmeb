@@ -126,7 +126,7 @@ class NewExamApplicationScreen extends Screen
         // Get the institution
         $institution = Institution::find($institutionId);
 
-        dd($institution);
+        dd(session()->get('institution_id'));
 
         // Get the course
         $course = Course::find($courseId);
