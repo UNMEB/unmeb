@@ -86,7 +86,7 @@ class PlatformScreen extends Screen
             ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
             ->groupBy('courses.course_name', 'students.gender')
             ->orderBy('courses.course_name', 'asc');
-        ;
+
 
 
         return [
