@@ -56,14 +56,6 @@ class NewExamApplicationScreen extends Screen
         $institutionId = session()->get('institution_id');
         $courseId = session()->get('course_id');
 
-        // Copy the session variables to separate variables
-        $institutionIdCopy = $institutionId;
-        $courseIdCopy = $courseId;
-
-        // Remove session variables
-        session()->forget('institution_id');
-        session()->forget('course_id');
-
         // Your query
         $query = Student::withoutGlobalScopes()->leftJoin('student_registrations as sr', 'students.id', '=', 'sr.student_id')
             ->leftJoin('registrations as r', 'sr.registration_id', '=', 'r.id')
@@ -71,8 +63,8 @@ class NewExamApplicationScreen extends Screen
             ->leftJoin('courses as c', 'r.course_id', '=', 'c.id')
             ->leftJoin('institutions as i', 'r.institution_id', '=', 'i.id')
             ->where('rp.id', '=', $this->exam_registration_period_id)
-            ->where('c.id', '=', $courseIdCopy)
-            ->where('i.id', '=', $institutionIdCopy)
+            ->where('c.id', '=', $courseId)
+            ->where('i.id', '=', $institutionId)
             ->select('students.*')
             ->limit(100)
             ->orderBy('surname', 'asc')
