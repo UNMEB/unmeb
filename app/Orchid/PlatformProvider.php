@@ -181,9 +181,6 @@ class PlatformProvider extends OrchidServiceProvider
                             return null;
                         }, Color::DANGER),
 
-                    // Logbook & Research Guidelines Purchase
-                    Menu::make(__('Logbooks & Research Guidelines'))
-                        ->route('platform.system.finance.logbooks')
                 ])
                 ->permission('platform.finance.list'),
 

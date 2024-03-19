@@ -126,8 +126,6 @@ class NewExamApplicationScreen extends Screen
         // Get the institution
         $institution = Institution::find($institutionId);
 
-        // dd($institution);
-
         // Get the course
         $course = Course::find($courseId);
 
@@ -140,11 +138,9 @@ class NewExamApplicationScreen extends Screen
             ->where('surcharges.flag', 1)
             ->first();
 
-        // dd($normalCharge->surcharge_id);
-
         $bill = 0;
 
-        // Find the registration
+        // Find or create the registration
         $registration = Registration::where([
             'institution_id' => $institutionId,
             'course_id' => $courseId,
@@ -152,9 +148,7 @@ class NewExamApplicationScreen extends Screen
             'registration_period_id' => $examRegistrationPeriodId,
         ])->first();
 
-        if ($registration) {
-            // Increment the bill
-        } else {
+        if (!$registration) {
             $registration = new Registration();
             $registration->institution_id = $institution->id;
             $registration->course_id = $courseId;
@@ -165,10 +159,8 @@ class NewExamApplicationScreen extends Screen
             $registration->save();
         }
 
-
+        // Check bill for entire batch of students
         foreach ($studentIds as $studentId) {
-            $student = Student::find($studentId);
-
             // if first attempt register normally
             if ($trial == 'First') {
                 $bill += $normalCharge->course_fee;
@@ -179,6 +171,17 @@ class NewExamApplicationScreen extends Screen
                 $costToPay = ($costPerPaper + ($costPerPaper * 1)) * count($paperIds);
                 $bill += $costToPay;
             }
+        }
+
+        // Check if bill exceeds account balance before registration
+        if ($bill > $accountBalance) {
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', "Account balance too low to complete exam registration for all students. Please deposit funds to your account and try again.");
+            return back();
+        }
+
+        // Proceed with registration for each student
+        foreach ($studentIds as $studentId) {
+            $student = Student::find($studentId);
 
             // Register Student Exam Registration
             $existingRegistration = StudentRegistration::where([
@@ -187,10 +190,7 @@ class NewExamApplicationScreen extends Screen
                 'trial' => $trial,
             ])->first();
 
-            if ($existingRegistration != null) {
-                // Student already has a registration
-                // continue;
-            } else {
+            if (!$existingRegistration) {
                 $courseCodes = Paper::whereIn('id', $paperIds)->pluck('code');
 
                 $existingRegistration = new StudentRegistration();
@@ -201,6 +201,18 @@ class NewExamApplicationScreen extends Screen
                 $existingRegistration->no_of_papers = count($paperIds);
                 $existingRegistration->sr_flag = 0;
                 $existingRegistration->save();
+
+                // Create a transaction for this student registration
+                $transaction = new Transaction([
+                    'amount' => $bill, // Same bill amount for each student
+                    'type' => 'debit',
+                    'account_id' => $institution->account->id,
+                    'institution_id' => $institution->id,
+                    'initiated_by' => auth()->user()->id,
+                    'status' => 'approved',
+                    'comment' => 'Exam Registration for student ID: ' . $student->id,
+                ]);
+                $transaction->save();
             }
 
             // Register Student Papers
@@ -208,8 +220,6 @@ class NewExamApplicationScreen extends Screen
                 ->where('course_id', $course->id)
                 ->whereIn('paper_id', $paperIds)
                 ->pluck('id');
-
-            // dd($studentCoursePapers);
 
             foreach ($studentCoursePapers as $coursePaperId) {
                 // Create a new StudentPaperRegistration record
@@ -220,36 +230,18 @@ class NewExamApplicationScreen extends Screen
             }
         }
 
-        if ($bill > $accountBalance) {
-            // Alert::error("Account balance to low to complete transaction. Please deposit funds to your account.");
-
-            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', "Account balance to low to complete exam registration. Please deposit funds to your account and try again.");
-
-            return back();
-        }
-
-        $newBalanace = $institution->account->balance - $bill;
+        // Update account balance and complete registration
+        $newBalance = $institution->account->balance - $bill;
 
         // Increment this amount in registration
-        $registration->amount += $newBalanace;
+        $registration->amount += $newBalance;
         $registration->save();
 
         $institution->account->update([
-            'balance' => $newBalanace,
+            'balance' => $newBalance,
         ]);
-
-        $transaction = new Transaction([
-            'amount' => $bill,
-            'type' => 'debit',
-            'account_id' => $institution->account->id,
-            'institution_id' => $institution->id,
-            'initiated_by' => auth()->user()->id,
-            'status' => 'approved',
-            'comment' => 'Exam Registration',
-        ]);
-
-        $transaction->save();
 
         Alert::success('Registration successful');
     }
+
 }
