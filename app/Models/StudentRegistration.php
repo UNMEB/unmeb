@@ -11,7 +11,7 @@ use Orchid\Screen\AsSource;
 
 class StudentRegistration extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution;
+    use HasFactory, AsSource, Filterable, Sortable;
 
     public function student()
     {
