@@ -75,20 +75,19 @@ class PlatformScreen extends Screen
         $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
         $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
 
-
-        // $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
-        //     ->join('courses', 'registrations.course_id', '=', 'courses.id')
-        //     ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
-        //     ->groupBy('registrations.course_id')
-        //     ->orderBy('registrations.course_id', 'asc');
-
-        // if ($this->currentUser()->inRole('institution')) {
-        //     $query1->where('registrations.institution_id', $this->currentUser()->institution_id);
-        // }
-
-        // $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
-
         $query1 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
+            ->join('courses', 'registrations.course_id', '=', 'courses.id')
+            ->select('courses.course_name AS course', DB::raw('COUNT(*) as count_of_students'))
+            ->groupBy('registrations.course_id')
+            ->orderBy('registrations.course_id', 'asc');
+
+        if ($this->currentUser()->inRole('institution')) {
+            $query1->where('registrations.institution_id', $this->currentUser()->institution_id);
+        }
+
+        $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
+
+        $query2 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
             ->join('students', 'student_registrations.student_id', '=', 'students.id')
             ->select(
@@ -101,20 +100,20 @@ class PlatformScreen extends Screen
             ->orderBy('registrations.course_id', 'asc');
 
         if ($this->currentUser()->inRole('institution')) {
-            $query1->where('registrations.institution_id', $this->currentUser()->institution_id);
+            $query2->where('registrations.institution_id', $this->currentUser()->institution_id);
         }
 
-        $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
+        $query2->where('registrations.registration_period_id', $activeExamPeriod->id);
 
 
-        $query2 = Student::select('courses.course_name', 'students.gender', \DB::raw('COUNT(*) as gender_count'))
-            ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
-            ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
-            ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
-            ->groupBy('courses.course_name', 'students.gender')
-            ->orderBy('courses.course_name', 'asc')
-            ->where('nsin_registrations.institution_id', $this->currentUser()->institution_id)
-            ->where('nsin_registrations.year_id', $activeNsinPeriod->year_id);
+        // $query2 = Student::select('courses.course_name', 'students.gender', \DB::raw('COUNT(*) as gender_count'))
+        //     ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
+        //     ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
+        //     ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
+        //     ->groupBy('courses.course_name', 'students.gender')
+        //     ->orderBy('courses.course_name', 'asc')
+        //     ->where('nsin_registrations.institution_id', $this->currentUser()->institution_id)
+        //     ->where('nsin_registrations.year_id', $activeNsinPeriod->year_id);
 
         return [
             'student_registration_by_course' => $query1->get(),
