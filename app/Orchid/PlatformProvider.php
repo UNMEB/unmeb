@@ -82,20 +82,20 @@ class PlatformProvider extends OrchidServiceProvider
                 ->permission('platform.registration.nsin.list'),
 
             // Manage Student Exam Registration
-            Menu::make(__('Student Exam Registration'))
+            Menu::make(__('Exam Registration'))
                 ->icon('fa.cubes')
                 ->list([
-                    Menu::make(__('Exam Registrations'))
-                        ->route('platform.registration.exam.incomplete'),
+                    Menu::make(__('Exam Applications'))
+                        ->route('platform.registration.exam.applications.list'),
 
-                    Menu::make(__('Accepted Exam Registrations'))
-                        ->route('platform.registration.exam.accepted'),
+                    // Menu::make(__('Accepted Exam Registrations'))
+                    //     ->route('platform.registration.exam.accepted'),
 
-                    Menu::make(__('Rejected Exam Registrations'))
-                        ->route('platform.registration.exam.rejected'),
+                    // Menu::make(__('Rejected Exam Registrations'))
+                    //     ->route('platform.registration.exam.rejected'),
 
-                    Menu::make(__('Approve Exam Registrations'))
-                        ->route('platform.registration.exam.approve'),
+                    // Menu::make(__('Approve Exam Registrations'))
+                    //     ->route('platform.registration.exam.approve'),
                 ])
                 ->permission('platform.registration.exam.list'),
 

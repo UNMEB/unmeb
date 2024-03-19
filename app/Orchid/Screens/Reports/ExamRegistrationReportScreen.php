@@ -65,7 +65,7 @@ class ExamRegistrationReportScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
@@ -81,32 +81,32 @@ class ExamRegistrationReportScreen extends Screen
             Layout::rows([
                 Group::make([
                     Relation::make('institution_id')
-                    ->title('Filter By Institution')
-                    ->fromModel(Institution::class, 'institution_name'),
+                        ->title('Filter By Institution')
+                        ->fromModel(Institution::class, 'institution_name'),
 
                     Relation::make('course_id')
-                    ->title('Filter By Program')
-                    ->fromModel(Course::class, 'course_name'),
+                        ->title('Filter By Program')
+                        ->fromModel(Course::class, 'course_name'),
 
                     // Select Year of Study
                     Select::make('year_of_study')
-                    ->empty('None Selected')
-                    ->title('Select Year of Study')
-                    ->options([
-                        'Year 1 Semester 1' => 'Year 1 Semester 1',
-                        'Year 1 Semester 2' => 'Year 1 Semester 2',
-                        'Year 2 Semester 1' => 'Year 2 Semester 1',
-                        'Year 3 Semester 2' => 'Year 2 Semester 2',
-                        'Year 3 Semester 1' => 'Year 3 Semester 1',
-                    ]),
+                        ->empty('None Selected')
+                        ->title('Select Year of Study')
+                        ->options([
+                            'Year 1 Semester 1' => 'Year 1 Semester 1',
+                            'Year 1 Semester 2' => 'Year 1 Semester 2',
+                            'Year 2 Semester 1' => 'Year 2 Semester 1',
+                            'Year 3 Semester 1' => 'Year 3 Semester 1',
+                            'Year 3 Semester 2' => 'Year 3 Semester 2',
+                        ]),
                 ]),
                 Group::make([
                     Button::make('Submit')
-                    ->method('filter'),
+                        ->method('filter'),
 
                     // Reset Filters
                     Button::make('Reset')
-                    ->method('reset')
+                        ->method('reset')
 
                 ])->autoWidth()
                     ->alignEnd(),
@@ -136,11 +136,11 @@ class ExamRegistrationReportScreen extends Screen
 
         $filters = [];
 
-        if (!empty($institutionId)) {
+        if (!empty ($institutionId)) {
             $filters['filter[institution_id]'] = $institutionId;
         }
 
-        if (!empty($courseId)) {
+        if (!empty ($courseId)) {
             $filters['filter[course_id]'] = $courseId;
         }
 

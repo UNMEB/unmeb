@@ -90,13 +90,13 @@ class PackingListReportScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Button::make('Export Packing List')
-            ->method('export')
-            ->id('download')
-            ->rawClick(true)
+                ->method('export')
+                ->id('download')
+                ->rawClick(true)
         ];
     }
 
@@ -129,8 +129,8 @@ class PackingListReportScreen extends Screen
                             'Year 1 Semester 1' => 'Year 1 Semester 1',
                             'Year 1 Semester 2' => 'Year 1 Semester 2',
                             'Year 2 Semester 1' => 'Year 2 Semester 1',
-                            'Year 3 Semester 2' => 'Year 2 Semester 2',
                             'Year 3 Semester 1' => 'Year 3 Semester 1',
+                            'Year 3 Semester 2' => 'Year 3 Semester 2',
                         ]),
 
                     Relation::make('Program')

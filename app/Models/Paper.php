@@ -20,6 +20,12 @@ class Paper extends Model
         'code',
     ];
 
+    protected $allowedFilters = [
+        'paper_name',
+        'paper',
+        'year_of_study'
+    ];
+
     public function courses()
     {
         return $this->belongsToMany(Course::class, 'course_paper', 'paper_id', 'course_id')

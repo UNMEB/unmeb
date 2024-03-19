@@ -55,6 +55,7 @@ class StudentListScreen extends Screen
             'students' => Student::with('district')
                 ->filters()
                 ->latest()
+                ->orderBy('surname', 'desc')
                 ->paginate(),
         ];
     }

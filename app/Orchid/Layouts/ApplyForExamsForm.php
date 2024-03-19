@@ -6,7 +6,6 @@ use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Paper;
 use App\Models\RegistrationPeriod;
-use App\Models\Student;
 use Illuminate\Http\Request;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
@@ -14,13 +13,14 @@ use Orchid\Screen\Layouts\Listener;
 use Orchid\Screen\Repository;
 use Orchid\Support\Facades\Layout;
 
-class RegisterStudentsForExamForm extends Listener
+class ApplyForExamsForm extends Listener
 {
 
     public $courses = [];
     public $papers = [];
 
     public $institution = null;
+    public $course;
 
     /**
      * List of field names for which values will be listened.
@@ -31,7 +31,6 @@ class RegisterStudentsForExamForm extends Listener
         'institution_id',
         'course_id',
         'paper_ids',
-        'student_ids',
         'year_of_study',
         'trial'
     ];
@@ -51,6 +50,7 @@ class RegisterStudentsForExamForm extends Listener
             $yearOptions[$registrationPeriod->id] = $registrationPeriod->reg_start_date . ' - ' . $registrationPeriod->reg_end_date;
         }
 
+
         return [
             Layout::rows([
                 // Select Exam Registration Period
@@ -64,7 +64,8 @@ class RegisterStudentsForExamForm extends Listener
                     ->title('Select Institution')
                     ->fromModel(Institution::class, 'institution_name')
                     ->applyScope('userInstitutions')
-                    ->placeholder('Select Institution'),
+                    ->placeholder('Select Institution')
+                    ->value(auth()->user()->institution_id),
 
                 // Select Year of Study
                 Select::make('year_of_study')
@@ -87,15 +88,6 @@ class RegisterStudentsForExamForm extends Listener
                     ->options($this->courses)
                     ->canSee(count($this->courses) > 0),
 
-
-                // Select Paper
-                Select::make('paper_ids')
-                    ->title('Select Papers')
-                    ->placeholder('Select Papers')
-                    ->multiple()
-                    ->options($this->papers)
-                    ->canSee(count($this->papers) > 0),
-
                 // Select Trial
                 Select::make('trial')
                     ->title('Trial Number')
@@ -106,18 +98,16 @@ class RegisterStudentsForExamForm extends Listener
                         'Third Attempt' => 'Third Attempt'
                     ]),
 
-                // Select Students
-                Relation::make('student_ids')
-                    ->fromModel(Student::class, 'id')
-                    ->title('Select students to register for Exams')
+                // Select Paper
+                Select::make('paper_ids')
+                    ->title('Select Papers')
+                    ->placeholder('Select Papers')
                     ->multiple()
-                    ->displayAppend('studentWithNin')
-                    ->searchColumns('surname', 'othername', 'firstname')
-                    ->applyScope('filterByInstitution', [
-                        'id' => $this->institution
-                    ])
-                    ->chunk(100),
-            ])
+                    ->options($this->papers)
+                    ->canSee(count($this->papers) > 0),
+            ]),
+
+
         ];
     }
 
@@ -131,11 +121,9 @@ class RegisterStudentsForExamForm extends Listener
      */
     public function handle(Repository $repository, Request $request): Repository
     {
-
         $examRegistrationPeriodId = $request->get('exam_registration_period_id');
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
-        $studentIds = $request->get('student_ids');
         $paperIds = $request->get('paper_ids');
         $yearOfStudy = $request->get('year_of_study');
         $trial = $request->get('trial');
@@ -148,15 +136,16 @@ class RegisterStudentsForExamForm extends Listener
         }
 
         if ($courseId != null) {
-            $course = Course::find($courseId);
+            $this->course = Course::find($courseId);
         }
 
-        if ($yearOfStudy) {
+        if ($yearOfStudy != null && $courseId != null) {
 
             $papers = Paper::select('papers.*', 'course_paper.course_id as pivot_course_id', 'course_paper.paper_id as pivot_paper_id', 'course_paper.flag as pivot_flag')
                 ->join('course_paper', 'papers.id', '=', 'course_paper.paper_id')
                 ->where('course_paper.course_id', $courseId)
                 ->where('papers.year_of_study', $yearOfStudy)
+                ->where('papers.code', 'LIKE', $this->course->course_code . '%')
                 ->orderBy('papers.paper_name')
                 ->get();
 
@@ -179,7 +168,6 @@ class RegisterStudentsForExamForm extends Listener
             ->set('institution_id', $institutionId)
             ->set('course_id', $courseId)
             ->set('paper_ids', $paperIds)
-            ->set('student_ids', $studentIds)
             ->set('year_of_study', $yearOfStudy)
             ->set('trial', $trial);
     }

@@ -78,21 +78,19 @@ class CourseUnAssignPapersListScreen extends Screen
 
                     Select::make('paper')
                         ->options([
-                            'Paper I',
-                            'Paper II',
-                            'Paper III',
-                            'Paper IV',
-                            'Paper V',
-                            'Paper VI',
+                            'Paper I' => 'Paper I',
+                            'Paper II' => 'Paper II',
+                            'Paper III' => 'Paper III',
+                            'Paper IV' => 'Paper IV',
+                            'Paper V' => 'Paper V',
+                            'Paper VI' => 'Paper VI',
                         ])
                         ->title('Paper')
-                        ->placeholder('Select paper'),
+                        ->placeholder('Select paper')
+                        ->empty('None Selected'),
 
-                    Select::make('paper_code')
-                        ->title('Paper Code')
-                        ->options([
-
-                        ]),
+                    Input::make('code')
+                        ->title('Paper Code'),
 
                     Select::make('year_of_study')
                         ->empty('None Selected')
@@ -101,8 +99,8 @@ class CourseUnAssignPapersListScreen extends Screen
                             'Year 1 Semester 1' => 'Year 1 Semester 1',
                             'Year 1 Semester 2' => 'Year 1 Semester 2',
                             'Year 2 Semester 1' => 'Year 2 Semester 1',
-                            'Year 3 Semester 2' => 'Year 2 Semester 2',
                             'Year 3 Semester 1' => 'Year 3 Semester 1',
+                            'Year 3 Semester 2' => 'Year 3 Semester 2',
                         ])
 
                 ]),
@@ -163,5 +161,39 @@ class CourseUnAssignPapersListScreen extends Screen
                 }
             }
         }
+    }
+
+    public function filter(Request $request)
+    {
+        $paperName = $request->get('paper_name');
+        $paper = $request->get('paper');
+        $code = $request->get('code');
+        $yearOfStudy = $request->get('year_of_study');
+
+        // Define the filter parameters
+        $filterParams = [];
+
+        if (!empty ($paperName)) {
+            $filterParams['filter[paper_name]'] = $paperName;
+        }
+
+        if (!empty ($paper)) {
+            $filterParams['filter[paper]'] = $paper;
+        }
+
+        if (!empty ($code)) {
+            $filterParams['filter[code]'] = $code;
+        }
+
+        if (!empty ($yearOfStudy)) {
+            $filterParams['filter[year_of_study]'] = $yearOfStudy;
+        }
+
+        // Add the course parameter to the filterParams
+        $filterParams['course'] = $this->course->id;
+
+        $url = route('platform.courses.unassign', $filterParams);
+
+        return redirect()->to($url);
     }
 }

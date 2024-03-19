@@ -60,7 +60,7 @@ class InstitutionListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Add Institution')
@@ -131,8 +131,9 @@ class InstitutionListScreen extends Screen
                 TD::make(__('Actions'))
                     ->alignCenter()
                     ->render(function (Institution $institution) {
-                    return Group::make([Link::make('Programs')->class('btn btn-primary btn-sm link-primary')
-                            ->route('platform.institutions.assign', $institution->id),
+                        return Group::make([
+                            Link::make('Programs')->class('btn btn-primary btn-sm link-primary')
+                                ->route('platform.institutions.assign', $institution->id),
                             ModalToggle::make('Edit')
                                 ->icon('fa.edit')
                                 ->method('edit')
@@ -140,14 +141,14 @@ class InstitutionListScreen extends Screen
                                 ->modalTitle('Edit Institution')
                                 ->asyncParameters([
                                     'institution' => $institution->id
-                            ])
-                            ->class('btn btn-success btn-sm link-success'),
+                                ])
+                                ->class('btn btn-success btn-sm link-success'),
                             Button::make('Delete')
                                 ->confirm('Are you sure you want to delete this institution?')
                                 ->method('delete', [
                                     'id' => $institution->id
                                 ])
-                        ->class('btn btn-danger btn-sm link-danger')
+                                ->class('btn btn-danger btn-sm link-danger')
                         ]);
                     })
 
@@ -171,14 +172,14 @@ class InstitutionListScreen extends Screen
                     ->placeholder('Enter institution type'),
 
                 Select::make('institution.category')
-                ->title('Category')
-                ->placeholder('Enter institution category')
-                ->options([
-                    'UNMEB' => 'UNMEB',
-                    'UAHEB' => 'UAHEB',
-                    'UBTEB' => 'UBTEB',
-                ])
-                ->empty('Non Selected'),
+                    ->title('Category')
+                    ->placeholder('Enter institution category')
+                    ->options([
+                        'UNMEB' => 'UNMEB',
+                        'UAHEB' => 'UAHEB',
+                        'UBTEB' => 'UBTEB',
+                    ])
+                    ->empty('Non Selected'),
 
                 Input::make('institution.code')
                     ->title('Institution Code')
@@ -189,9 +190,9 @@ class InstitutionListScreen extends Screen
                     ->placeholder('Enter institution phone number'),
 
                 Input::make('institution.email')
-                ->title('Institution Email Address')
-                ->type('email')
-                ->placeholder('Enter institution email'),
+                    ->title('Institution Email Address')
+                    ->type('email')
+                    ->placeholder('Enter institution email'),
 
                 Input::make('institution.box_no')
                     ->title('Institution P.O.Box')
@@ -218,14 +219,14 @@ class InstitutionListScreen extends Screen
                     ->placeholder('Enter institution type'),
 
                 Select::make('institution.category')
-                ->title('Category')
-                ->placeholder('Enter institution category')
-                ->options([
-                    'UNMEB' => 'UNMEB',
-                    'UAHEB' => 'UAHEB',
-                    'UBTEB' => 'UBTEB',
-                ])
-                ->empty('Non Selected'),
+                    ->title('Category')
+                    ->placeholder('Enter institution category')
+                    ->options([
+                        'UNMEB' => 'UNMEB',
+                        'UAHEB' => 'UAHEB',
+                        'UBTEB' => 'UBTEB',
+                    ])
+                    ->empty('Non Selected'),
 
                 Input::make('institution.code')
                     ->title('Institution Code')
@@ -236,9 +237,9 @@ class InstitutionListScreen extends Screen
                     ->placeholder('Enter institution phone number'),
 
                 Input::make('institution.email')
-                ->title('Institution Email Address')
-                ->type('email')
-                ->placeholder('Enter institution email'),
+                    ->title('Institution Email Address')
+                    ->type('email')
+                    ->placeholder('Enter institution email'),
 
                 Input::make('institution.box_no')
                     ->title('Institution P.O.Box')
@@ -374,7 +375,7 @@ class InstitutionListScreen extends Screen
             // Display a success message using SweetAlert
             Alert::success("Institution data imported successfully");
 
-            
+
         } catch (\Exception $e) {
             // Handle any exceptions that may occur during import
             Alert::error($e->getMessage());
@@ -417,16 +418,16 @@ class InstitutionListScreen extends Screen
         $filterParams = [];
 
         // Check and add each parameter to the filterParams array
-        if (!empty($institutionName)) {
+        if (!empty ($institutionName)) {
             $filterParams['filter[institution_name]'] = $institutionName;
         }
-        if (!empty($institutionCode)) {
+        if (!empty ($institutionCode)) {
             $filterParams['filter[code]'] = $institutionCode;
         }
-        if (!empty($institutionType)) {
+        if (!empty ($institutionType)) {
             $filterParams['filter[institution_type]'] = $institutionType;
         }
-        if (!empty($institutionLocation)) {
+        if (!empty ($institutionLocation)) {
             $filterParams['filter[institution_location]'] = $institutionLocation;
         }
 
