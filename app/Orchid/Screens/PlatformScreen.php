@@ -52,7 +52,7 @@ class PlatformScreen extends Screen
     public function commandBar()
     {
         return [
-            Button::make('Downalod User Manual')
+            Button::make('Download User Manual')
                 ->class('btn btn-success')
                 ->rawClick(false),
         ];
