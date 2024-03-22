@@ -3,12 +3,15 @@
 namespace App\Orchid\Screens;
 
 use App\Models\Institution;
+use App\Models\NsinRegistrationPeriod;
+use App\Models\Student;
 use App\Orchid\Layouts\ApplyForNSINsForm;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Screen;
+use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
 
 class NsinApplicationListScreen extends Screen
@@ -20,7 +23,23 @@ class NsinApplicationListScreen extends Screen
      */
     public function query(): iterable
     {
-        return [];
+        $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
+
+        $pendingQuery = Student::join('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->join('nsin_registration_periods as nsp', function ($join) {
+                $join->on('nr.year_id', '=', 'nsp.year_id')
+                    ->on('nr.month', '=', 'nsp.month');
+            })
+            ->whereNotNull('nsp.id')
+            ->where('nsp.id', '=', $activeNsinPeriod->id)
+            ->select('students.*')
+            ->limit(100)
+            ->orderBy('surname', 'asc')
+            ->get();
+        return [
+            'pending_students' => $pendingQuery
+        ];
     }
 
     /**
@@ -63,7 +82,31 @@ class NsinApplicationListScreen extends Screen
     {
         return [
             Layout::modal('newNSINApplicationModal', ApplyForNSINsForm::class)
-                ->applyButton('Register for NSINs')
+                ->applyButton('Register for NSINs'),
+
+
+            Layout::tabs([
+                'Pending NSINs (Current Period)' => Layout::table('pending_students', [
+                    TD::make('id', 'ID'),
+                    TD::make('fullName', 'Name'),
+                    TD::make('gender', 'Gender'),
+                    TD::make('dob', 'Date of Birth'),
+                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
+                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
+                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
+                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
+                ]),
+                'Approved NSINs (Current Period)' => Layout::table('approved_students', [
+                    TD::make('id', 'ID'),
+                    TD::make('fullName', 'Name'),
+                    TD::make('gender', 'Gender'),
+                    TD::make('dob', 'Date of Birth'),
+                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
+                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
+                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
+                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
+                ]),
+            ])
         ];
     }
 

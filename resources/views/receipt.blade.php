@@ -52,7 +52,7 @@
         .logo img {
             max-width: 100%;
             /* Fit the logo to match the width of the parent container */
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
         .header {
@@ -102,15 +102,30 @@
             margin-bottom: 20px;
         }
 
-        .approved-text {
-            text-align: left;
+        .approved-container {
+            text-align: center;
             margin-top: 20px;
+            max-width: 200px;
         }
 
-        .amount-words {
-            margin-top: 18px;
-            font-style: italic;
-            font-size: 14px;
+        .approved-text {
+            text-align: center;
+            margin-top: 5px;
+            /* margin-left: 150px; */
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .signature-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .signature-image {
+            width: 100px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -118,7 +133,7 @@
 <body>
     <div class="container">
         <div class="watermark">
-            <p>APPROVED</p>
+            <p>{{ strtoupper($status) }}</p>
         </div>
         <div class="header">
             <div class="logo">
@@ -132,7 +147,7 @@
 
         <div class="receipt">
             <h2>Payment Receipt</h2>
-            <p>Mar 1, 2023</p>
+            <p>{{ $date }} </p>
         </div>
 
         <div class="top-text">
@@ -155,13 +170,10 @@
 
         <!-- Add a container for "Approved by" text and the dotted line -->
         <div class="approved-container">
-            <div class="approved-text">
-                <p style="margin-left: 150px; font-weight: 600; font-size: 12px">
-                    {{ $approvedBy }}
-                </p>
-                <p>
-                    Approved by ....................................................
-                </p>
+            <div class="signature-container">
+                <img src="{{ $finance_signature }}" class="signature-image" />
+                <div class="dotted-line"></div>
+                <p class="approved-text">{{ $approvedBy }}</p>
             </div>
         </div>
 

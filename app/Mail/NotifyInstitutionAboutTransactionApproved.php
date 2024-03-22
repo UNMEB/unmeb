@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -76,6 +77,7 @@ class NotifyInstitutionAboutTransactionApproved extends Mailable
         // Amount in words
         $amountInWords = (new NumberFormatter('en_US', NumberFormatter::SPELLOUT))->format($amount);
 
+        // $transactionDate = Carbon::createFromFormat('d/m/Y', $this->transaction->updated_at);
 
         // Html for address
         $address = " Plot 157 Ssebowa Road,Kiwatule, Nakawa division, <br />
@@ -84,12 +86,16 @@ class NotifyInstitutionAboutTransactionApproved extends Mailable
 
         P.O. Box 3513, Kampala (Uganda).";
 
+        $settings = \Config::get('settings');
+
         $receiptData = [
             'amount' => 'Ush ' . number_format($amount),
             'amountInWords' => Str::title($amountInWords),
-            'address'   => $address,
+            'address' => $address,
             'approvedBy' => $this->transaction->approvedBy->name,
             'institution' => $this->transaction->institution->institution_name,
+            'finance_signature' => $settings['signature.finance_signature'],
+
         ];
 
         $pdf = Pdf::loadView('receipt', $receiptData);

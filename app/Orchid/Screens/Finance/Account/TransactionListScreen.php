@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Institution;
 use App\Models\Transaction;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
@@ -196,6 +197,7 @@ class TransactionListScreen extends Screen
         $amountInWords = (new NumberFormatter('en_US', NumberFormatter::SPELLOUT))->format($amount);
 
 
+
         // Html for address
         $address = " Plot 157 Ssebowa Road,Kiwatule, Nakawa division, <br />
 
@@ -203,12 +205,18 @@ class TransactionListScreen extends Screen
 
         P.O. Box 3513, Kampala (Uganda).";
 
+        $settings = \Config::get('settings');
+
         $receiptData = [
             'amount' => 'Ush ' . number_format($amount),
             'amountInWords' => Str::title($amountInWords),
             'address' => $address,
             'approvedBy' => $transaction->approvedBy->name ?? 'UNMEB OSRS',
             'institution' => $transaction->institution->institution_name,
+            'finance_signature' => $settings['signature.finance_signature'] ?? '',
+            'status' => $transaction->status,
+            'date' => $transaction->updated_at,
+
         ];
 
         $pdf = Pdf::loadView('receipt', $receiptData);

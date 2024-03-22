@@ -6,10 +6,12 @@ use App\Models\NotificationEmail;
 use App\Models\Settings;
 use Config;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Password;
+use Orchid\Screen\Fields\Picture;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
@@ -95,6 +97,29 @@ class AppSettingListScreen extends Screen
 
             Layout::block([
                 Layout::rows([
+                    Group::make(([
+                        Picture::make('signature.registra_signature')
+                            ->title('Registrar Signature')
+                            ->value($settings['signature.registra_signature']),
+
+                        Picture::make('signature.finance_signature')
+                            ->title('Finance Signature')
+                            ->value($settings['signature.finance_signature']),
+
+                    ])),
+                ])
+            ])
+                ->title('Administrative Signatures')
+                ->description('Add current signatures for Accountant and Registrar')
+                ->commands(
+                    Button::make('Save')
+                        ->method('save')
+                        ->icon('bs.check-circle')
+                        ->class('btn btn-success')
+                ),
+
+            Layout::block([
+                Layout::rows([
                     Input::make('email.smtp_host')
                         ->title('SMTP Host')
                         ->value($settings['email.smtp_host'])
@@ -169,8 +194,8 @@ class AppSettingListScreen extends Screen
 
     public function save(Request $request)
     {
-        $settings = $request->all();
 
+        $settings = $request->all();
         foreach ($settings as $category => $data) {
             // Check if $data is an array
             if (is_array($data)) {
