@@ -94,8 +94,9 @@ class NotifyInstitutionAboutTransactionApproved extends Mailable
             'address' => $address,
             'approvedBy' => $this->transaction->approvedBy->name,
             'institution' => $this->transaction->institution->institution_name,
-            'finance_signature' => $settings['signature.finance_signature'],
-
+            'finance_signature' => $settings['signature.finance_signature'] ?? '',
+            'status' => $this->transaction->status,
+            'date' => $this->transaction->updated_at,
         ];
 
         $pdf = Pdf::loadView('receipt', $receiptData);
