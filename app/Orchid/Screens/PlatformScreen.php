@@ -14,9 +14,11 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\View\Components\GenderDistributionByCourseChart;
 use App\View\Components\StudentRegistrationByCourseBarChart;
+use Config;
 use DB;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Screen;
+use Orchid\Screen\Sight;
 use Orchid\Support\Facades\Layout;
 
 class PlatformScreen extends Screen
@@ -65,6 +67,9 @@ class PlatformScreen extends Screen
      */
     public function query(): iterable
     {
+
+        $settings = Config::get('settings');
+        // dd($settings);
 
         $institutionId = $this->currentUser()->institution_id;
 
@@ -129,6 +134,8 @@ class PlatformScreen extends Screen
                 'tickets' => $tickets_count,
                 'open_tickets' => $open_tickets_count,
                 'closed_tickets' => $closed_tickets_count,
+                'nsin_registration_fees' => number_format((float) $settings['fees.nsin_registration']),
+                'paper_registration_fees' => number_format((float) $settings['fees.paper_registration']),
             ],
         ];
     }
@@ -148,6 +155,12 @@ class PlatformScreen extends Screen
             'Closed Tickets' => 'metrics.closed_tickets',
         ];
 
+
+        $feeMetrics = [
+            'NSIN Registration Fees' => 'metrics.nsin_registration_fees',
+            'Paper Registration Fees' => 'metrics.paper_registration_fees'
+        ];
+
         if ($this->currentUser()->inRole('institution')) {
             $metrics = [
                 'Account Balance (UGX)' => 'metrics.account_balance',
@@ -159,10 +172,14 @@ class PlatformScreen extends Screen
         return [
             Layout::metrics($metrics),
             Layout::metrics($supportMetrics),
-            Layout::columns([
-                Layout::component(StudentRegistrationByCourseBarChart::class),
-                Layout::component(GenderDistributionByCourseChart::class)
-            ])
+
+            Layout::split([
+                Layout::columns([
+                    Layout::component(StudentRegistrationByCourseBarChart::class),
+                    Layout::component(GenderDistributionByCourseChart::class)
+                ]),
+                Layout::metrics($feeMetrics)
+            ])->ratio('70/30')
         ];
     }
 

@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\WhereBetween;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class RegistrationReport extends Model
 {
-    use HasFactory, AsSource, Filterable;
+    use HasFactory, AsSource, Filterable, LogsActivity;
 
     protected $fillable = [
         'id',
@@ -29,15 +31,15 @@ class RegistrationReport extends Model
 
     // Allowed Filters
     protected $allowedFilters = [
-        'institution_id'     => Where::class,
-        'course_id'          => Where::class,
-        'paper_id'           => Where::class,
-        'registration_id'    => Where::class,
+        'institution_id' => Where::class,
+        'course_id' => Where::class,
+        'paper_id' => Where::class,
+        'registration_id' => Where::class,
         'registration_period_id' => Where::class,
-        'attempt'            => Where::class,
-        'semester'           => Where::class,
-        'year'               => WhereBetween::class,
-        'total'              => WhereBetween::class,
+        'attempt' => Where::class,
+        'semester' => Where::class,
+        'year' => WhereBetween::class,
+        'total' => WhereBetween::class,
     ];
 
     public function course(): BelongsTo
@@ -69,5 +71,13 @@ class RegistrationReport extends Model
     {
         $user = auth()->user() ?? null;
         static::addGlobalScope(new InstitutionScope($user));
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

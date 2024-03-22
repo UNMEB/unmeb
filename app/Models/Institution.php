@@ -9,10 +9,12 @@ use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Like;
 use Orchid\Filters\Types\Where;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Institution extends Model
 {
-    use HasFactory, AsSource, Filterable;
+    use HasFactory, AsSource, Filterable, LogsActivity;
 
     protected $allowedFilters = [
         'institution_name' => Like::class,
@@ -78,5 +80,13 @@ class Institution extends Model
         }
 
         return $query;
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

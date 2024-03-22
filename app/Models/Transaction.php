@@ -23,7 +23,8 @@ class Transaction extends Model
         'institution_id',
         'deposited_by',
         'comment',
-        'remote_transaction_id'
+        'remote_transaction_id',
+        'status'
     ];
 
     protected $allowedFilters = [
@@ -31,6 +32,7 @@ class Transaction extends Model
         'transaction_type' => Where::class,
         'transaction_method' => Where::class,
         'remote_transaction_id' => Where::class,
+        'status' => Where::class,
     ];
 
     public function account()

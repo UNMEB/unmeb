@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
 use App\Models\Student;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
 use Log;
@@ -73,7 +74,10 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
      */
     public function rules(): array
     {
-        return [
+
+        $user = Auth::user();
+
+        $rules = [
             'surname' => 'required',
             'firstname' => 'required',
             'institution_code' => 'required|exists:institutions,code',
@@ -89,6 +93,17 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'lin' => 'required_without_all:nin,passport_number',
             'passport_number' => 'required_without_all:nin,lin',
         ];
+
+        if (!$user->inRole('system-admin')) {
+            $rules['institution_code'] = [
+                'required',
+                Rule::exists('institutions', 'code')->where(function ($query) use ($user) {
+                    $query->where('id', $user->institution_id);
+                }),
+            ];
+        }
+
+        return $rules;
     }
 
     /**
@@ -100,7 +115,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'surname.required' => 'The surname field is required.',
             'firstname.required' => 'The firstname field is required.',
             'institution_code.required' => 'The institution code field is required.',
-            'institution_code.exists' => 'The selected institution code is invalid.',
+            'institution_code.exists' => 'The selected institution code is invalid or belongs to another institution.',
             'program_code.required' => 'The program code field is required.',
             'program_code.exists' => 'The selected program code is invalid.',
             'country.required' => 'The country field is required.',

@@ -4,26 +4,28 @@ namespace App\Orchid\Screens;
 
 use App\Models\NotificationEmail;
 use App\Models\Settings;
+use Config;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Password;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class AppSettingListScreen extends Screen
 {
     public $activeEmails = [];
+    public $settings = [];
 
     public function __construct()
     {
         $notifEmails = NotificationEmail::query();
-
         $this->activeEmails = $notifEmails->where('is_active', true)->get();
-        // dd($this->activeEmails);
-
-        $settings = Settings::get();
+        $this->settings = Settings::all();
     }
 
     /**
@@ -33,13 +35,8 @@ class AppSettingListScreen extends Screen
      */
     public function query(): iterable
     {
-        // dd(config('config.settings'));
-
         return [
-            'email.smtp_host' => config('settings.email.smtp_host'),
-            'email.smtp_port' => config('settings.email.smtp_port'),
-            'email.smtp_username' => config('settings.email.smtp_username'),
-            'email.smtp_password' => config('settings.email.smtp_password'),
+
         ];
     }
 
@@ -58,7 +55,7 @@ class AppSettingListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
@@ -70,6 +67,9 @@ class AppSettingListScreen extends Screen
      */
     public function layout(): iterable
     {
+
+        $settings = Config::get('settings');
+
         return [
             Layout::block([
                 Layout::rows([
@@ -79,6 +79,7 @@ class AppSettingListScreen extends Screen
                         ->allowAdd()
                         ->fromQuery(NotificationEmail::where('is_active', false), 'email', 'email')
                         ->value($this->activeEmails)
+                        ->autocomplete(false)
                     ,
 
                 ])
@@ -94,10 +95,26 @@ class AppSettingListScreen extends Screen
 
             Layout::block([
                 Layout::rows([
-                    Input::make('email.smtp_host')->title('SMTP Host')->required(),
-                    Input::make('email.smtp_port')->title('SMTP Port')->type('number')->required(),
-                    Input::make('email.smtp_username')->title('SMTP Username')->required(),
-                    Input::make('email.smtp_password')->title('SMTP Password')->required()->type('password')
+                    Input::make('email.smtp_host')
+                        ->title('SMTP Host')
+                        ->value($settings['email.smtp_host'])
+                        ->required(),
+
+                    Input::make('email.smtp_port')
+                        ->title('SMTP Port')
+                        ->type('number')
+                        ->value($settings['email.smtp_port'])
+                        ->required(),
+
+                    Input::make('email.smtp_username')
+                        ->title('SMTP Username')
+                        ->value($settings['email.smtp_username'])
+                        ->required(),
+
+                    Input::make('email.smtp_password')
+                        ->title('SMTP Password')
+                        ->value($settings['email.smtp_password'])
+                        ->required(),
                 ])
             ])
                 ->title('Email Configuration (SMTP Settings)')
@@ -111,12 +128,29 @@ class AppSettingListScreen extends Screen
 
             Layout::block([
                 Layout::rows([
-                    Input::make('fees.nsin_registration')->title('NSIN Registration Fee')
-                        ->type('number')
-                        ->min(1)
-                        ->required(),
-                    Input::make('fees.paper_registration')->title('Exam Registration Cost Per Paper')->type('number')->required()->min(1),
-                    Input::make('finance.minimum_balance')->title('Minimum Institution Account Balance')->type('number')->required()->min(1),
+
+                    Group::make([
+                        Input::make('fees.nsin_registration')->title('NSIN Registration Fee')
+                            ->type('number')
+                            ->min(1)
+                            ->value($settings['fees.nsin_registration'])
+                            ->required(),
+
+                        Input::make('fees.paper_registration')->title('Exam Registration Cost Per Paper')->type('number')->required()->min(1)
+                            ->value($settings['fees.paper_registration'] ?? null),
+                    ]),
+
+                    Group::make([
+                        Input::make('fees.logbook_fee')->title('Logbook Fees')->type('number')->required()->min(1)
+                            ->value($settings['fees.logbook_fee'] ?? null),
+
+                        Input::make('fees.research_fee')->title('Research Fees')->type('number')->required()->min(1)
+                            ->value($settings['fees.research_fee'] ?? null),
+                    ]),
+
+                    Input::make('finance.minimum_balance')->title('Minimum Institution Account Balance')
+                        ->type('number')->required()->min(1)
+                        ->value($settings['finance.minimum_balance']),
 
                 ])
             ])
@@ -135,33 +169,27 @@ class AppSettingListScreen extends Screen
 
     public function save(Request $request)
     {
-        $activeEmails = $request->input('active_emails');
+        $settings = $request->all();
 
-        if ($request->has('notification_emails')) {
-            $emails = $request->get('notification_emails');
-            foreach ($emails as $email) {
-                // Check if the email exists or was added. If it does not exist, add it and mark as active
-                $existing = NotificationEmail::where('email', $email)->first();
-
-                if ($existing != null) {
-                    // If email exists, update the model
-                    if (in_array($email, $activeEmails)) {
-                        $existing->is_active = false;
-                        $existing->save();
-                    } else {
-                        // If email exists but is not active, mark it as active
-                        $existing->is_active = true;
-                        $existing->save();
-                    }
-                } else {
-                    // If email doesn't exist, create it and mark as active
-                    $newEmail = new NotificationEmail();
-                    $newEmail->email = $email;
-                    $newEmail->is_active = true;
-                    $newEmail->save();
+        foreach ($settings as $category => $data) {
+            // Check if $data is an array
+            if (is_array($data)) {
+                foreach ($data as $key => $value) {
+                    Settings::updateOrCreate(
+                        ['key' => "$category.$key"], // This will give you a unique key like "email.smtp_host"
+                        ['value' => $value]
+                    );
                 }
             }
         }
+
+        $this->settings = $settings;
+
+        Alert::success('Action Complete', 'Settings have been updated');
+
+        return redirect()->back();
+
+
     }
 
 

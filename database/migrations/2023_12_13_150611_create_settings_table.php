@@ -23,7 +23,7 @@ return new class extends Migration {
             ['key' => 'email.smtp_username', 'value' => 'mail@unmeb.go.ug'],
             ['key' => 'email.smtp_password', 'value' => 'qwerty123'],
             ['key' => 'fees.nsin_registration', 'value' => 0],
-            ['key' => 'fess.paper_registration', 'value' => 0],
+            ['key' => 'fees.paper_registration', 'value' => 0],
             ['key' => 'finance.minimum_balance', 'value' => 0],
             ['key' => 'signature.finance_signature', 'value' => ''],
             ['key' => 'signature.registra_signature', 'value' => ''],

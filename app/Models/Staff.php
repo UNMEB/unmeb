@@ -11,10 +11,12 @@ use Orchid\Attachment\Attachable;
 use Orchid\Filters\Filterable;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Staff extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, Attachable;
+    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, Attachable, LogsActivity;
 
     protected $fillable = [
         'institution_id',
@@ -47,10 +49,18 @@ class Staff extends Model
         // Check if there is a picture and image exists in public path
         if ($this->picture) {
             // Return img tag
-            return '<img src="' . $this->picture .  '" width="50px">';
+            return '<img src="' . $this->picture . '" width="50px">';
         }
 
         // Return placeholder avatar
         return '<img src="' . asset('placeholder/avatar.png') . '" width="50px">';
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

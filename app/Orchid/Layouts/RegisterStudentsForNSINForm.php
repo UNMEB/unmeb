@@ -45,6 +45,7 @@ class RegisterStudentsForNSINForm extends Listener
             Layout::view('components.register-students-for-n-s-i-n-form', [
                 'students' => $this->students,
                 'balance' => "UGX " . number_format($balance, 0),
+                'institution' => $institution->institution_name
             ])
         ];
     }

@@ -10,10 +10,12 @@ use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Account extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution;
+    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, LogsActivity;
 
     protected $fillable = [
         'institution_id',
@@ -52,5 +54,12 @@ class Account extends Model
     public function transactions()
     {
         return $this->hasMany(Transaction::class);
+    }
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

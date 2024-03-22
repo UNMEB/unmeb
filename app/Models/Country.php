@@ -4,9 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Country extends Model
 {
+    use LogsActivity;
     /**
      * The table associated with the model.
      *
@@ -51,5 +54,13 @@ class Country extends Model
         'created_at',
         'updated_at',
     ];
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
+    }
 }
 

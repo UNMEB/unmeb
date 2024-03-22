@@ -135,7 +135,7 @@ class PendingTransactionListScreen extends Screen
                 TD::make('id', 'ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
                     return $data->institution->institution_name;
-                }),
+                })->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant')),
                 TD::make('type', 'Transaction Type')->render(function ($data) {
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
                 }),

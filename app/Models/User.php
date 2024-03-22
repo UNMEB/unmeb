@@ -7,10 +7,13 @@ use Orchid\Filters\Types\Like;
 use Orchid\Filters\Types\Where;
 use Orchid\Filters\Types\WhereDateStartEnd;
 use Orchid\Platform\Models\User as Authenticatable;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\CausesActivity;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class User extends Authenticatable
 {
-    use HasApiTokens;
+    use HasApiTokens, LogsActivity, CausesActivity;
     /**
      * The attributes that are mass assignable.
      *
@@ -88,5 +91,13 @@ class User extends Authenticatable
 
         // Return placeholder avatar
         return '<img src="' . asset('placeholder/avatar.png') . '" width="50px">';
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

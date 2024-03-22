@@ -12,10 +12,12 @@ use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class NsinRegistration extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, OrderByLatest;
+    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, OrderByLatest, LogsActivity;
 
     protected $allowedFilters = [
         'institution_id' => Where::class,
@@ -32,5 +34,13 @@ class NsinRegistration extends Model
     public function year()
     {
         return $this->belongsTo(Year::class);
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

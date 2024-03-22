@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Orchid\Filters\Filterable;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Paper extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable;
+    use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
     protected $fillable = [
         'paper_name',
@@ -30,5 +32,13 @@ class Paper extends Model
     {
         return $this->belongsToMany(Course::class, 'course_paper', 'paper_id', 'course_id')
             ->withPivot('flag');
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

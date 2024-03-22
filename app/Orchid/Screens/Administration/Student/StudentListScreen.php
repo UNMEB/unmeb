@@ -92,21 +92,22 @@ class StudentListScreen extends Screen
             ModalToggle::make('Add New Student')
                 ->modal('createStudentModal')
                 ->method('save')
-                ->icon('plus'),
-
-
+                ->icon('plus')
+                ->class('btn btn-default btn-dark'),
 
             ModalToggle::make('Import Students')
                 ->modal('uploadStudentsModal')
                 ->method('upload')
                 ->icon('upload')
-                ->modalTitle('Upload StudentsS')
-                ->canSee(auth()->user()->hasAccess('platform.students.import')),
+                ->modalTitle('Import students in bulk')
+                ->canSee(auth()->user()->hasAccess('platform.students.import'))
+                ->class('btn btn-success'),
 
             Button::make('Export Data')
                 ->method('download')
                 ->rawClick(false)
                 ->canSee(auth()->user()->hasAccess('platform.students.export'))
+                ->class('btn btn-primary')
         ];
     }
 

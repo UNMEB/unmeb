@@ -21,16 +21,18 @@
                 Account Balance
             </div>
             <div class="card-body">
-                <!-- Replace 'Institution Name' with the actual name of the institution -->
-                <h5 class="card-title">Institution Name</h5>
                 <!-- Replace 'Balance' with the actual balance for the institution -->
-                <p class="card-text">Balance: {{ $balance }}</p>
+                <p class="card-text">{{ $institution }}</p>
+                <h5 class="card-title">Balance: {{ $balance }}</h5>
             </div>
         </div>
 
         <table class="table table-condensed table-bordered">
             <thead>
                 <tr>
+                    <th scope="col" class="text-capitalize">
+                        Student ID
+                    </th>
                     <th scope="col" class="text-capitalize">
                         Student Name
                     </th>
@@ -58,6 +60,7 @@
             <tbody>
                 @foreach ($students as $student)
                     <tr>
+                        <td>{{ $student->id }}</td>
                         <td>{{ $student->full_name }}</td>
                         <td>{{ $student->dob }}</td>
                         <td>{{ $student->nin }}</td>

@@ -131,41 +131,22 @@ class CourseAssignPapersListScreen extends Screen
         $course = Course::find($courseId);
         $data = $request->all();
 
-        if ($request->has('unassign')) {
-            $paperIds = $data['unassign'];
-            foreach ($paperIds as $paperId) {
-                $paper = Paper::find($paperId);
-                if (!$paper) {
-                    continue; // Skip to the next iteration
-                }
 
-                if ($course && $course->papers()->where('papers.id', $paperId)->exists()) {
-                    $course->papers()->detach($paperId);
-                    // dd('working');
-                }
+        $paperIds = $data['assign'];
+        foreach ($paperIds as $paperId) {
+            $paper = Paper::find($paperId);
+
+            if (!$paper) {
+                // Handle case where paper is not found
+                continue; // Skip to the next iteration
             }
 
-            \RealRashid\SweetAlert\Facades\Alert::success(__('Paper has been unassigned'));
-
-            return back();
-
-        } else {
-            $paperIds = $data['assign'];
-            foreach ($paperIds as $paperId) {
-                $paper = Paper::find($paperId);
-
-                if (!$paper) {
-                    // Handle case where paper is not found
-                    continue; // Skip to the next iteration
-                }
-
-                // Check if paper belongs to course
-                if ($course && $course->papers()->where('papers.id', $paperId)->exists()) {
-                    $course->papers()->attach($paperId);
-                    // dd('working');
-                }
+            // Check if paper belongs to course
+            if ($course && !$course->papers()->where('papers.id', $paperId)->exists()) {
+                $course->papers()->attach($paperId);
             }
         }
+
     }
 
     public function filter(Request $request)

@@ -9,10 +9,12 @@ use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ContinuousAssessment extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable;
+    use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
     protected $allowedFilters = [
         'institution_id' => Where::class,
@@ -81,12 +83,12 @@ class ContinuousAssessment extends Model
     {
         // Check if $this->theory_marks is set and not null
         if ($this->theory_marks !== null && is_array($this->theory_marks)) {
-            $firstAssignment = isset($this->theory_marks['first_assignment_marks']) ? $this->theory_marks['first_assignment_marks'] : 0;
-            $secondAssignment = isset($this->theory_marks['second_assignment_marks']) ? $this->theory_marks['second_assignment_marks'] : 0;
+            $firstAssignment = isset ($this->theory_marks['first_assignment_marks']) ? $this->theory_marks['first_assignment_marks'] : 0;
+            $secondAssignment = isset ($this->theory_marks['second_assignment_marks']) ? $this->theory_marks['second_assignment_marks'] : 0;
             $averageAssignment = ($firstAssignment + $secondAssignment) / 2;
 
-            $firstTest = isset($this->theory_marks['first_test_marks']) ? $this->theory_marks['first_test_marks'] : 0;
-            $secondTest = isset($this->theory_marks['second_test_marks']) ? $this->theory_marks['second_test_marks'] : 0;
+            $firstTest = isset ($this->theory_marks['first_test_marks']) ? $this->theory_marks['first_test_marks'] : 0;
+            $secondTest = isset ($this->theory_marks['second_test_marks']) ? $this->theory_marks['second_test_marks'] : 0;
             $averageTest = ($firstTest + $secondTest) / 2;
 
             $average = ($averageAssignment + $averageTest);
@@ -107,5 +109,13 @@ class ContinuousAssessment extends Model
     {
         $user = auth()->user() ?? null;
         static::addGlobalScope(new InstitutionScope($user));
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults();
     }
 }

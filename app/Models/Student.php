@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\Request;
 use Orchid\Attachment\Attachable;
 use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Like;
@@ -17,12 +18,18 @@ use Orchid\Filters\Types\Where;
 use Orchid\Platform\Concerns\Sortable;
 use Orchid\Screen\AsSource;
 use Log;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 
 
 class Student extends Model
 {
-    use HasFactory, AsSource, Filterable, Attachable, Sortable, OrderByLatest;
+    use HasFactory, AsSource, Filterable, Attachable, Sortable, OrderByLatest, LogsActivity;
+
+    // Add this property to store the request instance
+    protected $request;
 
     protected $fillable = [
         'surname',
@@ -173,5 +180,20 @@ class Student extends Model
         Log::info('Student Record', $record->toArray());
 
         return $record ? $record->getNin() : "No NSIN";
+    }
+
+    public function tapActivity(Activity $activity, string $eventName)
+    {
+        $activity->description = "activity.logs.message.{$eventName}";
+        $activity->ip_address = request()->ip();
+    }
+
+    /**
+     * @return \Spatie\Activitylog\LogOptions
+     */
+    function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->dontSubmitEmptyLogs();
     }
 }
