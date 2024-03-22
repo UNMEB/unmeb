@@ -118,6 +118,7 @@ class AccountListScreen extends Screen
                 ->title('Deposit Funds')
                 ->applyButton('Deposit Funds'),
 
+
             Layout::modal('exportAccounts', Layout::rows([
                 DateRange::make('date_range')
                     ->title('Filter By Date')
@@ -175,13 +176,13 @@ class AccountListScreen extends Screen
                 TD::make('last_transaction', 'Last Transaction')
                     ->alignRight()
                     ->render(function (Account $account) {
-                        $balance = !empty($account->lastTransaction()) ? (float) $account->lastTransaction()->amount : 0.0;
+                        $balance = !empty ($account->lastTransaction()) ? (float) $account->lastTransaction()->amount : 0.0;
                         return '<p class="text-default bold strong">Ush ' . number_format($balance, 2) . '</p>';
                     }),
 
                 TD::make('last_transacted_at', __('Last Transacted At'))
                     ->render(function ($account) {
-                        return !empty($account->lastTransaction()) ? $account->lastTransaction()->created_at : null;
+                        return !empty ($account->lastTransaction()) ? $account->lastTransaction()->created_at : null;
                     })
                     ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
@@ -249,7 +250,7 @@ class AccountListScreen extends Screen
         $filterParams = [];
 
         // Check and add each parameter to the filterParams array
-        if (!empty($institutionId)) {
+        if (!empty ($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
 

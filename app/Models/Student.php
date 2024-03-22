@@ -32,7 +32,7 @@ class Student extends Model
         'gender',
         'dob',
         'district_id',
-        'country',
+        'country_id',
         'location',
         'NSIN',
         'telephone',
@@ -41,7 +41,9 @@ class Student extends Model
         'date_time',
         'nin',
         'lin',
-        'passport_number'
+        'passport_number',
+        'applied_program',
+        'institution_id',
     ];
 
     protected $allowedFilters = [
@@ -55,6 +57,11 @@ class Student extends Model
     public function district()
     {
         return $this->belongsTo(District::class);
+    }
+
+    public function country()
+    {
+        return $this->belongsTo(Country::class);
     }
 
     public function getFullNameAttribute()

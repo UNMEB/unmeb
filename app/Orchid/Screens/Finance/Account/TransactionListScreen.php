@@ -2,12 +2,14 @@
 
 namespace App\Orchid\Screens\Finance\Account;
 
+use App\Models\Account;
 use App\Models\Institution;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\DateTimer;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
@@ -66,6 +68,7 @@ class TransactionListScreen extends Screen
                 ->modal('createStatementModal')
                 ->method('createStatement')
                 ->icon('archive')
+                ->rawClick()
                 ->class('btn btn-sm btn-primary'),
 
         ];
@@ -80,36 +83,33 @@ class TransactionListScreen extends Screen
     {
         return [
 
-            Layout::modal('depositFundsModal', Layout::rows([
+
+
+            Layout::modal('createStatementModal', Layout::rows([
                 Relation::make('institution_id')
                     ->fromModel(Institution::class, 'institution_name')
                     ->chunk(20)
                     ->title('Select Institution')
                     ->placeholder('Select an institution')
                     ->applyScope('userInstitutions')
-                    ->canSee($this->currentUser()->inRole('system-admin')),
+                    ->value(auth()->user()->institution_id),
 
-                Input::make('amount')
+                DateTimer::make('start_date')
+                    ->title('Start date')
+                    ->allowInput()
                     ->required()
-                    ->title('Enter amount to deposit')
-                    ->mask([
-                        'alias' => 'currency',
-                        'prefix' => 'Ush ',
-                        'groupSeparator' => ',',
-                        'digitsOptional' => true,
-                    ])
-                    ->help('Enter the exact amount paid to bank'),
+                    ->format('Y-m-d'),
 
-                Select::make('method')
-                    ->title('Select payment method')
-                    ->options([
-                        'bank' => 'Bank Payment',
-                        'agent_banking' => 'Agent Banking'
-                    ])
-                    ->empty('None Selected'),
-            ]))
-                ->title('Deposit Funds')
-                ->applyButton('Deposit Funds'),
+                DateTimer::make('end_date')
+                    ->title('End date')
+                    ->allowInput()
+                    ->required()
+                    ->format('Y-m-d'),
+
+
+            ]))->title('Generate Statement')
+                ->applyButton('Generate Statement')
+                ->rawClick(),
 
             Layout::rows([
                 Group::make([
@@ -235,6 +235,7 @@ class TransactionListScreen extends Screen
 
         $amount = $request->input('amount');
         $method = $request->input('method');
+        $remoteTxId = $request->input('transaction_id');
 
         $transaction = new Transaction([
             'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
@@ -244,11 +245,14 @@ class TransactionListScreen extends Screen
             'institution_id' => $institution->id,
             'deposited_by' => $request->input('deposited_by'),
             'initiated_by' => auth()->user()->id,
+            'transaction_id' => $remoteTxId,
         ]);
 
         $transaction->save();
 
-        Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
+        // Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
+
+        \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', 'Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
 
         return back();
     }
@@ -257,5 +261,36 @@ class TransactionListScreen extends Screen
     public function currentUser(): User
     {
         return auth()->user();
+    }
+
+    public function createStatement(Request $request)
+    {
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $institutionId = $request->get('institution_id');
+        $account = Account::where('institution_id', '=', $institutionId)->first();
+
+        if (!$account) {
+            return \RealRashid\SweetAlert\Facades\Alert::error('Account Not Found', 'Unable to find this account');
+
+        }
+
+        // Fetch transactions within the provided date range
+        $transactions = Transaction::where('account_id', $account->id)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at')
+            ->get();
+
+        // Prepare data for PDF
+        $pdfData = [
+            'account' => $account,
+            'transactions' => $transactions,
+        ];
+
+        // Generate PDF
+        $pdf = PDF::loadView('account_statement', $pdfData);
+
+        // Download PDF
+        return $pdf->stream('account_statement.pdf');
     }
 }

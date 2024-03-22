@@ -22,13 +22,15 @@ class Transaction extends Model
         'is_approved',
         'institution_id',
         'deposited_by',
-        'comment'
+        'comment',
+        'remote_transaction_id'
     ];
 
     protected $allowedFilters = [
         'institution_id' => Where::class,
         'transaction_type' => Where::class,
         'transaction_method' => Where::class,
+        'remote_transaction_id' => Where::class,
     ];
 
     public function account()

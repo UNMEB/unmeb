@@ -3,6 +3,7 @@
 namespace App\Orchid\Screens\Administration\Student;
 
 use App\Exports\StudentExport;
+use App\Imports\StudentImport;
 use App\Models\Account;
 use App\Models\Course;
 use App\Models\District;
@@ -20,6 +21,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Validators\ValidationException;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
@@ -29,6 +31,7 @@ use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
+use Orchid\Screen\Fields\Upload;
 use Orchid\Screen\Layouts\Modal;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
@@ -97,6 +100,7 @@ class StudentListScreen extends Screen
                 ->modal('uploadStudentsModal')
                 ->method('upload')
                 ->icon('upload')
+                ->modalTitle('Upload StudentsS')
                 ->canSee(auth()->user()->hasAccess('platform.students.import')),
 
             Button::make('Export Data')
@@ -163,7 +167,7 @@ class StudentListScreen extends Screen
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
                 TD::make('district.district_name', 'District'),
-                TD::make('country', 'Country'),
+                TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
                 TD::make('location', 'Location'),
                 TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
                 TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
@@ -218,9 +222,18 @@ class StudentListScreen extends Screen
                 ->title('Create Student')
                 ->applyButton('Create Student'),
 
-            Layout::modal('uploadStudentsModal', Layout::rows([
-                Link::make('Download Bulk Student Upload Template')
-            ])),
+            Layout::modal('uploadStudentsModal', [
+
+                Layout::rows([
+                    Input::make('file')
+                        ->type('file')
+                        ->help("Import excel file containing student data")
+                ]),
+
+                Layout::accordion([
+                    'Import Instructions' => Layout::view('import_instructions'),
+                ]),
+            ])->applyButton("Import Students"),
 
             Layout::modal('editStudentModal', Layout::rows([
 
@@ -362,12 +375,13 @@ class StudentListScreen extends Screen
             'student.surname' => 'required',
             'student.firstname' => 'required',
             'student.gender' => 'required',
-            'student.dob' => 'required',
             'student.passport' => 'required',
             'student.telephone' => 'required',
-            'student.email' => 'required|email',
             'student.district_id' => 'required',
-            'students.dob' => [
+            'student.applied_program' => 'required',
+            'student.country_id' => 'required',
+            'student.institution_id' => 'required',
+            'student.dob' => [
                 'required',
                 function ($attribute, $value, $fail) {
                     $age = Carbon::parse($value)->age;
@@ -377,6 +391,8 @@ class StudentListScreen extends Screen
                 },
             ],
         ]);
+
+        $institutionId = $request->input('student.institution_id');
 
         $student = null;
 
@@ -396,17 +412,24 @@ class StudentListScreen extends Screen
         $student->dob = $request->input('student.dob');
         $student->gender = $request->input('student.gender');
         $student->district_id = $request->input('student.district_id');
+        $student->country_id = $request->input('student.country_id');
         $student->telephone = $request->input('student.telephone');
         $student->email = $request->input('student.email');
         $student->date_time = now();
         $student->nin = $request->input('student.nin');
-        $student->institution_id = $request->input('institution_id');
+        $student->passport_number = $request->input('student.passport_number');
+        $student->lin = $request->input('student.lin');
+        $student->institution_id = $institutionId;
         $student->passport = $request->input('student.passport');
         $student->location = $request->input('student.location');
+        $student->applied_program = $request->input('student.applied_program');
+
+        // dd($student);
 
         $student->save();
 
-        Alert::success("Student record uploaded");
+        // Alert::success("Student record uploaded");
+        \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Student records saved.');
 
         return redirect()->back();
     }
@@ -472,6 +495,47 @@ class StudentListScreen extends Screen
     public function download(Request $request)
     {
         return Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
+    }
+
+    public function upload(Request $request)
+    {
+        $customMessages = [
+            'file.required' => 'Please select a file to upload.',
+            'file.file' => 'The uploaded file is not valid.',
+            'file.mimes' => 'The file must be a CSV file.',
+            'file.max' => 'The file size must not exceed 64MB.',
+        ];
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'file' => 'required|file|mimes:csv,txt|max:128000',
+        ], $customMessages);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $uploadedFile = $request->file('file');
+
+        $filePath = $uploadedFile->path();
+
+        // Excel::import(new StudentImport, $filePath);
+
+        try {
+            Excel::import(new StudentImport, $filePath);
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+
+            $errorMessages = collect($failures)->map(function ($failure) {
+                return $failure->errors()[0];
+            })->toArray();
+
+            // Now you can handle these error messages. For example, you can log them or show them to the user.
+            // For demonstration, let's flash the error messages to the session and redirect back with an alert.
+            return redirect()->back()->withInput()->withErrors($errorMessages)->with('error', 'There were validation errors during the import process.');
+        }
+
+
+
     }
 
     public function edit(Request $request, Student $student)

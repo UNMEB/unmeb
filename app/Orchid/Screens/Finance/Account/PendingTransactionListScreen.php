@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
@@ -60,17 +61,7 @@ class PendingTransactionListScreen extends Screen
     public function commandBar(): array
     {
         return [
-            ModalToggle::make('Deposit Funds')
-                ->modal('depositFundsModal')
-                ->method('deposit')
-                ->icon('wallet')
-                ->class('btn btn-sm btn-success link-success'),
 
-            ModalToggle::make('Generate Statement')
-                ->modal('createStatementModal')
-                ->method('createStatement')
-                ->icon('archive')
-                ->class('btn btn-sm btn-primary'),
         ];
     }
 
@@ -139,36 +130,6 @@ class PendingTransactionListScreen extends Screen
                     ->alignEnd(),
             ])->title('Filter Institutions'),
 
-            Layout::modal('depositFundsModal', Layout::rows([
-                Relation::make('institution_id')
-                    ->fromModel(Institution::class, 'institution_name')
-                    ->chunk(20)
-                    ->title('Select Institution')
-                    ->placeholder('Select an institution')
-                    ->applyScope('userInstitutions')
-                    ->canSee($this->currentUser()->inRole('system-admin')),
-
-                Input::make('amount')
-                    ->required()
-                    ->title('Enter amount to deposit')
-                    ->mask([
-                        'alias' => 'currency',
-                        'prefix' => 'Ush ',
-                        'groupSeparator' => ',',
-                        'digitsOptional' => true,
-                    ])
-                    ->help('Enter the exact amount paid to bank'),
-
-                Select::make('method')
-                    ->title('Select payment method')
-                    ->options([
-                        'bank' => 'Bank Payment',
-                        'agent_banking' => 'Agent Banking'
-                    ])
-                    ->empty('None Selected'),
-            ]))
-                ->title('Deposit Funds')
-                ->applyButton('Deposit Funds'),
 
             Layout::table('transactions', [
                 TD::make('id', 'ID'),
@@ -193,40 +154,48 @@ class PendingTransactionListScreen extends Screen
                 TD::make('comment', 'Comment'),
                 TD::make('actions', 'Actions')->render(function (Transaction $data) {
 
+                    return DropDown::make()
+                        ->icon('bs.three-dots-vertical')
+                        ->list([
+                            ModalToggle::make('Approve Transaction')
+                                ->modal('approveTransactionModal')
+                                ->modalTitle('Approve Transaction')
+                                ->method('approve', [
+                                    'id' => $data->id
+                                ])
+                                ->asyncParameters([
+                                    'transaction' => $data->id,
+                                ]),
 
-                    return Group::make([
-                        ModalToggle::make('Approve')
-                            ->modal('approveTransactionModal')
-                            ->modalTitle('Approve Transaction')
-                            ->method('approve', [
-                                'id' => $data->id
-                            ])
-                            ->class('btn btn-sm btn-success')
-                            ->asyncParameters([
-                                'transaction' => $data->id,
-                            ]),
-                        ModalToggle::make('Decline')
-                            ->modal('declineTransactionModal')
-                            ->modalTitle('Decline Transaction')
-                            ->method('decline', [
-                                'id' => $data->id
-                            ])
-                            ->asyncParameters([
-                                'transaction' => $data->id,
-                            ])
-                            ->class('btn btn-sm btn-danger'),
+                            ModalToggle::make('Decline Transaction')
+                                ->modal('declineTransactionModal')
+                                ->modalTitle('Decline Transaction')
+                                ->method('decline', [
+                                    'id' => $data->id
+                                ])
+                                ->asyncParameters([
+                                    'transaction' => $data->id,
+                                ]),
 
-                        ModalToggle::make('Flag')
-                            ->modal('flagTransactionModal')
-                            ->modalTitle('Flag Transaction')
-                            ->method('flag', [
-                                'id' => $data->id
-                            ])
-                            ->asyncParameters([
-                                'transaction' => $data->id,
-                            ])
-                            ->class('btn btn-sm btn-warning'),
-                    ])->autoWidth();
+                            ModalToggle::make('Flag Transaction')
+                                ->modal('flagTransactionModal')
+                                ->modalTitle('Flag Transaction')
+                                ->method('flag', [
+                                    'id' => $data->id
+                                ])
+                                ->asyncParameters([
+                                    'transaction' => $data->id,
+                                ])
+                        ]);
+
+                    // return Group::make([
+        
+
+                    //         ->class('btn btn-sm btn-danger'),
+        
+
+                    //         ->class('btn btn-sm btn-warning'),
+                    // ])->autoWidth();
                 })->alignCenter()
                     ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'))
             ]),
@@ -299,39 +268,6 @@ class PendingTransactionListScreen extends Screen
      *
      * @return void
      */
-    public function deposit(Request $request)
-    {
-        $institution = null;
-
-        if ($this->currentUser()->inRole('system-admin')) {
-            $institution = Institution::find($request->input('institution_id'));
-        } else {
-            $institution = $this->currentUser()->institution;
-        }
-
-        $accountId = $institution->account->id;
-
-        $amount = $request->input('amount');
-        $method = $request->input('method');
-
-        $transaction = new Transaction([
-            'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
-            'method' => $method,
-            'account_id' => $accountId,
-            'type' => 'credit',
-            'institution_id' => $institution->id,
-            'deposited_by' => $request->input('deposited_by'),
-            'initiated_by' => auth()->user()->id,
-        ]);
-
-        $transaction->save();
-
-        Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
-
-        return back();
-    }
-
-
     public function approve(Request $request)
     {
 

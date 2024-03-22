@@ -96,7 +96,7 @@ class AddNewStudentForm extends Listener
                     ->value(auth()->user()->institution_id ?? null)
                     ->required(),
 
-                Relation::make('student.assigned_program')
+                Relation::make('student.applied_program')
                     ->title('Select Program')
                     ->placeholder('Select Program')
                     ->fromModel(Course::class, 'course_name'),
