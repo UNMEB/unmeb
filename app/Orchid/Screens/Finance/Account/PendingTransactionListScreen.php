@@ -76,12 +76,6 @@ class PendingTransactionListScreen extends Screen
 
             Layout::rows([
                 Group::make([
-                    // // Filter By Institution
-                    // Select::make('institution_id')
-                    //     ->title('Filter By Institution')
-                    //     ->fromModel(Institution::class, 'institution_name')
-                    //     ->empty('Select Option'),
-
                     Relation::make('institution_id')
                         ->title('Select Institution')
                         ->fromModel(Institution::class, 'institution_name')
@@ -187,15 +181,6 @@ class PendingTransactionListScreen extends Screen
                                     'transaction' => $data->id,
                                 ])
                         ]);
-
-                    // return Group::make([
-        
-
-                    //         ->class('btn btn-sm btn-danger'),
-        
-
-                    //         ->class('btn btn-sm btn-warning'),
-                    // ])->autoWidth();
                 })->alignCenter()
                     ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'))
             ]),

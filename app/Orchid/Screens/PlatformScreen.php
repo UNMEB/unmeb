@@ -167,13 +167,10 @@ class PlatformScreen extends Screen
             Layout::metrics($metrics),
             Layout::metrics($supportMetrics),
 
-            Layout::split([
-                Layout::columns([
-                    Layout::component(StudentRegistrationByCourseBarChart::class),
-                    Layout::component(GenderDistributionByCourseChart::class)
-                ]),
-                Layout::metrics($feeMetrics)
-            ])->ratio('70/30')
+            Layout::columns([
+                Layout::component(StudentRegistrationByCourseBarChart::class),
+                Layout::component(GenderDistributionByCourseChart::class)
+            ]),
         ];
     }
 
