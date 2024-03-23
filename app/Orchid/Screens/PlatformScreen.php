@@ -7,7 +7,6 @@ namespace App\Orchid\Screens;
 use App\Models\Account;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\RegistrationPeriod;
-use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\Ticket;
 use App\Models\Transaction;
@@ -90,7 +89,9 @@ class PlatformScreen extends Screen
             $query1->where('registrations.institution_id', $this->currentUser()->institution_id);
         }
 
-        $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
+        if ($activeExamPeriod !== null) {
+            $query1->where('registrations.registration_period_id', $activeExamPeriod->id);
+        }
 
         $query2 = StudentRegistration::join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
@@ -108,16 +109,9 @@ class PlatformScreen extends Screen
             $query2->where('registrations.institution_id', $this->currentUser()->institution_id);
         }
 
-        $query2->where('registrations.registration_period_id', $activeExamPeriod->id);
-
-        // $query2 = Student::select('courses.course_name', 'students.gender', \DB::raw('COUNT(*) as gender_count'))
-        //     ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
-        //     ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
-        //     ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
-        //     ->groupBy('courses.course_name', 'students.gender')
-        //     ->orderBy('courses.course_name', 'asc')
-        //     ->where('nsin_registrations.institution_id', $this->currentUser()->institution_id)
-        //     ->where('nsin_registrations.year_id', $activeNsinPeriod->year_id);
+        if ($activeExamPeriod !== null) {
+            $query2->where('registrations.registration_period_id', $activeExamPeriod->id);
+        }
 
         return [
             'student_registration_by_course' => $query1->get(),
