@@ -19,8 +19,13 @@ class StudentResearch extends Model
         'student_id',
         'research_abstract',
         'research_title',
-        'year',
-        'submission_date'
+        'research_link',
+        'submission_date',
+        'submitted_by'
+    ];
+
+    protected $casts = [
+        'submission_date' => 'datetime'
     ];
 
     public function student(): BelongsTo
