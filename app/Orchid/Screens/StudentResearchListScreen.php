@@ -44,14 +44,14 @@ class StudentResearchListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Upload Research')
-            ->icon('bs.upload')
-            ->class('btn btn-primary')
-            ->modalTitle('Upload Student Research')
-            ->modal('uploadStudentResearch')
+                ->icon('bs.upload')
+                ->class('btn btn-primary')
+                ->modalTitle('Upload Student Research')
+                ->modal('uploadStudentResearch')
         ];
     }
 
@@ -69,11 +69,11 @@ class StudentResearchListScreen extends Screen
                 TextArea::make('research_title')->title('Research Title')->placeholder('Enter the title of the research'),
                 Quill::make('research_abstract')->title('Research Abstract')
             ]))
-            ->size(Modal::SIZE_LG),
+                ->size(Modal::SIZE_LG),
 
-            Layout::table('results',[
+            Layout::table('results', [
                 TD::make('id', 'ID'),
-                TD::make('student', 'Student Name')->render(fn ($student) => $student->full_name),
+                TD::make('student', 'Student Name')->render(fn($student) => $student->full_name),
                 TD::make('research_title', 'Researct Title'),
                 TD::make('year', 'Research Year'),
                 TD::make('submission_date', 'Submission Date')

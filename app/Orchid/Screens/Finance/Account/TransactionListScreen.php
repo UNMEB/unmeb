@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\DateTimer;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Screen;
@@ -200,9 +201,16 @@ class TransactionListScreen extends Screen
                     return $status;
                 }),
                 TD::make('approved_by', 'Approved By')->render(function (Transaction $data) {
+                    if ($data->approvedBy == null) {
+                        return "SYSTEM";
+                    }
+
                     return $data->status == 'approved' ? optional($data->approvedBy)->name : 'Not Approved';
                 }),
-                TD::make('comment', 'Comment'),
+                TD::make('created_at', 'Transaction Date')
+                    ->usingComponent(DateTimeSplit::class),
+                TD::make('updated_at', 'Updated At')
+                    ->usingComponent(DateTimeSplit::class),
                 TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {
                     return Button::make('Print Receipt')
                         ->method('print', [

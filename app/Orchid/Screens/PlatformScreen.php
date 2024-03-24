@@ -124,6 +124,7 @@ class PlatformScreen extends Screen
                     ->sum('amount'), 0),
                 'account_expenditure' => number_format((float) Transaction::where('institution_id', $institutionId)
                     ->where('type', 'debit')
+                    ->where('status', 'approved')
                     ->sum('amount'), 0),
                 'tickets' => $tickets_count,
                 'open_tickets' => $open_tickets_count,
