@@ -5,8 +5,11 @@ namespace App\Orchid\Screens\Registration\NSIN;
 use App\Models\Institution;
 use App\Models\NsinStudentRegistration;
 use App\Models\Student;
+use App\Orchid\Layouts\ApproveStudentsNSINsTable;
 use App\Orchid\Screens\TDCheckbox;
+use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Orchid\Screen\Screen;
 use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
@@ -29,34 +32,56 @@ class ApproveNsinRegistrationDetails extends Screen
     public function __construct(Request $request)
     {
         $data = $request->all();
-        $this->institutionId = $data['institution_id'] ?? null;
-        $this->courseId = $data['course_id'] ?? null;
-        $this->nsinRegistrationId = $data['nsin_registration_id'] ?? null;
+        $this->institutionId = isset ($data['institution_id']) ? $data['institution_id'] : null;
+        $this->courseId = isset ($data['course_id']) ? $data['course_id'] : null;
+        $this->nsinRegistrationId = isset ($data['nsin_registration_id']) ? $data['nsin_registration_id'] : null;
+
+        session()->put('institution_id', $this->institutionId);
+        session()->put('course_id', $this->courseId);
+        session()->put('nsin_registration_id', $this->nsinRegistrationId);
     }
 
     public function query(): iterable
     {
-        $students = Student::select(
-            'nsin_student_registrations.id as nsin_student_registration_id',
-            'students.id AS id',
-            'institutions.institution_name',
-            'courses.course_name',
-            'nsin_registrations.id AS nsin_registration_id',
-            'students.*',
-            'nsin_student_registrations.verify',
-            'nsin_student_registrations.remarks',
-            'nsin_student_registrations.nsin',
-        )
-            ->join('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
-            ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
-            ->join('institutions', 'nsin_registrations.institution_id', '=', 'institutions.id')
-            ->join('courses', 'nsin_registrations.course_id', '=', 'courses.id')
-            ->where('institutions.id', $this->institutionId)
-            ->where('courses.id', $this->courseId)
-            ->where('nsin_registrations.id', $this->nsinRegistrationId);
+
+        $query = Student::query()
+            ->select([
+                'nr.id as registration_id',
+                'i.institution_name',
+                'i.id as institution_id', // Added institution_id
+                'c.course_name',
+                'c.id as course_id', // Added course_id
+                'y.year as registration_year',
+                'nr.month as registration_month',
+                's.id as student_id', // Added student_id
+                's.*', // Added student_email
+                'nr.created_at as registration_date', // Added registration_date
+            ])
+            ->from('students AS s')
+            ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
+            ->join('courses AS c', 'c.id', '=', 'nr.course_id')
+            ->join('years as y', 'nr.year_id', '=', 'y.id')
+            ->whereNull('nsr.nsin')
+            ->where('nsr.verify', 0)
+            ->where('nr.institution_id', $this->institutionId)
+            ->where('nr.course_id', $this->courseId)
+            ->orderBy('nr.created_at', 'DESC');
+
+        ;
+
+        $registrations = $query
+            // ->orderBy('registration_year', 'desc')
+            // ->orderBy('registration_month', 'desc')
+            // ->orderBy('registrations_count', 'desc')
+            // ->orderBy('latest_created_at', 'desc')
+            ->orderBy('surname', 'asc')
+            ->paginate();
+
 
         return [
-            'students' => $students->paginate()
+            'students' => $registrations
         ];
     }
 
@@ -77,104 +102,76 @@ class ApproveNsinRegistrationDetails extends Screen
         return null;
     }
 
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
-            ModalToggle::make("Approve/Reject NSIN Applications")->modal('approveRejectModal')
-                ->method('bulkAction', [
-                    'nsin_registration_id' => $this->nsinRegistrationId,
-                    'course_id' => $this->courseId,
-                    'institution_id' => $this->institutionId
-                ]),
         ];
     }
 
     public function layout(): iterable
     {
         return [
-            Layout::table('students', [
-                TDCheckbox::make('student_ids', 'Student ID')
-                    ->checkboxSet('form', 'screen-modal-form-approveRejectModal'),
-                TD::make('id', 'ID'),
-                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
-                TD::make('fullName', 'Name'),
-                TD::make('gender', 'Gender'),
-                TD::make('dob', 'Date of Birth'),
-                TD::make('district_id', 'District')->render(fn (Student $student) => $student->district->district_name),
-                TD::make('country', 'Country'),
-                TD::make('location', 'Location'),
-                TD::make('nsin', 'NSIN'),
-                TD::make('telephone', 'Phone Number'),
-                TD::make('email', 'Email'),
-                TD::make('remarks', 'Remarks'),
-                TD::make('Status', 'Status')->render(function ($row) {
-                    return $row->verify == 1 ? 'Approved' : '';
-                })
-            ]),
-
-            Layout::modal('approveRejectModal', Layout::rows([
-                Select::make('action')
-                    ->options([
-                        'approve' => 'Approve',
-                        'reject' => 'Reject'
-                    ])
-                    ->title('Select Action')
-                    ->required(),
-                TextArea::make('remarks')
-                    ->title('Reason')
-                    ->required()
-            ]))
+            ApproveStudentsNSINsTable::class
         ];
     }
 
-    public function bulkAction(Request $request)
+    public function submit(Request $request)
     {
+        // Define validation rules
+        $rules = [
+            'approve_students.*' => 'required|in:0,1',
+            'reject_students.*' => [
+                'required',
+                function ($attribute, $value, $fail) use ($request) {
+                    $approveValue = $request->input('approve_students.' . str_replace('reject_students.', '', $attribute));
 
-        $data = $request->all();
-        $studentIds = $request->get('student-ids');
+                    if ($approveValue == 1 && $value == 1) {
+                        $fail('Cannot approve and reject the same student.');
+                    }
 
-        if (empty($studentIds)) {
-            Alert::error("Please select students to perform the action.");
-            return redirect()->back();
+                    // Set rejection message if rejection checkbox is selected
+                    if ($value == 1) {
+                        $request->merge(['reject_reasons.' . str_replace('reject_students.', '', $attribute) => 'Your rejection message goes here']);
+                    }
+                },
+            ],
+            'reject_reasons.*' => [
+                'required_if:reject_students.*,1',
+            ],
+        ];
+
+        // Validate the request
+        $validator = Validator::make($request->all(), $rules);
+
+        // Check if validation fails
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
         }
 
-        foreach ($studentIds as $studentId) {
-            $this->processRegistration($request, $studentId, $request->get('action'));
-        }
+        // Filter out values where both approval and rejection are 0
+        $toApprove = collect($request->input('approve_students'))->filter(function ($value) {
+            return $value == 1;
+        });
 
-        Alert::success('Action performed successfully.');
-        return redirect()->back();
+        $toReject = collect($request->input('reject_students'))->filter(function ($value) {
+            return $value == 1;
+        });
+
+        $institutionId = session()->get('institution_id');
+        $courseId = session()->get('course_id');
+        $nsinRegistrationId = session()->get('nsin_registration_id');
+
+        dd([
+            'institution_id' => $institutionId,
+            'course_id' => $courseId,
+            'nsin_registration_id' => $nsinRegistrationId,
+        ]);
     }
 
-    public function processRegistration(Request $request, $id, $action)
-    {
-        $data = $request->all();
 
-        $nsinStudentRegistration = NsinStudentRegistration::query()
-            ->where('nsin_registration_id', $data['nsin_registration_id'])
-            ->where('student_id', $id)
-            ->latest()
-            ->first();
 
-        if ($nsinStudentRegistration != null) {
-            if ($action === 'approve') {
-                $nsinStudentRegistration->update([
-                    'verify' => 1,
-                    'remarks' => $data['remarks']
-                ]);
-                Alert::success('Student NSIN Registration approved');
-            } elseif ($action === 'reject') {
-                $nsinStudentRegistration->update([
-                    'verify' => 0,
-                    'remarks' => $data['remarks']
-                ]);
-                Alert::success('Student NSIN Registration rejected');
-            }
 
-            return redirect()->back();
-        }
 
-        Alert::error("Unable to $action student at the moment");
-        return redirect()->back();
-    }
 }

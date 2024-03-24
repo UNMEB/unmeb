@@ -49,7 +49,9 @@ class ApproveNsinRegistration extends Screen
             ->select([
                 'nr.id as registration_id',
                 'i.institution_name',
+                'i.id as institution_id', // Added institution_id
                 'c.course_name',
+                'c.id as course_id', // Added course_id
                 'y.year as registration_year',
                 'nr.month as registration_month',
                 DB::raw('COUNT(*) as registrations_count'),
@@ -63,14 +65,7 @@ class ApproveNsinRegistration extends Screen
             ->join('years as y', 'nr.year_id', '=', 'y.id')
             ->whereNull('nsr.nsin')
             ->where('nsr.verify', 0)
-            ->groupBy('i.institution_name', 'c.course_name', 'registration_year', 'registration_month', 'registration_id');
-
-        // if (!empty ($this->filters)) {
-        //     $institutionId = $this->filters['institution_id'];
-        //     $courseId = $this->filters['course_id'];
-        //     $query->where('nr.institution_id', '=', $institutionId);
-        //     $query->where('c.id', $courseId);
-        // }
+            ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_year', 'registration_month', 'registration_id');
 
         if (!empty ($this->filters)) {
             if (isset ($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
@@ -85,6 +80,11 @@ class ApproveNsinRegistration extends Screen
             if (isset ($this->filters['month']) && $this->filters['month'] !== null) {
                 $month = $this->filters['month'];
                 $query->where('nr.month', '=', $month);
+            }
+
+            if (isset ($this->filters['year_id']) && $this->filters['year_id'] !== null) {
+                $yearId = $this->filters['year_id'];
+                $query->where('y.id', '=', $yearId);
             }
         }
 
@@ -107,7 +107,12 @@ class ApproveNsinRegistration extends Screen
      */
     public function name(): ?string
     {
-        return 'NSIN Registrations';
+        return 'Submitted NSIN Registrations';
+    }
+
+    public function description(): string|null
+    {
+        return 'View NSIN Application submission for all institutions';
     }
 
     /**
@@ -169,6 +174,7 @@ class ApproveNsinRegistration extends Screen
                         ->fromModel(Year::class, 'year')
                         ->title('Filter By Year')
                         ->empty('None Selected')
+                        ->value(isset ($this->filters['year_id']) ? $this->filters['year_id'] : null)
                 ]),
                 Group::make([
                     Button::make('Submit')
@@ -194,7 +200,7 @@ class ApproveNsinRegistration extends Screen
                         ->route('platform.registration.nsin.approve.details', [
                             'institution_id' => $data->institution_id,
                             'course_id' => $data->course_id,
-                            'nsin_registration_id' => $data->id
+                            'nsin_registration_id' => $data->registration_id
                         ])
                 )
             ]),
@@ -236,7 +242,7 @@ class ApproveNsinRegistration extends Screen
 
         $url = route('platform.registration.nsin.approve', $filters);
 
-        return Redirect::to($url);
+        return redirect()->to($url);
     }
 
     /**
