@@ -165,47 +165,48 @@
             width: 100px;
             margin-bottom: 10px;
         }
+
+        table {
+            font-size: 12px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <div class="watermark">
-            <p>STATUS</p>
+            <p>STATEMENT</p>
         </div>
         <div class="header">
             <div class="logo">
                 <img src="logo.png" alt="Company Logo" />
             </div>
             <div class="address">
-                <p>Customer Information:</p>
-                <p>Customer Name, Address, City, Country</p>
+                <p><strong>Institution Information</strong></p>
+                <p>{{ $customerInfo['name'] }}
+                    <br />
+                    {{ $customerInfo['location'] }},
+                    {{ $customerInfo['phone'] }}
+                </p>
             </div>
         </div>
 
         <div class="receipt">
             <h2>Transactional Statement</h2>
-            <p>March 22, 2024</p>
+            <p>{{ $statementDate }}</p>
         </div>
-
 
         <table class="account-summary">
             <thead>
                 <tr>
-                    <th colspan="2">Pending Account Balance</th>
-                    <th colspan="2">Actual Account Balance</th>
-                    <th colspan="2">NSIN Registration Total</th>
-                    <th colspan="2">Exam Registration Total</th>
-                    <th colspan="2">Other Fees (Logbooks, Research)</th>
+                    <th colspan="2">Account Balance</th>
+                    <th colspan="2">Total Expense</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
-                    <td colspan="2">Content</td>
-                    <td colspan="2">Content</td>
-                    <td colspan="2">Content</td>
-                    <td colspan="2">Content</td>
-                    <td colspan="2">Content</td>
+                    <td colspan="2">{{ $balance }}</td>
+                    <td colspan="2">{{ $expense }}</td>
                 </tr>
             </tbody>
         </table>
@@ -215,32 +216,55 @@
                 <tr>
                     <th>Date</th>
                     <th>Description</th>
-                    <th>Amount</th>
+                    <th>Debit</th>
+                    <th>Credit</th>
+                    <th>Balance</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Placeholder transaction data -->
+                <?php
+                $totalDebit = 0;
+                $totalCredit = 0;
+                $balance = 0;
+                ?>
+                @foreach ($transactions as $transaction)
+                    <tr>
+                        <td>{{ $transaction->created_at }}</td>
+                        <td>{{ $transaction->comment }}</td>
+                        <td>{{ $transaction->type == 'debit' ? number_format($transaction->amount) : '' }}</td>
+                        <td>{{ $transaction->type == 'credit' ? number_format($transaction->amount) : '' }}</td>
+                        <td>
+                            <?php
+                            $balance += $transaction->type == 'debit' ? -$transaction->amount : $transaction->amount;
+                            echo number_format($balance);
+                            ?>
+                        </td>
+                    </tr>
+                    <?php
+                    if ($transaction->type == 'debit') {
+                        $totalDebit += $transaction->amount;
+                    } elseif ($transaction->type == 'credit') {
+                        $totalCredit += $transaction->amount;
+                    }
+                    ?>
+                @endforeach
                 <tr>
-                    <td>March 20, 2024</td>
-                    <td>Transaction Description</td>
-                    <td>$100.00</td>
+                    <td colspan="2"><strong>Total</strong></td>
+                    <td><strong>{{ number_format($totalDebit) }}</strong></td>
+                    <td><strong>{{ number_format($totalCredit) }}</strong></td>
+                    <td><strong>{{ number_format($balance) }}</strong></td> <!-- Display calculated balance here -->
                 </tr>
-                <tr>
-                    <td>March 21, 2024</td>
-                    <td>Transaction Description</td>
-                    <td>$150.00</td>
-                </tr>
-                <!-- Add more rows as needed -->
             </tbody>
-        </table>
 
+
+        </table>
 
         <div class="footer">
             <p style="margin-bottom: 16px">
                 For any billing and support queries please contact UNMEB at <br />
                 info@unmeb.go.ug. Or Call +256-414-288947
             </p>
-            <p>Thank you for your payment</p>
+
         </div>
     </div>
 </body>

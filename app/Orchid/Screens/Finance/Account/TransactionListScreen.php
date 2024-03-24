@@ -311,26 +311,62 @@ class TransactionListScreen extends Screen
 
     public function createStatement(Request $request)
     {
-        $startDate = $request->get('start_date');
-        $endDate = $request->get('end_date');
+        $startDate = Carbon::createFromFormat('Y-m-d', $request->get('start_date'))->startOfDay();
+        $endDate = Carbon::createFromFormat('Y-m-d', $request->get('end_date'))->endOfDay();
         $institutionId = $request->get('institution_id');
         $account = Account::where('institution_id', '=', $institutionId)->first();
 
         if (!$account) {
             return \RealRashid\SweetAlert\Facades\Alert::error('Account Not Found', 'Unable to find this account');
-
         }
 
+        // // Fetch transactions within the provided date range
+        // $query = Transaction::where('account_id', $account->id)
+        //     ->whereBetween('created_at', [$startDate, $endDate])
+        //     ->orderBy('created_at', 'desc');
+
+        // $pendingTransactions = clone $query; // Clone the query instance
+        // $pendingTransactions = $pendingTransactions->where('type', 'credit')
+        //     ->where('status', 'pending')
+        //     ->sum('amount');
+
+        // $approvedTransactions = Transaction::where('account_id', $account->id)
+        //     ->whereBetween('created_at', [$startDate, $endDate])
+        //     ->where('type', 'credit')
+        //     ->sum('amount');
+
+        // $transactions = $query->get();
+
         // Fetch transactions within the provided date range
-        $transactions = Transaction::where('account_id', $account->id)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->orderBy('created_at')
-            ->get();
+        $query = Transaction::where('account_id', $account->id)
+            ->whereBetween('updated_at', [$startDate, $endDate]);
+
+        $transactions = $query->orderBy('updated_at', 'asc')->get();
+
+        $institution = Institution::where('id', $institutionId)->first();
+        $iName = $institution->institution_name;
+        $iLocation = $institution->institution_location;
+        $iPhone = $institution->phone_no;
 
         // Prepare data for PDF
         $pdfData = [
             'account' => $account,
             'transactions' => $transactions,
+            'pendingTransactions' => 0,
+            'approvedTransactions' => 0,
+            'statementDate' => now()->format('F j, Y'),
+            'customerInfo' => [
+                'name' => $iName,
+                'location' => $iLocation,
+                'phone' => $iPhone
+            ],
+            'pendingBalance' => 0,
+            'actualBalance' => 0,
+            'balance' => number_format(Account::where('id', $account->id)->sum('balance')),
+            'expense' => number_format((float) Transaction::where('institution_id', $institutionId)
+                ->where('type', 'debit')
+                ->where('status', 'approved')
+                ->sum('amount'), 0)
         ];
 
         // Generate PDF
@@ -339,4 +375,5 @@ class TransactionListScreen extends Screen
         // Download PDF
         return $pdf->stream('account_statement.pdf');
     }
+
 }

@@ -7,8 +7,10 @@ use App\Models\Institution;
 use App\Models\Registration;
 use App\Models\Student;
 use App\Models\StudentRegistration;
+use App\Orchid\Layouts\ApproveStudentsForExamTable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
@@ -35,6 +37,10 @@ class ApproveExamRegistrationDetails extends Screen
         $this->institutionId = $data['institution_id'] ?? null;
         $this->courseId = $data['course_id'] ?? null;
         $this->registrationId = $data['registration_id'] ?? null;
+
+        session()->put('institution_id', $this->institutionId);
+        session()->put('course_id', $this->courseId);
+        session()->put('registration_id', $this->registrationId);
     }
 
     /**
@@ -95,7 +101,7 @@ class ApproveExamRegistrationDetails extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
@@ -144,50 +150,7 @@ class ApproveExamRegistrationDetails extends Screen
                     ->alignEnd(),
             ])->title("Filter Students"),
 
-            Layout::table('students', [
-
-                TD::make('id', 'ID'),
-                // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
-                TD::make('fullName', 'Name'),
-                TD::make('gender', 'Gender'),
-                TD::make('dob', 'Date of Birth'),
-                TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
-                TD::make('country', 'Country'),
-                TD::make('location', 'Location'),
-                TD::make('NSIN', 'NSIN'),
-                TD::make('telephone', 'Phone Number'),
-                TD::make('email', 'Email'),
-                TD::make('old', 'Old Student')->render(fn($data) => $data->old == 1 ? 'YES' : 'NO'),
-                TD::make('date_time', 'Registration Date'),
-                TD::make('actions', 'Actions')
-                    ->render(function ($data) {
-                        return Group::make([
-                            Button::make('Approve')
-                                ->type(Color::SUCCESS)
-                                ->method('approve', [
-                                    'id' => $data->id,
-                                    'institution_id' => $this->institutionId,
-                                    'course_id' => $this->courseId,
-                                    'registration_id' => $this->registrationId
-                                ])->canSee($data->sr_flag == 0),
-
-                            ModalToggle::make('Reject')
-                                ->type(Color::DANGER)
-                                ->method('reject', [
-                                    'id' => $data->id
-                                ])
-                                ->asyncParameters([
-                                    'student' => $data->id,
-                                    'institution_id' => $this->institutionId,
-                                    'course_id' => $this->courseId,
-                                    'registration_id' => $this->registrationId
-                                ])
-                                ->modal('rejectStudentModal')
-                                ->modalTitle('Reject Student Exam Registration')
-                        ]);
-                    })
-            ]),
+            ApproveStudentsForExamTable::class,
 
             Layout::modal('rejectStudentModal', [
 
@@ -216,50 +179,88 @@ class ApproveExamRegistrationDetails extends Screen
     }
 
 
-
-    public function approve(Request $request, $id)
+    public function submit(Request $request)
     {
+        dd($request->all());
 
-        $studentId = $id;
-        $registrationId = $request->input('registration_id');
+        // Define validation rules
+        $rules = [
+            'approve_students.*' => [
+                'in:0,1'
+            ],
+            'reject_students.*' => [
+                'required_if:approve_students.*,0'
+            ],
+            'reject_reasons.*' => [
+                'required_if:reject_students.*,1',
+            ],
+        ];
+
+        $messages = [
+            'reject_reasons.*.required_if' => 'The rejection reason is required when the student is rejected.',
+        ];
+
+        // Validate the request
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        // Check if validation fails
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        // Filter out values where both approval and rejection are 0
+        $studentIdsToApprove = collect($request->input('approve_students'))->filter(function ($value) {
+            return $value == 1;
+        })->keys();
+
+        $studentIdsToReject = collect($request->input('reject_students'))->filter(function ($value) {
+            return $value == 1;
+        })->keys();
+
+        // Handle Student Approval
+        foreach ($studentIdsToApprove as $studentId) {
+            $this->processRegistration($studentId, 'approve');
+        }
+
+        // Handle Student Rejection
+        foreach ($studentIdsToReject as $studentId) {
+            $rejectionReason = $request->input('reject_reasons')[$studentId];
+            $this->processRegistration($studentId, 'reject', $rejectionReason);
+        }
+    }
+
+    public function processRegistration($studentId, $action, $rejectionReason = null)
+    {
+        $institutionId = session()->get('institution_id');
+        $courseId = session()->get('course_id');
+        $registrationId = session()->get('registration_id');
 
 
         $studentRegistration = StudentRegistration::where('registration_id', $registrationId)
             ->where('student_id', $studentId)->first();
 
         if ($studentRegistration != null) {
-            $studentRegistration->sr_flag = 1;
-            $studentRegistration->save();
+            if ($action == 'approve') {
+                $studentRegistration->sr_flag = 1;
+                $studentRegistration->save();
 
-            // Increment the registration
-            $registration = Registration::find($registrationId);
+                // Increment the registration
+                $registration = Registration::find($registrationId);
 
-            if ($registration != null) {
-                $registration->approved += 1;
-                $registration->save();
-
-                Alert::success('Student exam registration approved');
+                if ($registration != null) {
+                    $registration->approved += 1;
+                    $registration->save();
+                }
+            } else {
+                $studentRegistration->sr_flag = 2;
+                $studentRegistration->remarks = $rejectionReason;
+                $studentRegistration->save();
             }
-
-
         }
-
-        return back();
     }
 
-    public function reject(Request $request)
-    {
-        $registrationId = $request->input('registration_id');
-        $studentId = $request->input('student');
-
-
-        $studentRegistration = StudentRegistration::query()
-            ->where('student_id', $studentId)
-            ->where('registration_id', $registrationId)
-            ->get();
-
-        dd(collect($studentRegistration)->toJson());
-    }
 
     public function filter(Request $request)
     {
@@ -277,13 +278,13 @@ class ApproveExamRegistrationDetails extends Screen
         // Prepare the filters array with only new filter parameters
         $filters = [];
 
-        if (!empty($name)) {
+        if (!empty ($name)) {
             $filters['filter[name]'] = $name;
         }
-        if (!empty($gender)) {
+        if (!empty ($gender)) {
             $filters['filter[gender]'] = $gender;
         }
-        if (!empty($district)) {
+        if (!empty ($district)) {
             $filters['filter[district_id]'] = $district;
         }
 

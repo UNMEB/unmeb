@@ -66,7 +66,7 @@ class NewExamApplicationScreen extends Screen
             ->join('courses AS c', 'c.id', '=', 'nr.course_id')
             ->where('s.institution_id', $institutionId)
             ->where('c.id', $courseId)
-            ->whereNotNull('s.nsin')
+            ->whereNotNull('nsr.nsin')
             ->where('nsr.verify', 1)
             ->orderBy('surname', 'asc')
             ->paginate(100);
