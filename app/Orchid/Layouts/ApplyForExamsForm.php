@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\Paper;
 use App\Models\RegistrationPeriod;
 use Illuminate\Http\Request;
+use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Layouts\Listener;
@@ -18,6 +19,8 @@ class ApplyForExamsForm extends Listener
 
     public $courses = [];
     public $papers = [];
+
+    public $selectedPapers = [];
 
     public $institution = null;
     public $course;
@@ -32,7 +35,8 @@ class ApplyForExamsForm extends Listener
         'course_id',
         'paper_ids',
         'year_of_study',
-        'trial'
+        'trial',
+        'selected_papers'
     ];
 
     /**
@@ -50,6 +54,7 @@ class ApplyForExamsForm extends Listener
             $yearOptions[$registrationPeriod->id] = $registrationPeriod->reg_start_date . ' - ' . $registrationPeriod->reg_end_date;
         }
 
+        $selectedPapers = $this->selectedPapers;
 
         return [
             Layout::rows([
@@ -96,15 +101,20 @@ class ApplyForExamsForm extends Listener
                         'First' => 'First Attempt',
                         'Second' => 'Second Attempt',
                         'Third Attempt' => 'Third Attempt'
-                    ]),
+                    ])
+                    ->empty('None Selected'),
+
+                // If we select Second or third, clear the paper ids
+                // if($this->query->has('trial') )
 
                 // Select Paper
-                Select::make('paper_ids')
+                Select::make('paper_ids.') // Note the dot at the end to indicate an array
                     ->title('Select Papers')
                     ->placeholder('Select Papers')
                     ->multiple()
                     ->options($this->papers)
-                    ->canSee(count($this->papers) > 0),
+                    ->canSee(count($this->papers) > 0)
+                    ->values($this->selectedPapers),
             ]),
 
 
@@ -161,13 +171,22 @@ class ApplyForExamsForm extends Listener
             }
 
             $this->papers = collect($allPapers)->pluck('paper_name', 'id');
+
+            if ($trial == 'First') {
+                $this->selectedPapers = $this->papers;
+                $repository->set('paper_ids', $this->selectedPapers);
+            } else {
+                $this->selectedPapers = [];
+                $repository->set('paper_ids', $this->selectedPapers);
+            }
+
+            // dd($repository);
         }
 
         return $repository
             ->set('exam_registration_period_id', $examRegistrationPeriodId)
             ->set('institution_id', $institutionId)
             ->set('course_id', $courseId)
-            ->set('paper_ids', $paperIds)
             ->set('year_of_study', $yearOfStudy)
             ->set('trial', $trial);
     }

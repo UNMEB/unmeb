@@ -67,6 +67,8 @@ class ExamApplicationListScreen extends Screen
 
     public function applyForExams(Request $request)
     {
+        dd($request->all());
+
         $institutionId = $request->get('institution_id');
         $exam_registration_period_id = $request->get('exam_registration_period_id');
         $courseId = $request->get('course_id');
