@@ -28,9 +28,9 @@ class StudentResearch extends Model
         'submission_date' => 'datetime'
     ];
 
-    public function student(): BelongsTo
+    public function student()
     {
-        return $this->belongsTo(Student::class);
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     /**

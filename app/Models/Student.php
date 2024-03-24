@@ -196,4 +196,9 @@ class Student extends Model
         return LogOptions::defaults()
             ->dontSubmitEmptyLogs();
     }
+
+    public function researches()
+    {
+        return $this->hasMany(StudentResearch::class, 'student_id');
+    }
 }

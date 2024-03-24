@@ -7,7 +7,9 @@ use App\Models\Student;
 use App\Models\StudentResearch;
 use Illuminate\Http\Request;
 use Orchid\Attachment\File;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Quill;
 use Orchid\Screen\Fields\Relation;
@@ -28,7 +30,7 @@ class StudentResearchListScreen extends Screen
      */
     public function query(): iterable
     {
-        $query = StudentResearch::query();
+        $query = StudentResearch::with('student');
         return [
             'results' => $query->paginate()
         ];
@@ -90,10 +92,17 @@ class StudentResearchListScreen extends Screen
 
             Layout::table('results', [
                 TD::make('id', 'ID'),
-                TD::make('student', 'Student Name')->render(fn($student) => $student->full_name),
+                TD::make('student_id', 'Student Name')->render(fn($data) => $data->student->full_name),
                 TD::make('research_title', 'Researct Title'),
-                TD::make('year', 'Research Year'),
                 TD::make('submission_date', 'Submission Date')
+                    ->usingComponent(DateTimeSplit::class),
+                TD::make('actions', 'Actions')
+                    ->render(
+                        fn($data) => Link::make('Download Research')
+                            ->href($data->research_link)->target('blank')
+                            ->class('btn btn-dark')
+                    )
+                ,
             ])
         ];
     }
