@@ -2,12 +2,14 @@
 
 namespace App\Observers;
 
+use App\Models\Account;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\NsinStudentRegistration;
 use App\Models\Student;
 use App\Models\StudentPaperRegistration;
+use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -58,13 +60,85 @@ class NsinStudentRegistrationObserver
             $nsinStudentRegistration->nsin = $nsin;
             $nsinStudentRegistration->saveQuietly();
 
-            Student::find($nsinStudentRegistration->student_id)->update([
+            $studentId = $nsinStudentRegistration->student_id;
+
+            Student::whereId($studentId)->update([
                 'nsin' => $nsin
             ]);
+
+            // Student::find($nsinStudentRegistration->student_id)->update([
+            //     'nsin' => $nsin
+            // ]);
+
+            // $nsinStudentRegistration->student()->update([
+            //     'nsin' => $nsin
+            // ]);
 
             // Reset the flag
             $nsinStudentRegistration->is_observer_triggered = false;
         }
+
+        // if verify is set to 2 the reverse the account balance by creating a credit transaction
+        else if ($nsinStudentRegistration->verify == 2) {
+            // $account = Account::where('institution_id', $nsinRegistration->institution_id)->first();
+
+            $studentId = $nsinStudentRegistration->student_id;
+
+
+            // Find the original transaction
+            $transaction = Transaction::where('comment', '=', 'NSIN Registration Fee for Student ID: ' . $studentId)->first();
+
+            if ($transaction) {
+                // Create a new transaction to record the reversal
+                $reversalTransaction = new Transaction([
+                    'amount' => -$transaction->amount, // reverse the amount
+                    'type' => 'credit', // credit the reversed amount
+                    'account_id' => $transaction->account_id,
+                    'institution_id' => $transaction->institution_id,
+                    'initiated_by' => auth()->user()->id,
+                    'status' => 'approved',
+                    'comment' => 'Reversal of NSIN Registration Fee for Student ID: ' . $studentId,
+                ]);
+                $reversalTransaction->save();
+
+                // Update the original transaction to mark it as reversed
+                $transaction->status = 'reversed';
+                $transaction->save();
+
+                // Update account balance with increment
+                $account = $transaction->account;
+                $account->balance += $transaction->amount; // Increment the balance by the original transaction amount
+                $account->save();
+            }
+
+            // Find the logbook transaction for this student
+            $logbookTransaction = Transaction::where('comment', '=', 'Logbook Fee for Student ID: ' . $studentId)->first();
+
+            if ($logbookTransaction) {
+                // Create a new transaction to record the reversal
+                $reversalLogbookTransaction = new Transaction([
+                    'amount' => -$logbookTransaction->amount, // reverse the amount
+                    'type' => 'credit', // credit the reversed amount
+                    'account_id' => $logbookTransaction->account_id,
+                    'institution_id' => $logbookTransaction->institution_id,
+                    'initiated_by' => auth()->user()->id,
+                    'status' => 'approved',
+                    'comment' => 'Reversal of Logbook Fee for Student ID: ' . $studentId,
+                ]);
+                $reversalLogbookTransaction->save();
+
+                // Update the original transaction to mark it as reversed
+                $logbookTransaction->status = 'reversed';
+                $logbookTransaction->save();
+
+                // Update account balance with increment
+                $account = $logbookTransaction->account;
+                $account->balance += $logbookTransaction->amount; // Increment the balance by the original transaction amount
+                $account->save();
+            }
+
+        }
+
     }
 
     /**

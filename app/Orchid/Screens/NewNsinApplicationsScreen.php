@@ -104,8 +104,8 @@ class NewNsinApplicationsScreen extends Screen
     public function submitNSINs(Request $request)
     {
         $settings = \Config::get('settings');
-        $nsinRegistrationFee = $settings['fees.nsin_registration'] ?? 0;
-        $logbookFee = $settings['logbook_fees'] ?? 0;
+        $nsinRegistrationFee = $settings['fees.nsin_registration'];
+        $logbookFee = $settings['fees.logbook_fee'];
 
         // Log the start of the function
         \Log::info('NSIN registration submission started.');
@@ -135,37 +135,30 @@ class NewNsinApplicationsScreen extends Screen
         $yearId = $nsinRegistrationPeriod->year_id;
         $month = $nsinRegistrationPeriod->month;
 
-        $fees = 0;
-
-        foreach ($studentIds as $studentId) {
-            $fees += $nsinRegistrationFee + $logbookFee;
-        }
-
-        // Log total fee calculation
-        \Log::info('Total fees calculated:', ['total_fees' => $fees]);
-
         $institution = Institution::find($institutionId);
 
         // Log institution data
         \Log::info('Institution data:', ['institution' => $institution]);
 
-        if ($fees > $institution->account->balance) {
-            Alert::error('Account balance too low to complete this transaction. Please top up to continue');
-            return;
-        }
-
-        // Log balance check
-        \Log::info('Account balance check passed.');
-
-        // Find or create the NSIN registration
-        $nsinRegistration = NsinRegistration::firstOrCreate([
-            'year_id' => $yearId,
-            'month' => $month,
-            'institution_id' => $institutionId,
-            'course_id' => $courseId,
-        ]);
-
         foreach ($studentIds as $studentId) {
+            $fees = $nsinRegistrationFee + $logbookFee;
+
+            if ($fees > $institution->account->balance) {
+                Alert::error('Account balance too low to complete this transaction. Please top up to continue');
+                return;
+            }
+
+            // Log balance check
+            \Log::info('Account balance check passed.');
+
+            // Find or create the NSIN registration
+            $nsinRegistration = NsinRegistration::firstOrCreate([
+                'year_id' => $yearId,
+                'month' => $month,
+                'institution_id' => $institutionId,
+                'course_id' => $courseId,
+            ]);
+
             // Check if the student is already registered for the same period, institution, and course
             $existingRegistration = NsinStudentRegistration::where([
                 'nsin_registration_id' => $nsinRegistration->id,
@@ -205,18 +198,18 @@ class NewNsinApplicationsScreen extends Screen
                 ]);
 
                 $logbookTransaction->save();
+
+                // Update institution account balance
+                $newBalance = $institution->account->balance - $fees;
+
+                // Log new balance calculation
+                \Log::info('New balance calculated:', ['new_balance' => $newBalance]);
+
+                $institution->account->update([
+                    'balance' => $newBalance,
+                ]);
             }
         }
-
-        // Update institution account balance
-        $newBalance = $institution->account->balance - $fees;
-
-        // Log new balance calculation
-        \Log::info('New balance calculated:', ['new_balance' => $newBalance]);
-
-        $institution->account->update([
-            'balance' => $newBalance,
-        ]);
 
         Alert::success('Registration successful');
 
@@ -224,8 +217,9 @@ class NewNsinApplicationsScreen extends Screen
         \Log::info('NSIN registration successful.');
 
         // Redirect
-        redirect(route('platform.registration.nsin.applications.list'));
+        return redirect()->back();
     }
+
 
 
 }

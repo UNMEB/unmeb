@@ -57,8 +57,7 @@ class NewExamApplicationScreen extends Screen
         $institutionId = session()->get('institution_id');
         $courseId = session()->get('course_id');
 
-        // Your query
-        $query = Student::query()
+        $query = Student::withoutGlobalScopes()
             ->select('s.*')
             ->from('students AS s')
             ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')

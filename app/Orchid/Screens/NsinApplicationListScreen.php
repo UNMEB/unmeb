@@ -25,7 +25,8 @@ class NsinApplicationListScreen extends Screen
     {
         $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
 
-        $pendingQuery = Student::join('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
+        $pendingQuery = Student::query()
+            ->join('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
             ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
             ->join('nsin_registration_periods as nsp', function ($join) {
                 $join->on('nr.year_id', '=', 'nsp.year_id')
@@ -33,12 +34,28 @@ class NsinApplicationListScreen extends Screen
             })
             ->whereNotNull('nsp.id')
             ->where('nsp.id', '=', $activeNsinPeriod->id)
+            ->where('nsr.verify', 0)
+            ->whereNull('nsr.nsin')
             ->select('students.*')
-            ->limit(100)
             ->orderBy('surname', 'asc')
-            ->get();
+            ->paginate();
+
+        $approvedQuery = Student::query()
+            ->join('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->join('nsin_registration_periods as nsp', function ($join) {
+                $join->on('nr.year_id', '=', 'nsp.year_id')
+                    ->on('nr.month', '=', 'nsp.month');
+            })
+            ->whereNotNull('nsp.id')
+            ->where('nsp.id', '=', $activeNsinPeriod->id)
+            ->where('nsr.verify', 1)
+            ->select('students.*')
+            ->orderBy('surname', 'asc')
+            ->paginate();
         return [
-            'pending_students' => $pendingQuery
+            'pending_students' => $pendingQuery,
+            'approved_students' => $approvedQuery,
         ];
     }
 

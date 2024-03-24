@@ -66,10 +66,12 @@ class PlatformProvider extends OrchidServiceProvider
                 ->list([
 
                     Menu::make(__('NSIN Applications'))
-                        ->route('platform.registration.nsin.applications.list'),
+                        ->route('platform.registration.nsin.applications.list')
+                        ->permission('platform.registration.nsin.applications.list'),
 
                     Menu::make('NSIN Registration Approval')
-                        ->route('platform.registration.nsin.approve'),
+                        ->route('platform.registration.nsin.approve')
+                        ->permission('platform.registration.nsin.approve'),
 
                     // Menu::make(__('Incomplete NSIN Registrations'))
                     //     ->route('platform.registration.nsin.incomplete'),
@@ -81,15 +83,15 @@ class PlatformProvider extends OrchidServiceProvider
                     //     ->route('platform.registration.nsin.rejected'),
 
 
-                ])
-                ->permission('platform.registration.nsin.list'),
+                ]),
 
             // Manage Student Exam Registration
             Menu::make(__('Exam Registration'))
                 ->icon('fa.cubes')
                 ->list([
                     Menu::make(__('Exam Applications'))
-                        ->route('platform.registration.exam.applications.list'),
+                        ->route('platform.registration.exam.applications.list')
+                        ->permission('platform.registration.exam.applications.list'),
 
                     // Menu::make(__('Accepted Exam Registrations'))
                     //     ->route('platform.registration.exam.accepted'),
@@ -97,8 +99,9 @@ class PlatformProvider extends OrchidServiceProvider
                     // Menu::make(__('Rejected Exam Registrations'))
                     //     ->route('platform.registration.exam.rejected'),
 
-                    // Menu::make(__('Approve Exam Registrations'))
-                    //     ->route('platform.registration.exam.approve'),
+                    Menu::make(__('Approve Exam Registrations'))
+                        ->route('platform.registration.exam.approve')
+                        ->permission('platform.registration.exam.approve'),
                 ])
                 ->permission('platform.registration.exam.list'),
 
@@ -288,12 +291,12 @@ class PlatformProvider extends OrchidServiceProvider
             // Manage NSIN Student Registration
             ItemPermission::group('Manage NSIN Registrations')
                 ->addPermission('platform.registration.nsin.applications.list', 'View NSIN Applications')
-                ->addPermission('platform.registration.nsin.list', 'View NSIN Registrations')
                 ->addPermission('platform.registration.nsin.create', 'Create NSIN Registrations')
                 ->addPermission('platform.registration.nsin.update', 'Update NSIN Registrations')
                 ->addPermission('platform.registration.nsin.delete', 'Delete NSIN Registrations')
                 ->addPermission('platform.registration.nsin.import', 'Import NSIN Registrations')
-                ->addPermission('platform.registration.nsin.export', 'Export NSIN Registrations'),
+                ->addPermission('platform.registration.nsin.export', 'Export NSIN Registrations')
+                ->addPermission('platform.registration.nsin.approve', 'Approve NSIN Applications'),
 
             // Manage Exam Studet Registration
             ItemPermission::group('Manage Exam Registrations')
@@ -302,7 +305,9 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.registration.exam.update', 'Update Exam Registrations')
                 ->addPermission('platform.registration.exam.delete', 'Delete Exam Registrations')
                 ->addPermission('platform.registration.exam.import', 'Import Exam Registrations')
-                ->addPermission('platform.registration.exam.export', 'Export Exam Registrations'),
+                ->addPermission('platform.registration.exam.export', 'Export Exam Registrations')
+                ->addPermission('platform.registration.exam.applications.list', 'View Exam Applications')
+                ->addPermission('platform.registration.exam.approve', 'Approve Exam Application'),
 
             // Manage NSIN Registration Periods
             ItemPermission::group('NSIN Registration Periods')

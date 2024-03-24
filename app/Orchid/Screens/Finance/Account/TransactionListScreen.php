@@ -84,7 +84,36 @@ class TransactionListScreen extends Screen
     {
         return [
 
+            Layout::modal('depositFundsModal', Layout::rows([
+                Relation::make('institution_id')
+                    ->fromModel(Institution::class, 'institution_name')
+                    ->chunk(20)
+                    ->title('Select Institution')
+                    ->placeholder('Select an institution')
+                    ->applyScope('userInstitutions')
+                    ->canSee($this->currentUser()->inRole('system-admin')),
 
+                Input::make('amount')
+                    ->required()
+                    ->title('Enter amount to deposit')
+                    ->mask([
+                        'alias' => 'currency',
+                        'prefix' => 'Ush ',
+                        'groupSeparator' => ',',
+                        'digitsOptional' => true,
+                    ])
+                    ->help('Enter the exact amount paid to bank'),
+
+                Select::make('method')
+                    ->title('Select payment method')
+                    ->options([
+                        'bank' => 'Bank Payment',
+                        'agent_banking' => 'Agent Banking'
+                    ])
+                    ->empty('None Selected'),
+            ]))
+                ->title('Deposit Funds')
+                ->applyButton('Deposit Funds'),
 
             Layout::modal('createStatementModal', Layout::rows([
                 Relation::make('institution_id')
@@ -180,6 +209,7 @@ class TransactionListScreen extends Screen
                             'id' => $data->id
                         ])
                         ->disabled($data->status != 'approved')
+                        ->class('btn btn-sm btn-success')
                         ->rawClick(false);
                 })
             ])

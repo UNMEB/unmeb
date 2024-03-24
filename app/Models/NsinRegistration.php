@@ -19,6 +19,22 @@ class NsinRegistration extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable, HasInstitution, OrderByLatest, LogsActivity;
 
+    protected $fillable = [
+        'institution_id',
+        'course_id',
+        'amount',
+        'receipt',
+        'month',
+        'year_id',
+        'completed',
+        'approved',
+        'books',
+        'nsin',
+        'nsin_verify',
+        'old',
+        'date_time'
+    ];
+
     protected $allowedFilters = [
         'institution_id' => Where::class,
         'course_id' => Where::class,

@@ -57,15 +57,9 @@ class AccountListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
-            ModalToggle::make('Deposit Funds')
-                ->modal('depositFundsModal')
-                ->method('deposit')
-                ->icon('wallet')
-                ->class('btn btn-primary btn-sm link-primary'),
-
             Button::make('Export Accounts')
                 ->method('export')
                 ->icon('archive')
@@ -87,37 +81,6 @@ class AccountListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            Layout::modal('depositFundsModal', Layout::rows([
-                Relation::make('institution_id')
-                    ->fromModel(Institution::class, 'institution_name')
-                    ->chunk(20)
-                    ->title('Select Institution')
-                    ->placeholder('Select an institution')
-                    ->applyScope('userInstitutions')
-                    ->canSee($this->currentUser()->inRole('system-admin')),
-
-                Input::make('amount')
-                    ->required()
-                    ->title('Enter amount to deposit')
-                    ->mask([
-                        'alias' => 'currency',
-                        'prefix' => 'Ush ',
-                        'groupSeparator' => ',',
-                        'digitsOptional' => true,
-                    ])
-                    ->help('Enter the exact amount paid to bank'),
-
-                Select::make('method')
-                    ->title('Select payment method')
-                    ->options([
-                        'bank' => 'Bank Payment',
-                        'agent_banking' => 'Agent Banking'
-                    ])
-                    ->empty('None Selected'),
-            ]))
-                ->title('Deposit Funds')
-                ->applyButton('Deposit Funds'),
-
 
             Layout::modal('exportAccounts', Layout::rows([
                 DateRange::make('date_range')
