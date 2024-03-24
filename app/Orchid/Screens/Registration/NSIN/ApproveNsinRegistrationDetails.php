@@ -119,29 +119,23 @@ class ApproveNsinRegistrationDetails extends Screen
     {
         // Define validation rules
         $rules = [
-            'approve_students.*' => 'required|in:0,1',
+            'approve_students.*' => [
+                'in:0,1'
+            ],
             'reject_students.*' => [
-                'required',
-                function ($attribute, $value, $fail) use ($request) {
-                    $approveValue = $request->input('approve_students.' . str_replace('reject_students.', '', $attribute));
-
-                    if ($approveValue == 1 && $value == 1) {
-                        $fail('Cannot approve and reject the same student.');
-                    }
-
-                    // Set rejection message if rejection checkbox is selected
-                    if ($value == 1) {
-                        $request->merge(['reject_reasons.' . str_replace('reject_students.', '', $attribute) => 'Your rejection message goes here']);
-                    }
-                },
+                'required_if:approve_students.*,0'
             ],
             'reject_reasons.*' => [
                 'required_if:reject_students.*,1',
             ],
         ];
 
+        $messages = [
+            'reject_reasons.*.required_if' => 'The rejection reason is required when the student is rejected.',
+        ];
+
         // Validate the request
-        $validator = Validator::make($request->all(), $rules);
+        $validator = Validator::make($request->all(), $rules, $messages);
 
         // Check if validation fails
         if ($validator->fails()) {
@@ -151,27 +145,57 @@ class ApproveNsinRegistrationDetails extends Screen
         }
 
         // Filter out values where both approval and rejection are 0
-        $toApprove = collect($request->input('approve_students'))->filter(function ($value) {
+        $studentIdsToApprove = collect($request->input('approve_students'))->filter(function ($value) {
             return $value == 1;
-        });
+        })->keys();
 
-        $toReject = collect($request->input('reject_students'))->filter(function ($value) {
+        $studentIdsToReject = collect($request->input('reject_students'))->filter(function ($value) {
             return $value == 1;
-        });
+        })->keys();
 
+        // Handle Student Approval
+        foreach ($studentIdsToApprove as $studentId) {
+            $this->processRegistration($studentId, 'approve');
+        }
+
+        // Handle Student Rejection
+        foreach ($studentIdsToReject as $studentId) {
+            $rejectionReason = $request->input('reject_reasons')[$studentId];
+            $this->processRegistration($studentId, 'reject', $rejectionReason);
+        }
+    }
+
+    public function processRegistration($studentId, $action, $rejectionReason = null)
+    {
         $institutionId = session()->get('institution_id');
         $courseId = session()->get('course_id');
         $nsinRegistrationId = session()->get('nsin_registration_id');
 
-        dd([
-            'institution_id' => $institutionId,
-            'course_id' => $courseId,
-            'nsin_registration_id' => $nsinRegistrationId,
-        ]);
+        $student = Student::find($studentId);
+        if (!$student) {
+            return "Student not found";
+        }
+
+        $nsinStudentRegistration = NsinStudentRegistration::query()
+            ->where('nsin_registration_id', $nsinRegistrationId)
+            ->where('student_id', $studentId)
+            ->latest()
+            ->first();
+
+        if (!$nsinStudentRegistration) {
+            return "Student NSIN Registration not found";
+        }
+
+        if ($action === 'approve') {
+            $nsinStudentRegistration->update([
+                'verify' => 1,
+                'remarks' => 'Validation Complete'
+            ]);
+        } elseif ($action === 'reject') {
+            $nsinStudentRegistration->update([
+                'verify' => 2,
+                'remarks' => $rejectionReason // Assign the rejection reason here
+            ]);
+        }
     }
-
-
-
-
-
 }
