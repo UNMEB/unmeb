@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\NsinStudentRegistration;
+use App\Models\Student;
 use App\Models\Transaction;
 use App\Models\Year;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
@@ -26,6 +27,16 @@ use Orchid\Support\Facades\Layout;
 
 class ApproveNsinRegistration extends Screen
 {
+
+    public $filters = [];
+
+    public function __construct(Request $request)
+    {
+        // dd($request->all());
+        $this->filters = $request->get("filter");
+
+    }
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -34,28 +45,58 @@ class ApproveNsinRegistration extends Screen
     public function query(): iterable
     {
 
-        $query = Nsinregistration::filters()
+        $query = Student::query()
             ->select([
-                'r.id',
-                'r.month',
-                'c.course_name',
+                'nr.id as registration_id',
                 'i.institution_name',
-                'i.id as institution_id',
-                'c.id as course_id',
-                'y.year',
-                DB::raw("(FLOOR(r.amount / 20000)) as students_to_register"),
-                DB::raw("(SELECT COUNT(*) FROM nsin_student_registrations WHERE nsin_registration_id = r.id) as registered_students")
+                'c.course_name',
+                'y.year as registration_year',
+                'nr.month as registration_month',
+                DB::raw('COUNT(*) as registrations_count'),
+                DB::raw('MAX(nr.created_at) as latest_created_at'),
             ])
-            ->from('nsin_registrations as r')
-            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
-            ->join('courses as c', 'r.course_id', '=', 'c.id')
-            ->join('years as y', 'r.year_id', '=', 'y.id')
-            ->where('r.completed', 0)
-            ->where('r.old', 0)
-            ->orderBy('r.created_at', 'desc');
+            ->from('students AS s')
+            ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
+            ->join('courses AS c', 'c.id', '=', 'nr.course_id')
+            ->join('years as y', 'nr.year_id', '=', 'y.id')
+            ->whereNull('nsr.nsin')
+            ->where('nsr.verify', 0)
+            ->groupBy('i.institution_name', 'c.course_name', 'registration_year', 'registration_month', 'registration_id');
+
+        // if (!empty ($this->filters)) {
+        //     $institutionId = $this->filters['institution_id'];
+        //     $courseId = $this->filters['course_id'];
+        //     $query->where('nr.institution_id', '=', $institutionId);
+        //     $query->where('c.id', $courseId);
+        // }
+
+        if (!empty ($this->filters)) {
+            if (isset ($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
+                $institutionId = $this->filters['institution_id'];
+                $query->where('nr.institution_id', '=', $institutionId);
+            }
+            if (isset ($this->filters['course_id']) && $this->filters['course_id'] !== null) {
+                $courseId = $this->filters['course_id'];
+                $query->where('c.id', '=', $courseId);
+            }
+
+            if (isset ($this->filters['month']) && $this->filters['month'] !== null) {
+                $month = $this->filters['month'];
+                $query->where('nr.month', '=', $month);
+            }
+        }
+
+        $registrations = $query->orderBy('registration_year', 'desc')
+            ->orderBy('registration_month', 'desc')
+            ->orderBy('registrations_count', 'desc')
+            ->orderBy('latest_created_at', 'desc')
+            ->paginate();
+
 
         return [
-            'registrations' => $query->paginate()
+            'registrations' => $registrations
         ];
     }
 
@@ -74,7 +115,7 @@ class ApproveNsinRegistration extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Register Student For NSIN')
@@ -96,11 +137,14 @@ class ApproveNsinRegistration extends Screen
                 Group::make([
                     Relation::make('institution_id')
                         ->title('Filter By Institution')
-                        ->fromModel(Institution::class, 'institution_name'),
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->value(isset ($this->filters['institution_id']) ? $this->filters['institution_id'] : null),
+
 
                     Relation::make('course_id')
                         ->title('Filter By Program')
-                        ->fromModel(Course::class, 'course_name'),
+                        ->fromModel(Course::class, 'course_name')
+                        ->value(isset ($this->filters['course_id']) ? $this->filters['course_id'] : null),
 
                     Select::make('month')
                         ->title('Filter By Month')
@@ -118,7 +162,8 @@ class ApproveNsinRegistration extends Screen
                             'November' => 'November',
                             'December' => 'December',
                         ])
-                        ->empty('None Selected'),
+                        ->empty('None Selected')
+                        ->value(isset ($this->filters['month']) ? $this->filters['month'] : null),
 
                     Select::make('year_id')
                         ->fromModel(Year::class, 'year')
@@ -137,15 +182,14 @@ class ApproveNsinRegistration extends Screen
                     ->alignEnd(),
             ]),
             Layout::table('registrations', [
-                TD::make('id', 'ID'),
+                TD::make('registration_id', 'NR ID'),
                 TD::make('institution_name', 'Institution'),
                 TD::make('course_name', 'Program'),
-                TD::make('month', 'Month'),
-                TD::make('year', 'Year'),
-                TD::make('students_to_register', 'Students to Register'),
-                TD::make('registered_students', 'Registered Students'),
+                TD::make('registration_month', 'Month'),
+                TD::make('registration_year', 'Year'),
+                TD::make('registrations_count', 'Pending Approval')->render(fn($data) => "$data->registrations_count Students"),
                 TD::make('actions', 'Actions')->render(
-                    fn ($data) => Link::make('Details')
+                    fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
                         ->route('platform.registration.nsin.approve.details', [
                             'institution_id' => $data->institution_id,
@@ -174,19 +218,19 @@ class ApproveNsinRegistration extends Screen
 
         $filters = [];
 
-        if (!empty($institutionId)) {
+        if (!empty ($institutionId)) {
             $filters['filter[institution_id]'] = $institutionId;
         }
 
-        if (!empty($courseId)) {
+        if (!empty ($courseId)) {
             $filters['filter[course_id]'] = $courseId;
         }
 
-        if (!empty($month)) {
+        if (!empty ($month)) {
             $filters['filter[month]'] = $month;
         }
 
-        if (!empty($yearId)) {
+        if (!empty ($yearId)) {
             $filters['filter[year_id]'] = $yearId;
         }
 

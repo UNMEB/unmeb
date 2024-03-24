@@ -28,6 +28,7 @@ class NewExamApplicationScreen extends Screen
 
     public function __construct(Request $request)
     {
+
         $this->institutionId = $request->get('institution_id');
         $this->exam_registration_period_id = $request->get('exam_registration_period_id');
         $this->courseId = $request->get('course_id');
@@ -57,16 +58,17 @@ class NewExamApplicationScreen extends Screen
         $courseId = session()->get('course_id');
 
         // Your query
-        $query = Student::withoutGlobalScopes()->leftJoin('student_registrations as sr', 'students.id', '=', 'sr.student_id')
-            ->leftJoin('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->leftJoin('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->leftJoin('courses as c', 'r.course_id', '=', 'c.id')
-            ->leftJoin('institutions as i', 'r.institution_id', '=', 'i.id')
-            ->where('rp.id', '=', $this->exam_registration_period_id)
-            ->where('c.id', '=', $courseId)
-            ->where('i.id', '=', $institutionId)
-            ->select('students.*')
-            ->limit(100)
+        $query = Student::query()
+            ->select('s.*')
+            ->from('students AS s')
+            ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
+            ->join('courses AS c', 'c.id', '=', 'nr.course_id')
+            ->where('s.institution_id', $institutionId)
+            ->where('c.id', $courseId)
+            ->whereNotNull('s.nsin')
+            ->where('nsr.verify', 1)
             ->orderBy('surname', 'asc')
             ->paginate(100);
 
