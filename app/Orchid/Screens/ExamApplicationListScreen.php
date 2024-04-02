@@ -28,8 +28,10 @@ class ExamApplicationListScreen extends Screen
             ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
             ->where('rp.id', $activeExamPeriod->id)
             ->where('sr.sr_flag', 0)
+            ->where('i.id', auth()->user()->institution_id)
             ->paginate();
 
         $approvedQuery = Student::withoutGlobalScopes()
@@ -37,6 +39,7 @@ class ExamApplicationListScreen extends Screen
             ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
             ->where('rp.id', $activeExamPeriod->id)
             ->where('sr.sr_flag', 1)
             ->where('i.id', auth()->user()->institution_id)
