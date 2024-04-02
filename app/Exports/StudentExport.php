@@ -3,15 +3,33 @@
 namespace App\Exports;
 
 use App\Models\Student;
-use Maatwebsite\Excel\Concerns\FromCollection;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\FromQuery;
+use Illuminate\Support\Facades\DB;
 
-class StudentExport implements FromCollection
+class StudentExport implements FromQuery, ShouldQueue
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    public function collection()
+    use Exportable;
+
+    protected $institutionId;
+
+    public function __construct($institutionId)
     {
-        return Student::all();
+        $this->institutionId = $institutionId;
+    }
+
+    public function query()
+    {
+        // return Student::withoutGlobalScopes()
+        //     ->where('institution_id', $this->institutionId);
+
+        $query = Student::withoutGlobalScopes();
+
+        if ($this->institutionId !== null) {
+            $query->where('institution_id', $this->institutionId);
+        }
+
+        return $query;
     }
 }

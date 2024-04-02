@@ -1,4 +1,4 @@
 surname,firstname,othername,nin,lin,passport_number,institution_code,program_code,gender,dob,phone,email,country,district,home_address
-Hanifah,Julian,Demo,CF123456789001, , ,U011,CCN,Female,19/12/1992,2.56756E+11,hanifah@demo.com,Uganda,Kampala,"Kanyanya, Gayaza Road"
-Mary,Jane,Demo,CF123456789002,,,U011,CCN,Female,20/12/1992,2.56756E+11,mary@mail.com,Uganda,Kampala,"Kanyanya, Gayaza Road"
-Sarah,Abdallah,Demo,CF123456789003,,,U011,CCN,Female,21/12/1992,2.56756E+11,sarah@mail.com,Uganda,Kampala,"Kanyanya, Gayaza Road"
+John,Julian,Demo,CF123456789001, , ,U011,CCN,Female,19/12/1992,2.56756E+11,johnny@demo.com,Uganda,Kampala,"Kanyanya, Gayaza Road"
+Jane,Jane,Demo,CF123456789002,,,U011,CCN,Female,20/12/1992,2.56756E+11,jjane@mail.com,Uganda,Kampala,"Kanyanya, Gayaza Road"
+Suzan,Abdallah,Demo,CF123456789003,,,U011,CCN,Female,21/12/1992,2.56756E+11,ssuzane@mail.com,Uganda,Kampala,"Kanyanya, Gayaza Road"

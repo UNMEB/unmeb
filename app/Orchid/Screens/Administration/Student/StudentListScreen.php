@@ -457,19 +457,19 @@ class StudentListScreen extends Screen
 
         $filterParams = [];
 
-        if (!empty ($institutionId)) {
+        if (!empty($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
 
-        if (!empty ($name)) {
+        if (!empty($name)) {
             $filterParams['filter[name]'] = $name;
         }
 
-        if (!empty ($gender)) {
+        if (!empty($gender)) {
             $filterParams['filter[gender]'] = $gender;
         }
 
-        if (!empty ($district)) {
+        if (!empty($district)) {
             $filterParams['filter[district_id]'] = $district;
         }
 
@@ -495,7 +495,13 @@ class StudentListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return Excel::download(new StudentExport, 'students.csv', ExcelExcel::CSV);
+        //Excel::store(new StudentExport, 'students.csv', ExcelExcel::CSV);
+
+        // (new StudentExport)->queue('students.csv');
+
+        (new StudentExport(auth()->user()->institution_id))->queue('students.csv', ExcelExcel::CSV);
+
+        return back()->withSuccess('Export started!');
     }
 
     public function upload(Request $request)

@@ -6,8 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -29,9 +28,9 @@ return new class extends Migration
                 DB::table('users')
                     ->where('id', $user->id)
                     ->update([
-                        'new_password' => $hashedPassword,
-                        'old_password' => $user->password
-                    ]);
+                            'new_password' => $hashedPassword,
+                            'old_password' => $user->password
+                        ]);
             }
         });
 

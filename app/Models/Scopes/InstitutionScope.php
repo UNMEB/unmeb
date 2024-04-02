@@ -12,7 +12,7 @@ class InstitutionScope implements Scope
 {
     protected $user;
 
-    public function __construct(User $user)
+    public function __construct(?User $user)
     {
         $this->user = $user;
     }
@@ -23,7 +23,7 @@ class InstitutionScope implements Scope
     public function apply(Builder $builder, Model $model): void
     {
         // Check if the user is not null
-        if ($this->user) {
+        if ($this->user !== null) {
             $hasAccess = $this->user->hasAccess('platform.internals.all_institutions');
 
             // Get the institution id
@@ -31,8 +31,6 @@ class InstitutionScope implements Scope
 
             // Check if the user has access to the institution
             if (!$hasAccess) {
-                // $builder->where('institution_id', $institutionId);
-
                 $builder->where($model->getTable() . '.institution_id', $institutionId);
             }
         }

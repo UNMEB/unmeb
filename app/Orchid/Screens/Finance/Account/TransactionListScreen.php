@@ -196,6 +196,7 @@ class TransactionListScreen extends Screen
                 TD::make('amount', 'Amount')->render(function ($data) {
                     return 'Ush ' . number_format($data->amount);
                 }),
+                TD::make('comment', 'Comment'),
                 TD::make('status', 'Approval Status')->render(function ($data) {
                     $status = Str::upper($data->status);
                     return $status;
