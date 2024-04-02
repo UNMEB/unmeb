@@ -93,15 +93,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'passport_number' => 'required_without_all:nin,lin',
         ];
 
-        if (!$user->inRole('system-admin')) {
-            $rules['institution_code'] = [
-                'required',
-                Rule::exists('institutions', 'code')->where(function ($query) use ($user) {
-                    $query->where('id', $user->institution_id);
-                }),
-            ];
-        }
-
         return $rules;
     }
 
