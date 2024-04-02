@@ -2,10 +2,13 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\RegistrationPeriod;
+use App\Models\Student;
 use App\Orchid\Layouts\ApplyForExamsForm;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
+use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
 
 class ExamApplicationListScreen extends Screen
@@ -17,7 +20,18 @@ class ExamApplicationListScreen extends Screen
      */
     public function query(): iterable
     {
-        return [];
+        $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
+
+        $pendingQuery = Student::query()
+            ->paginate();
+        $approvedQuery = Student::query()
+            ->paginate();
+
+
+        return [
+            'pending_students' => $pendingQuery,
+            'approved_students' => $approvedQuery,
+        ];
     }
 
     /**
@@ -60,7 +74,30 @@ class ExamApplicationListScreen extends Screen
     {
         return [
             Layout::modal('newExamApplicationModal', ApplyForExamsForm::class)
-                ->applyButton('Register for Exams')
+                ->applyButton('Register for Exams'),
+
+            Layout::tabs([
+                'Pending NSINs (Current Period)' => Layout::table('pending_students', [
+                    TD::make('id', 'ID'),
+                    TD::make('fullName', 'Name'),
+                    TD::make('gender', 'Gender'),
+                    TD::make('dob', 'Date of Birth'),
+                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
+                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
+                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
+                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
+                ]),
+                'Approved NSINs (Current Period)' => Layout::table('approved_students', [
+                    TD::make('id', 'ID'),
+                    TD::make('fullName', 'Name'),
+                    TD::make('gender', 'Gender'),
+                    TD::make('dob', 'Date of Birth'),
+                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
+                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
+                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
+                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
+                ]),
+            ])
         ];
     }
 
