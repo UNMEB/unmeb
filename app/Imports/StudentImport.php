@@ -27,8 +27,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
 
     public function prepareForValidation(array $row)
     {
-        dd($row);
-
         return $row;
     }
 
@@ -39,9 +37,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
      */
     public function model(array $row)
     {
-
-
-
         // Retrieve related models based on codes provided in the Excel sheet
         $institution = Institution::firstWhere('id', auth()->user()->institution_id);
         $program = Course::firstWhere('course_code', $row['program_code']);
@@ -50,8 +45,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
 
         // Convert date of birth to 'YYYY-MM-DD' format
         $dob = Carbon::createFromFormat('d/m/Y', $row['dob'])->format('d/m/Y');
-
-        dd($dob);
 
         // Create and return a new Student instance
         return new Student([
