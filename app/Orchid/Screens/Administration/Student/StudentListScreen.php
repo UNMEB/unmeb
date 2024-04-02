@@ -511,7 +511,7 @@ class StudentListScreen extends Screen
         $customMessages = [
             'file.required' => 'Please select a file to upload.',
             'file.file' => 'The uploaded file is not valid.',
-            'file.mimes' => 'The file must be a CSV file.',
+            'file.mimes' => 'The file must be an excel document.',
             'file.max' => 'The file size must not exceed 64MB.',
         ];
 
