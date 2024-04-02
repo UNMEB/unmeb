@@ -39,7 +39,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
     {
 
         // Retrieve related models based on codes provided in the Excel sheet
-        $institution = Institution::firstWhere('code', $row['institution_code']);
+        $institution = Institution::firstWhere('id', auth()->user()->institution_id);
         $program = Course::firstWhere('course_code', $row['program_code']);
         $country = Country::firstWhere('name', $row['country']);
         $district = District::firstWhere('district_name', $row['district']);
@@ -80,7 +80,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         $rules = [
             'surname' => 'required',
             'firstname' => 'required',
-            'institution_code' => 'required|exists:institutions,code',
             'program_code' => 'required|exists:courses,course_code',
             'country' => 'required|exists:countries,name',
             'district' => 'required|exists:districts,district_name',
@@ -114,8 +113,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         return [
             'surname.required' => 'The surname field is required.',
             'firstname.required' => 'The firstname field is required.',
-            'institution_code.required' => 'The institution code field is required.',
-            'institution_code.exists' => 'The selected institution code is invalid or belongs to another institution.',
             'program_code.required' => 'The program code field is required.',
             'program_code.exists' => 'The selected program code is invalid.',
             'country.required' => 'The country field is required.',
