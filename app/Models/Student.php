@@ -53,6 +53,10 @@ class Student extends Model
         'institution_id',
     ];
 
+    protected $casts = [
+        'dob' => 'datetime',
+    ];
+
     protected $allowedFilters = [
         'students.institution_id' => Where::class,
         'gender' => Like::class,
@@ -137,7 +141,7 @@ class Student extends Model
         return $this->hasMany(Registration::class);
     }
 
-    public function currentUser(): User
+    public function currentUser(): ?User
     {
         return auth()->user();
     }
