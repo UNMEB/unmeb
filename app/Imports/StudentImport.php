@@ -19,7 +19,6 @@ use Maatwebsite\Excel\Imports\HeadingRowFormatter;
 
 class StudentImport implements ToModel, WithHeadingRow, WithValidation
 {
-
     public function __construct()
     {
         HeadingRowFormatter::default('none');
@@ -32,23 +31,13 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         return $row;
     }
 
-
-    /**
-     * @param array $row
-     * @return \Illuminate\Database\Eloquent\Model|\Illuminate\Database\Eloquent\Model[]|null
-     */
     public function model(array $row)
     {
-        // Retrieve related models based on codes provided in the Excel sheet
         $institution = Institution::firstWhere('id', auth()->user()->institution_id);
         $program = Course::firstWhere('course_code', $row['program_code']);
         $country = Country::firstWhere('name', $row['country']);
         $district = District::firstWhere('district_name', $row['district']);
 
-        // Convert date of birth to 'YYYY-MM-DD' format
-        $dob = Carbon::createFromFormat('d/m/Y', trim($row['dob']))->format('d/m/Y');
-
-        // Create and return a new Student instance
         return new Student([
             'surname' => $row['surname'],
             'othername' => $row['othername'],
@@ -63,17 +52,13 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'district_id' => $district->id,
             'email' => $row['email'],
             'gender' => $row['gender'],
-            'dob' => $dob,
+            'dob' => $row['dob'], // Using the pre-formatted dob directly
             'location' => $row['home_address'],
             'telephone' => $row['phone'],
             'passport' => asset('placeholder/avatar.png')
         ]);
     }
 
-
-    /**
-     * @return array
-     */
     public function rules(): array
     {
         $user = Auth::user();
@@ -95,9 +80,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         ];
     }
 
-    /**
-     * @return array
-     */
     public function customValidationMessages()
     {
         return [
