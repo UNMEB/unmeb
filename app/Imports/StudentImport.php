@@ -85,7 +85,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'district' => 'required|exists:districts,district_name',
             'email' => 'required|email',
             'gender' => 'required',
-            '*.dob' => 'required|date_format:d/m/Y|before_or_equal:' . now()->subYears(18)->format('d/m/Y') . '|after_or_equal:' . now()->subYears(65)->format('d/m/Y'),
+            '*.dob' => 'required|date_format:Y-m-d|before_or_equal:' . now()->subYears(18)->format('Y-m-d') . '|after_or_equal:' . now()->subYears(65)->format('Y-m-d'),
             'home_address' => 'required',
             'phone' => 'required',
             'nin' => 'required_without_all:lin,passport_number',
