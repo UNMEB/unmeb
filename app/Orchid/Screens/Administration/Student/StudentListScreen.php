@@ -501,6 +501,8 @@ class StudentListScreen extends Screen
 
         (new StudentExport(auth()->user()->institution_id))->queue('students.csv', ExcelExcel::CSV);
 
+        Toast::success('Student list is being exported. Please wait');
+
         return back()->withSuccess('Export started!');
     }
 
