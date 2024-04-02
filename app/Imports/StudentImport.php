@@ -27,7 +27,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
 
     public function prepareForValidation(array $row)
     {
-        dd($row);
+        $row['dob'] = Carbon::createFromFormat('d/m/Y', trim($row['dob']))->format('d/m/Y');
         return $row;
     }
 
