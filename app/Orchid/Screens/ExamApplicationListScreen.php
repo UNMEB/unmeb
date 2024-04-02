@@ -95,7 +95,7 @@ class ExamApplicationListScreen extends Screen
                 ->applyButton('Register for Exams'),
 
             Layout::tabs([
-                'Pending NSINs (Current Period)' => Layout::table('pending_students', [
+                'Pending Exam Registrations' => Layout::table('pending_students', [
                     TD::make('id', 'ID'),
                     TD::make('fullName', 'Name'),
                     TD::make('gender', 'Gender'),
@@ -105,7 +105,7 @@ class ExamApplicationListScreen extends Screen
                     TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
                     TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
                 ]),
-                'Approved NSINs (Current Period)' => Layout::table('approved_students', [
+                'Approved Exam Registrations' => Layout::table('approved_students', [
                     TD::make('id', 'ID'),
                     TD::make('fullName', 'Name'),
                     TD::make('gender', 'Gender'),
