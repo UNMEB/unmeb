@@ -27,6 +27,8 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
 
     public function prepareForValidation(array $row)
     {
+        dd($row);
+
         return $row;
     }
 
@@ -38,7 +40,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
     public function model(array $row)
     {
 
-        dd($row);
+
 
         // Retrieve related models based on codes provided in the Excel sheet
         $institution = Institution::firstWhere('id', auth()->user()->institution_id);
