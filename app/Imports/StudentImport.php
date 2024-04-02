@@ -33,7 +33,19 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
 
     public function model(array $row)
     {
-        $institution = Institution::firstWhere('id', auth()->user()->institution_id);
+        // Check if institution_id is null
+        if (is_null(auth()->user()->institution_id)) {
+            return null; // Skip processing this row
+        }
+
+        $institution = Institution::find(auth()->user()->institution_id);
+        if (!$institution) {
+            // Log or handle the case where institution is not found
+            Log::error('Institution not found for user: ' . auth()->id());
+            return null; // Skip processing this row
+        }
+
+        // Rest of your code remains unchanged
         $program = Course::firstWhere('course_code', $row['program_code']);
         $country = Country::firstWhere('name', $row['country']);
         $district = District::firstWhere('district_name', $row['district']);
@@ -58,6 +70,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'passport' => asset('placeholder/avatar.png')
         ]);
     }
+
 
     public function rules(): array
     {

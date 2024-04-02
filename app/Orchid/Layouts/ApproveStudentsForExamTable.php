@@ -34,7 +34,7 @@ class ApproveStudentsForExamTable extends FormTable
             TD::make('fullName', 'Name'),
             TD::make('gender', 'Gender'),
             TD::make('dob', 'Date of Birth'),
-            TD::make('country_id', 'Country')->render(fn(Student $student) => $student->country->name),
+            TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
             TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
             // TD::make('location', 'Location'),
             TD::make('NSIN', 'NSIN'),

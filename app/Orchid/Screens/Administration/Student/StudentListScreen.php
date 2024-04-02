@@ -508,6 +508,14 @@ class StudentListScreen extends Screen
 
     public function upload(Request $request)
     {
+
+        if (!$this->currentUser()->inRole('institution')) {
+            \RealRashid\SweetAlert\Facades\Alert::error('Student Upload Failed', 'Only institutions can upload student info. Please switch to institution account')
+                ->autoClose(1000)
+            ;
+            return back();
+        }
+
         $customMessages = [
             'file.required' => 'Please select a file to upload.',
             'file.file' => 'The uploaded file is not valid.',
