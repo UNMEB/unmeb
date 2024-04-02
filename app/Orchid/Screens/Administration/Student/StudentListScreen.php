@@ -516,7 +516,7 @@ class StudentListScreen extends Screen
         ];
 
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
-            'file' => 'required|file|mimes:csv,txt|max:128000',
+            'file' => 'required|file|mimes:xls,xlsx|max:128000',
         ], $customMessages);
 
         if ($validator->fails()) {
@@ -527,10 +527,8 @@ class StudentListScreen extends Screen
 
         $filePath = $uploadedFile->path();
 
-        // Excel::import(new StudentImport, $filePath);
-
         try {
-            Excel::import(new StudentImport, $filePath);
+            Excel::import(new StudentImport, $filePath, null, ExcelExcel::XLSX);
         } catch (ValidationException $e) {
             $failures = $e->failures();
 
