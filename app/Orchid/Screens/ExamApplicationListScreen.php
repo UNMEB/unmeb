@@ -22,7 +22,8 @@ class ExamApplicationListScreen extends Screen
     {
         $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
 
-        $pendingQuery = Student::query()
+        $pendingQuery = Student
+            ::withoutGlobalScopes()
             ->from('students as s')
             ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
@@ -30,7 +31,7 @@ class ExamApplicationListScreen extends Screen
             ->where('rp.id', $activeExamPeriod->id)
             ->paginate();
 
-        $approvedQuery = Student::query()
+        $approvedQuery = Student::withoutGlobalScopes()
             ->from('students as s')
             ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
