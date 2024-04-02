@@ -38,7 +38,7 @@ class ExamApplicationListScreen extends Screen
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
             ->where('rp.id', $activeExamPeriod->id)
-            ->where('sr.flag', 1)
+            ->where('sr.sr_flag', 1)
             ->where('i.id', auth()->user()->institution_id)
             ->paginate();
 
