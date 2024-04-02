@@ -23,8 +23,13 @@ class ExamApplicationListScreen extends Screen
         $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
 
         $pendingQuery = Student::query()
+            ->from('students as s')
+            ->join('institutions as i', 'i.id', 's.institution_id')
             ->paginate();
+
         $approvedQuery = Student::query()
+            ->from('students as s')
+            ->join('institutions as i', 'i.id', 's.institution_id')
             ->paginate();
 
 
