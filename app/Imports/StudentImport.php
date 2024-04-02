@@ -37,7 +37,6 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
      */
     public function model(array $row)
     {
-
         // Retrieve related models based on codes provided in the Excel sheet
         $institution = Institution::firstWhere('id', auth()->user()->institution_id);
         $program = Course::firstWhere('course_code', $row['program_code']);
@@ -45,7 +44,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         $district = District::firstWhere('district_name', $row['district']);
 
         // Convert date of birth to 'YYYY-MM-DD' format
-        $dob = Carbon::createFromFormat('d/m/Y', $row['dob'])->format('Y-m-d');
+        $dob = Carbon::createFromFormat('d/m/Y', $row['dob'])->format('d/m/Y');
 
         // Create and return a new Student instance
         return new Student([
@@ -69,15 +68,15 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         ]);
     }
 
+
     /**
      * @return array
      */
     public function rules(): array
     {
-
         $user = Auth::user();
 
-        $rules = [
+        return [
             'surname' => 'required',
             'firstname' => 'required',
             'program_code' => 'required|exists:courses,course_code',
@@ -85,15 +84,13 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
             'district' => 'required|exists:districts,district_name',
             'email' => 'required|email',
             'gender' => 'required',
-            '*.dob' => 'required|date_format:Y-m-d|before_or_equal:' . now()->subYears(18)->format('Y-m-d') . '|after_or_equal:' . now()->subYears(65)->format('Y-m-d'),
+            '*.dob' => 'required|date_format:d/m/Y|before_or_equal:' . now()->subYears(18)->format('d/m/Y') . '|after_or_equal:' . now()->subYears(65)->format('d/m/Y'),
             'home_address' => 'required',
             'phone' => 'required',
             'nin' => 'required_without_all:lin,passport_number',
             'lin' => 'required_without_all:nin,passport_number',
             'passport_number' => 'required_without_all:nin,lin',
         ];
-
-        return $rules;
     }
 
     /**
