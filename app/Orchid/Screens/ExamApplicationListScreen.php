@@ -24,12 +24,18 @@ class ExamApplicationListScreen extends Screen
 
         $pendingQuery = Student::query()
             ->from('students as s')
-            ->join('institutions as i', 'i.id', 's.institution_id')
+            ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->where('rp.id', $activeExamPeriod->id)
             ->paginate();
 
         $approvedQuery = Student::query()
             ->from('students as s')
-            ->join('institutions as i', 'i.id', 's.institution_id')
+            ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->where('rp.id', $activeExamPeriod->id)
             ->paginate();
 
 
