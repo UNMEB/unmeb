@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Layouts;
 
+use App\Models\Institution;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Orchid\Screen\Layouts\Listener;
@@ -32,7 +33,7 @@ class RegisterStudentsForNSINForm extends Listener
     protected function layouts(): iterable
     {
         $user = auth()->user();
-        $institution = $user->institution; // Assuming 'institution' is the method defining the BelongsTo relationship
+        $institution = $user->institution ?? Institution::find(session('institution_id')); // Assuming 'institution' is the method defining the BelongsTo relationship
 
         if ($institution) {
             $balance = $institution->account->balance;

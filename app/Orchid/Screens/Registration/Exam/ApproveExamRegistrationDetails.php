@@ -33,6 +33,8 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function __construct(Request $request)
     {
+        session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
+
         $data = $request->all();
         $this->institutionId = $data['institution_id'] ?? null;
         $this->courseId = $data['course_id'] ?? null;
@@ -233,9 +235,9 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function processRegistration($studentId, $action, $rejectionReason = null)
     {
-        $institutionId = session()->get('institution_id');
-        $courseId = session()->get('course_id');
-        $registrationId = session()->get('registration_id');
+        $institutionId = session('institution_id');
+        $courseId = session('course_id');
+        $registrationId = session('registration_id');
 
 
         $studentRegistration = StudentRegistration::where('registration_id', $registrationId)
@@ -278,13 +280,13 @@ class ApproveExamRegistrationDetails extends Screen
         // Prepare the filters array with only new filter parameters
         $filters = [];
 
-        if (!empty ($name)) {
+        if (!empty($name)) {
             $filters['filter[name]'] = $name;
         }
-        if (!empty ($gender)) {
+        if (!empty($gender)) {
             $filters['filter[gender]'] = $gender;
         }
-        if (!empty ($district)) {
+        if (!empty($district)) {
             $filters['filter[district_id]'] = $district;
         }
 

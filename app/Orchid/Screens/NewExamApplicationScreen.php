@@ -28,13 +28,14 @@ class NewExamApplicationScreen extends Screen
 
     public function __construct(Request $request)
     {
+        session()->flush();
 
-        $this->institutionId = $request->get('institution_id');
-        $this->exam_registration_period_id = $request->get('exam_registration_period_id');
-        $this->courseId = $request->get('course_id');
-        $this->paperIds = $request->get('paper_ids');
-        $this->yearOfStudy = $request->get('year_of_study');
-        $this->trial = $request->get('trial');
+        $this->institutionId = $request->get('institution_id') ?? null;
+        $this->exam_registration_period_id = $request->get('exam_registration_period_id') ?? null;
+        $this->courseId = $request->get('course_id') ?? null;
+        $this->paperIds = $request->get('paper_ids') ?? null;
+        $this->yearOfStudy = $request->get('year_of_study') ?? null;
+        $this->trial = $request->get('trial') ?? null;
 
         session()->put('institution_id', $this->institutionId);
         session()->put('exam_registration_period_id', $this->exam_registration_period_id);
@@ -52,29 +53,38 @@ class NewExamApplicationScreen extends Screen
      */
     public function query(): iterable
     {
-
-        // Retrieve institution and course IDs from session
-        $institutionId = session()->get('institution_id');
-        $courseId = session()->get('course_id');
+        // Retrieve institution, course, and exam period IDs from session
+        $institutionId = session('institution_id');
+        $courseId = session('course_id');
+        $examPeriodId = session('exam_registration_period_id');
 
         $query = Student::withoutGlobalScopes()
             ->select('s.*')
             ->from('students AS s')
-            ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations AS nr', 'nr.id', '=', 'nsr.nsin_registration_id')
             ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
             ->join('courses AS c', 'c.id', '=', 'nr.course_id')
+            ->leftJoin('student_registrations AS sr', function ($join) {
+                $join->on('s.id', '=', 'sr.student_id')
+                    ->where('sr.registration_id', '=', 'nsr.nsin_registration_id');
+            })
+            ->leftJoin('registrations AS r', 'r.id', '=', 'sr.registration_id')
+            ->leftJoin('registration_periods AS rp', 'r.registration_period_id', '=', 'rp.id')
             ->where('s.institution_id', $institutionId)
             ->where('c.id', $courseId)
             ->whereNotNull('nsr.nsin')
             ->where('nsr.verify', 1)
-            ->orderBy('surname', 'asc')
+            ->whereNull('r.id') // Exclude students who have exam registrations
+            ->where('rp.id', $examPeriodId) // Filter by specific exam registration period
+            ->orderBy('s.surname', 'asc')
             ->paginate(100);
 
         return [
             'students' => $query
         ];
     }
+
 
     /**
      * The name of the screen displayed in the header.
@@ -110,19 +120,18 @@ class NewExamApplicationScreen extends Screen
 
     public function submit(Request $request)
     {
-        $examRegistrationPeriodId = session()->get('exam_registration_period_id');
-        $institutionId = session()->get('institution_id');
-        $courseId = session()->get('course_id');
-        $paperIds = session()->get('paper_ids');
+        $totalCost = 0;
+        $bill = 0;
+        $examRegistrationPeriodId = session('exam_registration_period_id');
+        $institutionId = session('institution_id');
+        $courseId = session('course_id');
+        $paperIds = session('paper_ids');
         $studentIds = collect($request->get('students'));
         $numberOfPapers = count($paperIds);
         $numberOfStudents = count($studentIds);
-        $yearOfStudy = session()->get('year_of_study');
-        $trial = session()->get('trial');
-
+        $yearOfStudy = session('year_of_study');
+        $trial = session('trial');
         $costPerPaper = config('settings.fees.paper_registration');
-
-        $totalCost = 0;
 
         // Get the institution
         $institution = Institution::find($institutionId);
@@ -130,7 +139,7 @@ class NewExamApplicationScreen extends Screen
         // Get the course
         $course = Course::find($courseId);
 
-
+        // Account Balance
         $accountBalance = (float) $institution->account->balance;
 
         $normalCharge = SurchargeFee::join('surcharges', 'surcharge_fees.surcharge_id', '=', 'surcharges.id')
@@ -138,8 +147,6 @@ class NewExamApplicationScreen extends Screen
             ->where('surcharge_fees.course_id', $courseId)
             ->where('surcharges.flag', 1)
             ->first();
-
-        $bill = 0;
 
         // Find or create the registration
         $registration = Registration::where([
@@ -182,6 +189,15 @@ class NewExamApplicationScreen extends Screen
 
         // Proceed with registration for each student
         foreach ($studentIds as $studentId) {
+            // if first attempt register normally
+            if ($trial == 'First') {
+                $amountToPay = $normalCharge->course_fee;
+            } else if ($trial == 'Second') {
+                $amountToPay = ($costPerPaper + ($costPerPaper * 0.5)) * count($paperIds);
+            } else {
+                $amountToPay = ($costPerPaper + ($costPerPaper * 1)) * count($paperIds);
+            }
+
             $student = Student::find($studentId);
 
             // Register Student Exam Registration
@@ -205,7 +221,7 @@ class NewExamApplicationScreen extends Screen
 
                 // Create a transaction for this student registration
                 $transaction = new Transaction([
-                    'amount' => $bill, // Same bill amount for each student
+                    'amount' => $amountToPay, // Same bill amount for each student
                     'type' => 'debit',
                     'account_id' => $institution->account->id,
                     'institution_id' => $institution->id,
@@ -214,35 +230,32 @@ class NewExamApplicationScreen extends Screen
                     'comment' => 'Exam Registration for student ID: ' . $student->id,
                 ]);
                 $transaction->save();
+
+                // Update account balance and complete registration
+                $newBalance = $institution->account->balance - $amountToPay;
+
+                $institution->account->update([
+                    'balance' => $newBalance,
+                ]);
+
+                // Register Student Papers
+                $studentCoursePapers = DB::table('course_paper') // Use the actual pivot table name
+                    ->where('course_id', $course->id)
+                    ->whereIn('paper_id', $paperIds)
+                    ->pluck('id');
+
+                foreach ($studentCoursePapers as $coursePaperId) {
+                    // Create a new StudentPaperRegistration record
+                    $studentPaperRegistration = new StudentPaperRegistration();
+                    $studentPaperRegistration->student_registration_id = $existingRegistration->id;
+                    $studentPaperRegistration->course_paper_id = $coursePaperId;
+                    $studentPaperRegistration->save();
+                }
+
             }
 
-            // Register Student Papers
-            $studentCoursePapers = DB::table('course_paper') // Use the actual pivot table name
-                ->where('course_id', $course->id)
-                ->whereIn('paper_id', $paperIds)
-                ->pluck('id');
-
-            foreach ($studentCoursePapers as $coursePaperId) {
-                // Create a new StudentPaperRegistration record
-                $studentPaperRegistration = new StudentPaperRegistration();
-                $studentPaperRegistration->student_registration_id = $existingRegistration->id;
-                $studentPaperRegistration->course_paper_id = $coursePaperId;
-                $studentPaperRegistration->save();
-            }
         }
 
-        // Update account balance and complete registration
-        $newBalance = $institution->account->balance - $bill;
-
-        // Increment this amount in registration
-        $registration->amount += $newBalance;
-        $registration->save();
-
-        $institution->account->update([
-            'balance' => $newBalance,
-        ]);
-
-        Alert::success('Registration successful');
     }
 
 }

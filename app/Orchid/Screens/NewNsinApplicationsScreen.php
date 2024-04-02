@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\District;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\NsinRegistrationPeriod;
@@ -9,8 +10,15 @@ use App\Models\NsinStudentRegistration;
 use App\Models\Student;
 use App\Models\Transaction;
 use App\Orchid\Layouts\RegisterStudentsForNSINForm;
+use App\Orchid\Layouts\RegisterStudentsForNSINTable;
+use DB;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Alert;
@@ -24,6 +32,8 @@ class NewNsinApplicationsScreen extends Screen
 
     public function __construct(Request $request)
     {
+        session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
+
         $this->institutionId = request()->get('institution_id');
         $this->courseId = request()->get('course_id');
         $this->nsinRegistrationPeriodId = request()->get('nsin_registration_period_id');
@@ -46,18 +56,20 @@ class NewNsinApplicationsScreen extends Screen
      */
     public function query(): iterable
     {
-        $query = Student::leftJoin('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
-            ->leftJoin('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->leftJoin('nsin_registration_periods as nsp', function ($join) {
-                $join->on('nr.year_id', '=', 'nsp.year_id')
-                    ->on('nr.month', '=', 'nsp.month');
+
+        $currentPeriod = NsinRegistrationPeriod::query()->where('id', session('nsin_registration_period_id'))->first();
+
+        $query = Student::select('students.*')
+            ->leftJoin('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
+            ->whereNull('nsin_student_registrations.id')
+            ->whereExists(function ($query) use ($currentPeriod) {
+                $query->select(DB::raw(1))
+                    ->from('nsin_registrations')
+                    ->where('month', $currentPeriod->month)
+                    ->where('year_id', $currentPeriod->year_id);
             })
-            ->whereNull('nsp.id')
-            ->orWhere('nsp.id', '<>', $this->nsinRegistrationPeriodId)
-            ->select('students.*')
-            ->limit(100)
-            ->orderBy('surname', 'asc')
             ->get();
+        ;
 
         return [
             'students' => $query
@@ -97,12 +109,51 @@ class NewNsinApplicationsScreen extends Screen
     public function layout(): iterable
     {
         return [
-            RegisterStudentsForNSINForm::class
+            Layout::rows([
+
+                Group::make([
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->applyScope('userInstitutions')
+                        ->chunk(20),
+
+                    Input::make('name')
+                        ->title('Filter By Name'),
+
+                    Relation::make('district_id')
+                        ->fromModel(District::class, 'district_name')
+                        ->title('Filter By District of origin'),
+
+                    Select::make('gender')
+                        ->title('Filter By Gender')
+                        ->options([
+                            'Male' => 'Male',
+                            'Female' => 'Female'
+                        ])
+                        ->empty('Not Selected')
+                ]),
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ])->title("Filter Students"),
+            RegisterStudentsForNSINTable::class
         ];
     }
 
-    public function submitNSINs(Request $request)
+    public function submit(Request $request)
     {
+        // dd($request->all());
+
+        // dd(session()->all());
+
         $settings = \Config::get('settings');
         $nsinRegistrationFee = $settings['fees.nsin_registration'];
         $logbookFee = $settings['fees.logbook_fee'];
@@ -120,7 +171,7 @@ class NewNsinApplicationsScreen extends Screen
         $nrpID = session('nsin_registration_period_id');
         $institutionId = session('institution_id');
         $courseId = session('course_id');
-        $studentIds = collect($request->get('students'))->keys();
+        $studentIds = collect($request->get('students'))->values();
 
         // Log session and input data
         \Log::info('Session data:', [
@@ -218,6 +269,42 @@ class NewNsinApplicationsScreen extends Screen
 
         // Redirect
         return redirect()->back();
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function filter(Request $request)
+    {
+
+        $institutionId = $request->input('institution_id');
+        $name = $request->input('name');
+        $gender = $request->input('gender');
+        $district = $request->input('district_id');
+
+        $filterParams = [];
+
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        if (!empty($name)) {
+            $filterParams['filter[name]'] = $name;
+        }
+
+        if (!empty($gender)) {
+            $filterParams['filter[gender]'] = $gender;
+        }
+
+        if (!empty($district)) {
+            $filterParams['filter[district_id]'] = $district;
+        }
+
+        $url = route('platform.registration.nsin.applications.new', $filterParams);
+
+        return redirect()->to($url);
     }
 
 

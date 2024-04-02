@@ -3,61 +3,50 @@
 namespace App\Orchid\Screens\Registration\NSIN;
 
 use App\Models\Institution;
+use App\Models\NsinRegistration;
 use App\Models\NsinStudentRegistration;
 use App\Models\Student;
 use App\Orchid\Layouts\ApproveStudentsNSINsTable;
-use App\Orchid\Screens\TDCheckbox;
-use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Orchid\Screen\Screen;
 use Illuminate\Support\Str;
-use Orchid\Screen\Actions\Button;
-use Orchid\Screen\Actions\ModalToggle;
-use Orchid\Screen\Fields\Group;
-use Orchid\Screen\Fields\Select;
-use Orchid\Screen\Fields\TextArea;
-use Orchid\Screen\TD;
-use Orchid\Support\Color;
-use Orchid\Support\Facades\Alert;
-use Orchid\Support\Facades\Layout;
+use Orchid\Screen\Screen;
 
 class ApproveNsinRegistrationDetails extends Screen
 {
-
-    public $institutionId;
-    public $courseId;
-    public $nsinRegistrationId;
-
     public function __construct(Request $request)
     {
-        $data = $request->all();
-        $this->institutionId = isset ($data['institution_id']) ? $data['institution_id'] : null;
-        $this->courseId = isset ($data['course_id']) ? $data['course_id'] : null;
-        $this->nsinRegistrationId = isset ($data['nsin_registration_id']) ? $data['nsin_registration_id'] : null;
+        // Clear previous values
+        session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
 
-        session()->put('institution_id', $this->institutionId);
-        session()->put('course_id', $this->courseId);
-        session()->put('nsin_registration_id', $this->nsinRegistrationId);
+        $data = $request->all();
+
+        // Check and handle null values for keys
+        $nsin_registration_id = $data['nsin_registration_id'] ?? null;
+        $institution_id = $request->get('institution_id') ?? null;
+        $course_id = $request->get('course_id') ?? null;
+
+        session()->put("nsin_registration_id", $nsin_registration_id);
+        session()->put('institution_id', $institution_id);
+        session()->put('course_id', $course_id);
     }
+
 
     public function query(): iterable
     {
+        $institutionId = session('institution_id');
 
         $query = Student::query()
             ->select([
-                'nr.id as registration_id',
+                's.id as id',
                 'i.institution_name',
-                'i.id as institution_id', // Added institution_id
+                'i.id as institution_id',
                 'c.course_name',
-                'c.id as course_id', // Added course_id
-                'y.year as registration_year',
-                'nr.month as registration_month',
-                's.id as student_id', // Added student_id
-                's.*', // Added student_email
-                'nr.created_at as registration_date', // Added registration_date
+                's.*',
+                'nr.id as registration_id',
+                'nr.created_at as registration_date',
             ])
-            ->from('students AS s')
+            ->from('students as s')
             ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
             ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
@@ -65,10 +54,8 @@ class ApproveNsinRegistrationDetails extends Screen
             ->join('years as y', 'nr.year_id', '=', 'y.id')
             ->whereNull('nsr.nsin')
             ->where('nsr.verify', 0)
-            ->where('nr.institution_id', $this->institutionId)
-            ->where('nr.course_id', $this->courseId)
-            ->orderBy('nr.created_at', 'DESC');
-
+            ->where('nr.institution_id', session('institution_id'))
+            ->where('nr.course_id', session('course_id'))
         ;
 
         $registrations = $query
@@ -78,7 +65,6 @@ class ApproveNsinRegistrationDetails extends Screen
             // ->orderBy('latest_created_at', 'desc')
             ->orderBy('surname', 'asc')
             ->paginate();
-
 
         return [
             'students' => $registrations
@@ -92,20 +78,14 @@ class ApproveNsinRegistrationDetails extends Screen
 
     public function description(): ?string
     {
-        if ($this->institutionId) {
-            $institution = Institution::find($this->institutionId);
+        if (session()->has('institution_id')) {
+            $institution = Institution::find(session('institution_id'));
             if ($institution) {
                 return 'Approve/Reject NSIN registrations for ' . Str::title($institution->institution_name);
             }
         }
 
         return null;
-    }
-
-    public function commandBar(): array
-    {
-        return [
-        ];
     }
 
     public function layout(): iterable
@@ -167,19 +147,18 @@ class ApproveNsinRegistrationDetails extends Screen
 
     public function processRegistration($studentId, $action, $rejectionReason = null)
     {
-        $institutionId = session()->get('institution_id');
-        $courseId = session()->get('course_id');
-        $nsinRegistrationId = session()->get('nsin_registration_id');
+        $institutionId = session('institution_id');
+        $courseId = session('course_id');
+        $nsinRegistrationId = session('nsin_registration_id');
 
         $student = Student::find($studentId);
+
         if (!$student) {
             return "Student not found";
         }
 
-        $nsinStudentRegistration = NsinStudentRegistration::query()
-            ->where('nsin_registration_id', $nsinRegistrationId)
-            ->where('student_id', $studentId)
-            ->latest()
+        $nsinStudentRegistration = NsinStudentRegistration::where("nsin_registration_id", $nsinRegistrationId)
+            ->where("student_id", $studentId)
             ->first();
 
         if (!$nsinStudentRegistration) {
@@ -189,13 +168,16 @@ class ApproveNsinRegistrationDetails extends Screen
         if ($action === 'approve') {
             $nsinStudentRegistration->update([
                 'verify' => 1,
-                'remarks' => 'Validation Complete'
+                'remarks' => 'Verification Complete'
             ]);
-        } elseif ($action === 'reject') {
+        } else if ($action === 'reject') {
             $nsinStudentRegistration->update([
                 'verify' => 2,
-                'remarks' => $rejectionReason // Assign the rejection reason here
+                'remarks' => $rejectionReason
             ]);
         }
     }
+
+
+
 }

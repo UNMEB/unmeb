@@ -21,6 +21,8 @@ class SelectStudentsFormScreen extends Screen
 
     public function __construct(Request $request)
     {
+        session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
+
         $this->action = $request->get("action");
         if ($this->action == "PURCHASE_LOGBOOKS") {
             $this->institutionId = $request->get("institution_id");

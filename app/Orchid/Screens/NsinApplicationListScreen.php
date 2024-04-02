@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\District;
 use App\Models\Institution;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\Student;
@@ -9,7 +10,10 @@ use App\Orchid\Layouts\ApplyForNSINsForm;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Input;
 use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
@@ -103,16 +107,22 @@ class NsinApplicationListScreen extends Screen
 
 
             Layout::tabs([
-                'Pending NSINs (Current Period)' => Layout::table('pending_students', [
-                    TD::make('id', 'ID'),
-                    TD::make('fullName', 'Name'),
-                    TD::make('gender', 'Gender'),
-                    TD::make('dob', 'Date of Birth'),
-                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
-                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
-                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
-                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
-                ]),
+
+                'Pending NSINs (Current Period)' => [
+                    Layout::rows([
+
+                    ]),
+                    Layout::table('pending_students', [
+                        TD::make('id', 'ID'),
+                        TD::make('fullName', 'Name'),
+                        TD::make('gender', 'Gender'),
+                        TD::make('dob', 'Date of Birth'),
+                        TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
+                        TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
+                        TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
+                        TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
+                    ])
+                ],
                 'Approved NSINs (Current Period)' => Layout::table('approved_students', [
                     TD::make('id', 'ID'),
                     TD::make('fullName', 'Name'),
@@ -129,6 +139,10 @@ class NsinApplicationListScreen extends Screen
 
     public function applyForNSINs(Request $request)
     {
+        session()->forget('institution_id');
+        session()->forget('course_id');
+        session()->forget('nsin_registration_period_id');
+
         $institutionId = $request->get('institution_id');
         $nsin_registration_period_id = $request->get('nsin_registration_period_id');
         $courseId = $request->get('course_id');
@@ -138,6 +152,42 @@ class NsinApplicationListScreen extends Screen
             'course_id' => $courseId,
             'nsin_registration_period_id' => $nsin_registration_period_id
         ]);
+
+        return redirect()->to($url);
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function filter(Request $request)
+    {
+
+        $institutionId = $request->input('institution_id');
+        $name = $request->input('name');
+        $gender = $request->input('gender');
+        $district = $request->input('district_id');
+
+        $filterParams = [];
+
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        if (!empty($name)) {
+            $filterParams['filter[name]'] = $name;
+        }
+
+        if (!empty($gender)) {
+            $filterParams['filter[gender]'] = $gender;
+        }
+
+        if (!empty($district)) {
+            $filterParams['filter[district_id]'] = $district;
+        }
+
+        $url = route('platform.registration.nsin.applications.list', $filterParams);
 
         return redirect()->to($url);
     }

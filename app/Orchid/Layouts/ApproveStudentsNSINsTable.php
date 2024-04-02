@@ -38,7 +38,7 @@ class ApproveStudentsNSINsTable extends FormTable
             TD::make('gender', 'Gender'),
             TD::make('dob', 'Date of Birth'),
             TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
-            TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
+            TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
             TD::make('telephone', 'Phone Number'),
             // TD::make('email', 'Email'),
             TD::make('Status', 'Status')->render(function ($row) {

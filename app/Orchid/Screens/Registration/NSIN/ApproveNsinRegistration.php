@@ -27,14 +27,12 @@ use Orchid\Support\Facades\Layout;
 
 class ApproveNsinRegistration extends Screen
 {
-
     public $filters = [];
 
     public function __construct(Request $request)
     {
-        // dd($request->all());
+        session()->flush();
         $this->filters = $request->get("filter");
-
     }
 
     /**
@@ -67,22 +65,22 @@ class ApproveNsinRegistration extends Screen
             ->where('nsr.verify', 0)
             ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_year', 'registration_month', 'registration_id');
 
-        if (!empty ($this->filters)) {
-            if (isset ($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
+        if (!empty($this->filters)) {
+            if (isset($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
                 $institutionId = $this->filters['institution_id'];
                 $query->where('nr.institution_id', '=', $institutionId);
             }
-            if (isset ($this->filters['course_id']) && $this->filters['course_id'] !== null) {
+            if (isset($this->filters['course_id']) && $this->filters['course_id'] !== null) {
                 $courseId = $this->filters['course_id'];
                 $query->where('c.id', '=', $courseId);
             }
 
-            if (isset ($this->filters['month']) && $this->filters['month'] !== null) {
+            if (isset($this->filters['month']) && $this->filters['month'] !== null) {
                 $month = $this->filters['month'];
                 $query->where('nr.month', '=', $month);
             }
 
-            if (isset ($this->filters['year_id']) && $this->filters['year_id'] !== null) {
+            if (isset($this->filters['year_id']) && $this->filters['year_id'] !== null) {
                 $yearId = $this->filters['year_id'];
                 $query->where('y.id', '=', $yearId);
             }
@@ -143,13 +141,13 @@ class ApproveNsinRegistration extends Screen
                     Relation::make('institution_id')
                         ->title('Filter By Institution')
                         ->fromModel(Institution::class, 'institution_name')
-                        ->value(isset ($this->filters['institution_id']) ? $this->filters['institution_id'] : null),
+                        ->value(isset($this->filters['institution_id']) ? $this->filters['institution_id'] : null),
 
 
                     Relation::make('course_id')
                         ->title('Filter By Program')
                         ->fromModel(Course::class, 'course_name')
-                        ->value(isset ($this->filters['course_id']) ? $this->filters['course_id'] : null),
+                        ->value(isset($this->filters['course_id']) ? $this->filters['course_id'] : null),
 
                     Select::make('month')
                         ->title('Filter By Month')
@@ -168,13 +166,13 @@ class ApproveNsinRegistration extends Screen
                             'December' => 'December',
                         ])
                         ->empty('None Selected')
-                        ->value(isset ($this->filters['month']) ? $this->filters['month'] : null),
+                        ->value(isset($this->filters['month']) ? $this->filters['month'] : null),
 
                     Select::make('year_id')
                         ->fromModel(Year::class, 'year')
                         ->title('Filter By Year')
                         ->empty('None Selected')
-                        ->value(isset ($this->filters['year_id']) ? $this->filters['year_id'] : null)
+                        ->value(isset($this->filters['year_id']) ? $this->filters['year_id'] : null)
                 ]),
                 Group::make([
                     Button::make('Submit')
@@ -224,19 +222,19 @@ class ApproveNsinRegistration extends Screen
 
         $filters = [];
 
-        if (!empty ($institutionId)) {
+        if (!empty($institutionId)) {
             $filters['filter[institution_id]'] = $institutionId;
         }
 
-        if (!empty ($courseId)) {
+        if (!empty($courseId)) {
             $filters['filter[course_id]'] = $courseId;
         }
 
-        if (!empty ($month)) {
+        if (!empty($month)) {
             $filters['filter[month]'] = $month;
         }
 
-        if (!empty ($yearId)) {
+        if (!empty($yearId)) {
             $filters['filter[year_id]'] = $yearId;
         }
 

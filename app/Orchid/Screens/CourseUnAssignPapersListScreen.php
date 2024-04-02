@@ -122,7 +122,7 @@ class CourseUnAssignPapersListScreen extends Screen
 
     public function submit(Request $request)
     {
-        $courseId = session()->get('course_id');
+        $courseId = session('course_id');
         $course = Course::find($courseId);
         $data = $request->all();
 
@@ -173,19 +173,19 @@ class CourseUnAssignPapersListScreen extends Screen
         // Define the filter parameters
         $filterParams = [];
 
-        if (!empty ($paperName)) {
+        if (!empty($paperName)) {
             $filterParams['filter[paper_name]'] = $paperName;
         }
 
-        if (!empty ($paper)) {
+        if (!empty($paper)) {
             $filterParams['filter[paper]'] = $paper;
         }
 
-        if (!empty ($code)) {
+        if (!empty($code)) {
             $filterParams['filter[code]'] = $code;
         }
 
-        if (!empty ($yearOfStudy)) {
+        if (!empty($yearOfStudy)) {
             $filterParams['filter[year_of_study]'] = $yearOfStudy;
         }
 

@@ -511,7 +511,7 @@ class StudentListScreen extends Screen
 
         if (!$this->currentUser()->inRole('institution')) {
             \RealRashid\SweetAlert\Facades\Alert::error('Student Upload Failed', 'Only institutions can upload student info. Please switch to institution account')
-                ->autoClose(5000)
+                ->autoClose(15000)
             ;
             return back();
         }
