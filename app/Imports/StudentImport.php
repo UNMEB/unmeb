@@ -44,7 +44,7 @@ class StudentImport implements ToModel, WithHeadingRow, WithValidation
         $district = District::firstWhere('district_name', $row['district']);
 
         // Convert date of birth to 'YYYY-MM-DD' format
-        $dob = Carbon::createFromFormat('d/m/Y', $row['dob'])->format('d/m/Y');
+        $dob = Carbon::createFromFormat('d/m/Y', trim($row['dob']))->format('d/m/Y');
 
         // Create and return a new Student instance
         return new Student([
