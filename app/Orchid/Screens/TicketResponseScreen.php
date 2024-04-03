@@ -3,6 +3,9 @@
 namespace App\Orchid\Screens;
 
 use App\Models\Ticket;
+use App\Models\TicketCategory;
+use App\Models\TicketPriority;
+use App\Models\TicketStatus;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
@@ -27,7 +30,10 @@ class TicketResponseScreen extends Screen
     {
         $ticket->load(['comments']);
         return [
-            'ticket' => $ticket
+            'ticket' => $ticket,
+            'statuses' => TicketStatus::all(),
+            'priorities' => TicketPriority::all(),
+            'categories' => TicketCategory::all()
         ];
     }
 
@@ -38,13 +44,19 @@ class TicketResponseScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Support Request #' . $this->ticket->id;
+        return $this->ticket->exists ? 'Support Request #' . $this->ticket->id : 'New Support Request';
     }
 
 
     public function description(): string|null
     {
-        return $this->ticket ? $this->ticket->subject : null;
+        return $this->ticket->exists ? $this->ticket->subject : null;
+    }
+
+
+    public function permission(): array|\Traversable|null
+    {
+        return [];
     }
 
     /**

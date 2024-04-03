@@ -108,8 +108,16 @@ Route::screen('/tickets/manager', TicketManagementScreen::class)
     ->name('platform.tickets.manager');
 
 // New Support Request
-Route::screen('/tickets/new', NewSupportRequestScreen::class)
-    ->name('platform.tickets.new');
+// Route::screen('/tickets/new', NewSupportRequestScreen::class)
+//     ->name('platform.tickets.new');
+
+
+// Platform > Tickets > New
+Route::screen('tickets/new', TicketResponseScreen::class)
+    ->name('platform.tickets.new')
+    ->breadcrumbs(fn(Trail $trail) => $trail
+        ->parent('platform.tickets')
+        ->push(__('Create'), route('platform.tickets.new')));
 
 // Ticket Response Screen
 Route::screen('tickets/{ticket}/response', TicketResponseScreen::class)

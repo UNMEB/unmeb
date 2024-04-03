@@ -53,9 +53,9 @@ class TicketListScreen extends Screen
     public function commandBar(): array
     {
         return [
-            Button::make('Request Support')
-                ->method('newRequest')
+            Link::make('Request Support')
                 ->class('btn btn-sm btn-success')
+                ->route('platform.tickets.new')
         ];
     }
 

@@ -72,7 +72,7 @@ class UserEditScreen extends Screen
      *
      * @return Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Button::make(__('Impersonate user'))
