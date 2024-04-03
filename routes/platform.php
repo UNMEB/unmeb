@@ -40,6 +40,7 @@ use App\Orchid\Screens\Finance\Account\AccountListScreen;
 use App\Orchid\Screens\Finance\Account\InstitutionTransactionListScreen;
 use App\Orchid\Screens\Finance\Account\PendingTransactionListScreen;
 use App\Orchid\Screens\Finance\Account\TransactionListScreen;
+use App\Orchid\Screens\InstitutionUnAssignCoursesListScreen;
 use App\Orchid\Screens\LogbookPurchaseScreen;
 use App\Orchid\Screens\NewExamApplicationScreen;
 use App\Orchid\Screens\NewSupportRequestScreen;
@@ -199,6 +200,13 @@ Route::screen('administration/institutions/{institution}/assign', InstitutionAss
     ->breadcrumbs(fn(Trail $trail, $institution) => $trail
         ->parent('platform.institutions')
         ->push($institution->institution_name, route('platform.institutions.assign', $institution)));
+
+// Platform > Administration > Insitutions > Assign Programs
+Route::screen('administration/institutions/{institution}/unassign', InstitutionUnAssignCoursesListScreen::class)
+    ->name('platform.institutions.unassign')
+    ->breadcrumbs(fn(Trail $trail, $institution) => $trail
+        ->parent('platform.institutions')
+        ->push($institution->institution_name, route('platform.institutions.unassign', $institution)));
 
 // Platform > Administration > Institutions
 Route::screen('administration/institutions', InstitutionListScreen::class)

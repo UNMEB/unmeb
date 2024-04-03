@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -131,25 +132,30 @@ class InstitutionListScreen extends Screen
                 TD::make(__('Actions'))
                     ->alignCenter()
                     ->render(function (Institution $institution) {
-                        return Group::make([
-                            Link::make('Programs')->class('btn btn-primary btn-sm link-primary')
-                                ->route('platform.institutions.assign', $institution->id),
-                            ModalToggle::make('Edit')
-                                ->icon('fa.edit')
-                                ->method('edit')
-                                ->modal('editInstitutionModal')
-                                ->modalTitle('Edit Institution')
-                                ->asyncParameters([
-                                    'institution' => $institution->id
-                                ])
-                                ->class('btn btn-success btn-sm link-success'),
-                            Button::make('Delete')
-                                ->confirm('Are you sure you want to delete this institution?')
-                                ->method('delete', [
-                                    'id' => $institution->id
-                                ])
-                                ->class('btn btn-danger btn-sm link-danger')
-                        ]);
+                        return DropDown::make()
+                            ->icon('bs.three-dots-vertical')
+                            ->list([
+                                Link::make('Assign Programs')
+                                    ->route('platform.institutions.assign', $institution->id),
+
+                                Link::make('Unassign Programs')
+                                    ->route('platform.institutions.unassign', $institution->id),
+
+                                ModalToggle::make('Edit')
+                                    ->icon('fa.edit')
+                                    ->method('edit')
+                                    ->modal('editInstitutionModal')
+                                    ->modalTitle('Edit Institution')
+                                    ->asyncParameters([
+                                        'institution' => $institution->id
+                                    ]),
+
+                                Button::make('Delete')
+                                    ->confirm('Are you sure you want to delete this institution?')
+                                    ->method('delete', [
+                                        'id' => $institution->id
+                                    ])
+                            ]);
                     })
 
 
@@ -358,7 +364,7 @@ class InstitutionListScreen extends Screen
         ], $customMessages);
 
         if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+            redirect()->back()->withErrors($validator)->withInput();
         }
 
         // Retrieve the uploaded file from the request
@@ -389,7 +395,7 @@ class InstitutionListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
+        Excel::download(new InstitutionExport, 'institutions.csv', ExcelExcel::CSV);
     }
 
     /**
@@ -418,16 +424,16 @@ class InstitutionListScreen extends Screen
         $filterParams = [];
 
         // Check and add each parameter to the filterParams array
-        if (!empty ($institutionName)) {
+        if (!empty($institutionName)) {
             $filterParams['filter[institution_name]'] = $institutionName;
         }
-        if (!empty ($institutionCode)) {
+        if (!empty($institutionCode)) {
             $filterParams['filter[code]'] = $institutionCode;
         }
-        if (!empty ($institutionType)) {
+        if (!empty($institutionType)) {
             $filterParams['filter[institution_type]'] = $institutionType;
         }
-        if (!empty ($institutionLocation)) {
+        if (!empty($institutionLocation)) {
             $filterParams['filter[institution_location]'] = $institutionLocation;
         }
 

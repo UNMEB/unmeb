@@ -4,6 +4,7 @@ namespace App\Orchid\Screens\Administration\Institution;
 
 use App\Models\Course;
 use App\Models\Institution;
+use App\Orchid\Layouts\FormAssignPrograms;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -26,13 +27,15 @@ class InstitutionAssignCoursesListScreen extends Screen
      */
     public function query(Institution $institution): iterable
     {
+
+        session()->put("institution_id", $institution->id);
+
         $assignedCourses = $institution->courses()->paginate();
         $coursesNotAssigned = Course::whereNotIn('id', $institution->courses->pluck('id'))->paginate();
 
         return [
             'institution' => $institution,
-            'assigned_courses' => $assignedCourses,
-            'courses_not_assigned' => $coursesNotAssigned,
+            'unassigned_programs' => $coursesNotAssigned,
         ];
     }
 
@@ -51,7 +54,7 @@ class InstitutionAssignCoursesListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
@@ -64,33 +67,7 @@ class InstitutionAssignCoursesListScreen extends Screen
     public function layout(): iterable
     {
         return [
-            Layout::tabs(['Assigned Programs' =>   Layout::table('assigned_courses', [
-                    TD::make('id', 'ID'),
-                    TD::make('course_code', 'Program Code'),
-                    TD::make('course_name', 'Program Name'),
-                    TD::make('duration', 'Duration'),
-                    TD::make('created_at', 'Created At')
-                    ->usingComponent(DateTimeSplit::class),
-                    TD::make('updated_at', 'Updated At')
-                    ->usingComponent(DateTimeSplit::class),
-                ]),
-                'Assign Programs' =>  Layout::table('courses_not_assigned', [
-                    TD::make('id', 'ID'),
-                    TD::make('course_code', 'Program Code'),
-                    TD::make('course_name', 'Program Name'),
-                    TD::make('duration', 'Duration'),
-                    TD::make('created_at', 'Created At')
-                    ->usingComponent(DateTimeSplit::class),
-                    TD::make('updated_at', 'Updated At')
-                    ->usingComponent(DateTimeSplit::class),
-                    TD::make('action', 'Action')
-                    ->align(TD::ALIGN_CENTER)
-                        ->render(function (Course $course) {
-                            return Button::make('Assign')
-                                ->method('assign', ['course_id' => $course->id]);
-                        })
-                ]),
-            ]),
+            FormAssignPrograms::class
         ];
     }
 
@@ -108,5 +85,27 @@ class InstitutionAssignCoursesListScreen extends Screen
         Alert::success(__('Program was assigned.'));
 
         return back();
+    }
+
+
+    public function submit(Request $request)
+    {
+        $institutionId = session('institution_id');
+        $institution = Institution::find($institutionId);
+        $data = $request->all();
+
+        $courseIds = $data['assign'];
+
+        foreach ($courseIds as $courseId) {
+            $course = Course::find($courseId);
+
+            if (!$course->exists) {
+                continue;
+            }
+
+            if ($institution->exists && !$institution->courses()->where('courses.id', $courseId)->exists()) {
+                $institution->courses()->attach($courseId);
+            }
+        }
     }
 }
