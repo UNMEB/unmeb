@@ -50,7 +50,7 @@ class PlatformScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar()
+    public function commandBar(): array
     {
         return [
             Button::make('Download User Manual')

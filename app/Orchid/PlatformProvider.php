@@ -215,10 +215,24 @@ class PlatformProvider extends OrchidServiceProvider
                 ->icon('bs.archive')
                 ->route('platform.student_research'),
 
-            Menu::make('Comments')
+            // Menu::make('Comments')
+            //     ->icon('fa.comments')
+            //     ->route('platform.comments.list')
+            //     ->permission('platform.comments.list'),
+
+            Menu::make('Support Request')
                 ->icon('fa.comments')
-                ->route('platform.comments.list')
-                ->permission('platform.comments.list'),
+                ->list([
+                    Menu::make('Request Help')
+                        ->route('platform.tickets.new'),
+
+                    Menu::make('My Support Requests')
+                        ->route('platform.tickets'),
+
+                    Menu::make('Resolution Center')
+                        ->route('platform.tickets.manager')
+                        ->permission('platform.tickets.resolve')
+                ]),
 
             Menu::make(__('Users'))
                 ->icon('bs.people')
@@ -367,7 +381,14 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.systems.users', __('Users')),
 
             ItemPermission::group(__('Internals'))
-                ->addPermission('platform.internals.all_institutions', 'View all institutions')
+                ->addPermission('platform.internals.all_institutions', 'View all institutions'),
+
+            ItemPermission::group(__('Manage Tickets'))
+                ->addPermission('platform.tickets.list', 'View Tickets')
+                ->addPermission('platform.tickets.create', 'Create Tickets')
+                ->addPermission('platform.ticktes.resolve', 'Resolve tickets')
+                ->addPermission('platform.tickets.archive', 'Archive Tickets'),
+
         ];
     }
 }

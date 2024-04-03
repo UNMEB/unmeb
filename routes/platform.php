@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\Student;
+use App\Models\Ticket;
 use App\Orchid\Screens\Administration\Course\CourseAssignPapersListScreen;
 use App\Orchid\Screens\Administration\Course\CourseListScreen;
 use App\Orchid\Screens\Administration\District\DistrictListScreen;
@@ -41,6 +42,7 @@ use App\Orchid\Screens\Finance\Account\PendingTransactionListScreen;
 use App\Orchid\Screens\Finance\Account\TransactionListScreen;
 use App\Orchid\Screens\LogbookPurchaseScreen;
 use App\Orchid\Screens\NewExamApplicationScreen;
+use App\Orchid\Screens\NewSupportRequestScreen;
 use App\Orchid\Screens\PackingListReportScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Registration\Exam\AcceptedExamRegistration;
@@ -69,6 +71,9 @@ use App\Orchid\Screens\Reports\RegistrationReportScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
 use App\Orchid\Screens\SelectStudentsFormScreen;
+use App\Orchid\Screens\TicketListScreen;
+use App\Orchid\Screens\TicketManagementScreen;
+use App\Orchid\Screens\TicketResponseScreen;
 use App\Orchid\Screens\UNMEBInformationScreen;
 use App\Orchid\Screens\User\UserEditScreen;
 use App\Orchid\Screens\User\UserListScreen;
@@ -97,6 +102,28 @@ use Illuminate\Support\Facades\URL;
 // Main
 Route::screen('/main', PlatformScreen::class)
     ->name('platform.main');
+
+// Ticket Manager Screen
+Route::screen('/tickets/manager', TicketManagementScreen::class)
+    ->name('platform.tickets.manager');
+
+// New Support Request
+Route::screen('/tickets/new', NewSupportRequestScreen::class)
+    ->name('platform.tickets.new');
+
+// Ticket Response Screen
+Route::screen('tickets/{ticket}/response', TicketResponseScreen::class)
+    ->name('platform.tickets.response')
+    ->breadcrumbs(fn(Trail $trail, Ticket $ticket) => $trail
+        ->parent('platform.tickets')
+        ->push($ticket->id, route('platform.tickets.response', $ticket)));
+
+// Support Ticket
+Route::screen('/tickets', TicketListScreen::class)
+    ->name('platform.tickets')
+    ->breadcrumbs(fn(Trail $trail) => $trail
+        ->parent('platform.index')
+        ->push(__('Tickets'), route('platform.tickets')));
 
 // UNMEB Updates Screen
 Route::screen('updates', UNMEBInformationScreen::class)->name('platform.updates');
