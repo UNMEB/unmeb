@@ -38,8 +38,6 @@ class RegisterStudentsForExamsTable extends FormTable
             TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
             TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
             TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
-            TD::make('telephone', 'Phone Number'),
-            TD::make('email', 'Email')->defaultHidden(),
             TDCheckbox::make('students', 'Students'),
         ];
     }

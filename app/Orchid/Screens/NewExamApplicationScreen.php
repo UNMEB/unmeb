@@ -59,25 +59,30 @@ class NewExamApplicationScreen extends Screen
         $examPeriodId = session('exam_registration_period_id');
 
         $query = Student::withoutGlobalScopes()
-            ->select('s.*')
-            ->from('students AS s')
-            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations AS nr', 'nr.id', '=', 'nsr.nsin_registration_id')
-            ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
-            ->join('courses AS c', 'c.id', '=', 'nr.course_id')
-            ->leftJoin('student_registrations AS sr', function ($join) {
-                $join->on('s.id', '=', 'sr.student_id')
-                    ->where('sr.registration_id', '=', 'nsr.nsin_registration_id');
-            })
-            ->leftJoin('registrations AS r', 'r.id', '=', 'sr.registration_id')
-            ->leftJoin('registration_periods AS rp', 'r.registration_period_id', '=', 'rp.id')
-            ->where('s.institution_id', $institutionId)
+            ->select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                's.country_id',
+                's.district_id',
+                's.nin',
+                's.lin',
+                's.passport_number',
+                's.refugee_number',
+                's.nsin'
+            ])
+            ->from('students as s')
+            ->join('nsin_student_registrations as nsr', 's.id', '=', 'nsr.student_id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->join('institutions as i', 'i.id', '=', 'nr.institution_id')
+            ->join('courses as c', 'c.id', '=', 'nr.course_id')
+            ->leftJoin('student_registrations as sr', 's.id', '=', 'sr.student_id')
+            ->where('i.id', $institutionId)
             ->where('c.id', $courseId)
-            ->whereNotNull('nsr.nsin')
-            ->where('nsr.verify', 1)
-            ->whereNull('r.id') // Exclude students who have exam registrations
-            ->where('rp.id', $examPeriodId) // Filter by specific exam registration period
-            ->orderBy('s.surname', 'asc')
+            ->whereNull('sr.student_id')
             ->paginate(100);
 
         return [
@@ -93,7 +98,12 @@ class NewExamApplicationScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Register For Exams';
+        return 'New Exam Applications';
+    }
+
+    public function description(): ?string
+    {
+        return 'Select students to register for Exams';
     }
 
     /**

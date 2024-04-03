@@ -54,7 +54,7 @@ class Student extends Model
     ];
 
     protected $casts = [
-        'dob' => 'datetime',
+        'dob' => 'date:Y-m-d',
     ];
 
     protected $allowedFilters = [

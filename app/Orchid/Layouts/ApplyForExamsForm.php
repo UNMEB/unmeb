@@ -62,7 +62,8 @@ class ApplyForExamsForm extends Listener
                 Select::make('exam_registration_period_id')
                     ->options($yearOptions)
                     ->empty('None Selected')
-                    ->title('Select Exam Registration Period'),
+                    ->title('Select Exam Registration Period')
+                    ->required(),
 
                 // Select Institution
                 Relation::make('institution_id')
@@ -70,7 +71,8 @@ class ApplyForExamsForm extends Listener
                     ->fromModel(Institution::class, 'institution_name')
                     ->applyScope('userInstitutions')
                     ->placeholder('Select Institution')
-                    ->value(auth()->user()->institution_id),
+                    ->value(auth()->user()->institution_id)
+                    ->required(),
 
                 // Select Year of Study
                 Select::make('year_of_study')
@@ -82,7 +84,8 @@ class ApplyForExamsForm extends Listener
                         'Year 2 Semester 1' => 'Year 2 Semester 1',
                         'Year 3 Semester 1' => 'Year 3 Semester 1',
                         'Year 3 Semester 2' => 'Year 3 Semester 2',
-                    ]),
+                    ])
+                    ->required(),
 
 
                 // Select Program
@@ -102,7 +105,8 @@ class ApplyForExamsForm extends Listener
                         'Second' => 'Second Attempt',
                         'Third Attempt' => 'Third Attempt'
                     ])
-                    ->empty('None Selected'),
+                    ->empty('None Selected')
+                    ->required(),
 
                 // If we select Second or third, clear the paper ids
                 // if($this->query->has('trial') )
