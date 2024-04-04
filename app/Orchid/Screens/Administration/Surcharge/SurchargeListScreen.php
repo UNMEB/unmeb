@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
@@ -53,7 +54,7 @@ class SurchargeListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Add Surcharge')
@@ -97,26 +98,28 @@ class SurchargeListScreen extends Screen
                     ->width(360)
                     ->alignCenter()
                     ->render(function (Surcharge $surcharge) {
-                        return  Group::make([
-                            Link::make('View Fees')
-                                ->route('platform.surcharge.fees', $surcharge->id)
-                                ->class('btn btn-primary btn-sm'),
+                        return DropDown::make()
+                            ->icon('bs.three-dots-vertical')
+                            ->list([
+                                Link::make('View Fees')
+                                    ->route('platform.surcharge.fees', $surcharge->id),
 
-                            ModalToggle::make('Edit')
-                                ->modal('editSurchargeModal')
-                                ->modalTitle('Edit Surcharge ')
-                                ->method('edit')
-                                ->type(Color::LINK)
-                                ->asyncParameters([
-                                    'surcharge' => $surcharge->id,
-                                ]),
-                            Button::make('Delete')
-                                ->confirm('Are you sure you want to delete this surcharge?')
-                                ->method('delete', [
-                                    'id' => $surcharge->id
-                                ])
-                                ->type(Color::LINK)
-                        ]);
+                                ModalToggle::make('Edit')
+                                    ->modal('editSurchargeModal')
+                                    ->modalTitle('Edit Surcharge ')
+                                    ->method('edit')
+                                    ->type(Color::LINK)
+                                    ->asyncParameters([
+                                        'surcharge' => $surcharge->id,
+                                    ]),
+
+                                Button::make('Delete')
+                                    ->confirm('Are you sure you want to delete this surcharge?')
+                                    ->method('delete', [
+                                        'id' => $surcharge->id
+                                    ])
+                                    ->type(Color::LINK)
+                            ]);
                     })
             ]),
 
@@ -137,8 +140,8 @@ class SurchargeListScreen extends Screen
 
                 Select::make('surcharge.flag')
                     ->options([
-                        1  => 'Active',
-                        0  => 'Inactive',
+                        1 => 'Active',
+                        0 => 'Inactive',
                     ])
                     ->title('Flag')
                     ->help('Status for Active/Inactive surcharge flag')
