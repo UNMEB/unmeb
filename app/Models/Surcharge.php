@@ -14,6 +14,12 @@ class Surcharge extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
+    protected $fillable = [
+        'surcharge_name'
+    ];
+
+    public $timestamps = false;
+
     public function fees()
     {
         return $this->hasMany(SurchargeFee::class);
