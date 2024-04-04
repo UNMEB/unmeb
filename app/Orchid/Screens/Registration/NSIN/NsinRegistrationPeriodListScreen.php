@@ -27,7 +27,7 @@ class NsinRegistrationPeriodListScreen extends Screen
      */
     public function query(): iterable
     {
-        $query = NsinRegistrationPeriod::with('year')->orderBy('flag', 'desc');
+        $query = NsinRegistrationPeriod::with('year')->orderBy('id', 'desc');
         return [
             'periods' => $query->paginate()
         ];
@@ -80,15 +80,6 @@ class NsinRegistrationPeriodListScreen extends Screen
                 TD::make('year.year', 'Year'),
                 TD::make('flag', 'Is Active'),
                 TD::make('flag', 'Is Active')->render(fn($data) => $data->flag == 1 ? 'Active' : 'Inactive'),
-                TD::make('created_at', __('Created On'))
-                    ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT)
-                    ->sort(),
-
-                TD::make('updated_at', __('Last Updated'))
-                    ->usingComponent(DateTimeSplit::class)
-                    ->align(TD::ALIGN_RIGHT)
-                    ->sort(),
                 TD::make(__('Actions'))
                     ->width(200)
                     ->cantHide()
@@ -156,8 +147,8 @@ class NsinRegistrationPeriodListScreen extends Screen
                     ->horizontal()
                     ->empty('No select')
             ]))
-                ->title('Create Period')
-                ->applyButton('Create Period'),
+                ->title('Create NSIN Registration Period')
+                ->applyButton('Save NSIN Registration Period'),
 
             Layout::modal('editPeriodModal', Layout::rows([
 
