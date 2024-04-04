@@ -54,45 +54,16 @@
                         New Ticket
                     </div>
                     <div class="card-body">
-                        <form method="post" action="#">
-                            @csrf
-                            <div class="form-group">
-                                <label for="subject">Subject</label>
-                                <input type="text" class="form-control" id="subject" name="subject" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="content">Content</label>
-                                <textarea class="form-control" id="content" name="content" rows="3" required></textarea>
-                            </div>
-                            {{-- <div class="form-group">
-                                <label for="status">Status</label>
-                                <select class="form-control" id="status" name="status" required>
-                                    <!-- Populate status options dynamically from database -->
-                                    @foreach ($statuses as $status)
-                                        <option value="{{ $status->id }}">{{ $status->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div> --}}
-                            <div class="form-group">
-                                <label for="priority">Priority</label>
-                                <select class="form-control" id="priority" name="priority" required>
-                                    <!-- Populate priority options dynamically from database -->
-                                    @foreach ($priorities as $priority)
-                                        <option value="{{ $priority->id }}">{{ $priority->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="category">Category</label>
-                                <select class="form-control" id="category" name="category" required>
-                                    <!-- Populate category options dynamically from database -->
-                                    @foreach ($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Create Ticket</button>
-                        </form>
+                        {!! \Orchid\Screen\Fields\Input::make('subject')->title('Subject')->required() !!}
+
+                        {!! \Orchid\Screen\Fields\Quill::make('content')->toolbar(['text', 'color', 'header', 'list', 'format', 'media'])->title('Content')->help('How may we assist you')->required() !!}
+
+                        {!! \Orchid\Screen\Fields\Relation::make('priority_id')->fromModel(\App\Models\TicketPriority::class, 'name')->title('Select priority')->empty('None Selected')->required() !!}
+
+                        {!! \Orchid\Screen\Fields\Relation::make('category_id')->fromModel(\App\Models\TicketCategory::class, 'name')->title('Select Category')->empty('None Selected')->required() !!}
+
+                        @include('submit_button')
+
                     </div>
                 </div>
             @endif

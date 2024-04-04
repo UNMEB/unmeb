@@ -12,6 +12,7 @@ use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class TicketResponseScreen extends Screen
 {
@@ -83,8 +84,36 @@ class TicketResponseScreen extends Screen
 
     public function submit(Request $request)
     {
-        $request->validate([
-            'reply' => 'required'
-        ]);
+        if ($this->ticket->exists) {
+            // We are performing an update operation
+        } else {
+            // Validate the incoming request data
+            $request->validate([
+                'subject' => 'required|string|max:255|min:3',
+                'content' => 'required|string|min:10',
+                'priority_id' => 'required|exists:ticket_priorities,id',
+                'category_id' => 'required|exists:ticket_categories,id',
+            ]);
+
+            $ticket = new Ticket();
+            $ticket->subject = $request->subject;
+            $ticket->priority_id = $request->priority_id;
+            $ticket->category_id = $request->category_id;
+            $ticket->status_id = TicketStatus::where('name', 'Pending')->first()->id;
+            $ticket->content = $request->content;
+            $ticket->user_id = auth()->user()->id;
+
+            // Set the agent ID
+            $ticket->autoSelectAgent();
+
+            $ticket->save();
+
+
+            // Alert::success('Action Completed', 'Your support ticket has been logged. You\'ll be notifed when its resolved by an admin')->persistent(true, false);
+
+            return redirect(route('platform.tickets.response', $ticket->id))->with('success', 'Your support ticket has been logged. You\'ll be notifed when its resolved by an admin');
+
+
+        }
     }
 }

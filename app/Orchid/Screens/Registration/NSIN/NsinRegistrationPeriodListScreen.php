@@ -5,6 +5,7 @@ namespace App\Orchid\Screens\Registration\NSIN;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\Year;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -47,20 +48,20 @@ class NsinRegistrationPeriodListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             ModalToggle::make('Add Period')
-            ->modal('createPeriodModal')
-            ->method('create')
-            ->icon('plus'),
+                ->modal('createPeriodModal')
+                ->method('create')
+                ->icon('plus'),
             ModalToggle::make('Import Periods')
-            ->modal('uploadPeriodsModal')
-            ->method('upload')
-            ->icon('upload'),
+                ->modal('uploadPeriodsModal')
+                ->method('upload')
+                ->icon('upload'),
             Button::make('Export Data')
-            ->method('download')
-            ->rawClick(false)
+                ->method('download')
+                ->rawClick(false)
         ];
     }
 
@@ -78,14 +79,14 @@ class NsinRegistrationPeriodListScreen extends Screen
                 TD::make('month', 'Month'),
                 TD::make('year.year', 'Year'),
                 TD::make('flag', 'Is Active'),
-                TD::make('flag', 'Is Active')->render(fn ($data) => $data->flag == 1 ? 'Active' : 'Inactive'),
+                TD::make('flag', 'Is Active')->render(fn($data) => $data->flag == 1 ? 'Active' : 'Inactive'),
                 TD::make('created_at', __('Created On'))
-                ->usingComponent(DateTimeSplit::class)
+                    ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
                     ->sort(),
 
                 TD::make('updated_at', __('Last Updated'))
-                ->usingComponent(DateTimeSplit::class)
+                    ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
                     ->sort(),
                 TD::make(__('Actions'))
@@ -94,8 +95,8 @@ class NsinRegistrationPeriodListScreen extends Screen
                     ->align(TD::ALIGN_CENTER)
                     ->render(function (NsinRegistrationPeriod $period) {
                         $editButton = ModalToggle::make('Edit Period')
-                        ->modal('editPeriodModal')
-                        ->modalTitle('Edit Period ' . $period->year)
+                            ->modal('editPeriodModal')
+                            ->modalTitle('Edit Period ' . $period->year)
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
                                 'period' => $period->id,
@@ -122,34 +123,34 @@ class NsinRegistrationPeriodListScreen extends Screen
             Layout::modal('createPeriodModal', Layout::rows([
 
                 FieldsRelation::make('period.year_id')
-                ->title('Period Year')
-                ->fromModel(Year::class, 'year', 'id')
+                    ->title('Period Year')
+                    ->fromModel(Year::class, 'year', 'id')
                     ->horizontal(),
 
                 Select::make('period.month')
-                ->options([
-                    'January'  => 'January',
-                    'February'  => 'February',
-                    'March'  => 'March',
-                    'April'  => 'April',
-                    'May'  => 'May',
-                    'June'  => 'June',
-                    'July'  => 'July',
-                    'August'  => 'August',
-                    'September'  => 'September',
-                    'October'  => 'October',
-                    'November'  => 'November',
-                    'December'  => 'December',
-                ])
+                    ->options([
+                        'January' => 'January',
+                        'February' => 'February',
+                        'March' => 'March',
+                        'April' => 'April',
+                        'May' => 'May',
+                        'June' => 'June',
+                        'July' => 'July',
+                        'August' => 'August',
+                        'September' => 'September',
+                        'October' => 'October',
+                        'November' => 'November',
+                        'December' => 'December',
+                    ])
                     ->title('Period Month')
                     ->horizontal(),
 
 
                 Select::make('period.flag')
-                ->options([
-                    1  => 'Active',
-                    0  => 'Inactive',
-                ])
+                    ->options([
+                        1 => 'Active',
+                        0 => 'Inactive',
+                    ])
                     ->title('Flag')
                     ->help('Status for Active/Inactive period flag')
                     ->horizontal()
@@ -161,33 +162,33 @@ class NsinRegistrationPeriodListScreen extends Screen
             Layout::modal('editPeriodModal', Layout::rows([
 
                 FieldsRelation::make('period.year_id')
-                ->title('Period Year')
-                ->fromModel(Year::class, 'year', 'id')
+                    ->title('Period Year')
+                    ->fromModel(Year::class, 'year', 'id')
                     ->horizontal(),
 
                 Select::make('period.month')
-                ->title('Period Month')
-                ->options([
-                    'January'  => 'January',
-                    'February'  => 'February',
-                    'March'  => 'March',
-                    'April'  => 'April',
-                    'May'  => 'May',
-                    'June'  => 'June',
-                    'July'  => 'July',
-                    'August'  => 'August',
-                    'September'  => 'September',
-                    'October'  => 'October',
-                    'November'  => 'November',
-                    'December'  => 'December',
-                ])
+                    ->title('Period Month')
+                    ->options([
+                        'January' => 'January',
+                        'February' => 'February',
+                        'March' => 'March',
+                        'April' => 'April',
+                        'May' => 'May',
+                        'June' => 'June',
+                        'July' => 'July',
+                        'August' => 'August',
+                        'September' => 'September',
+                        'October' => 'October',
+                        'November' => 'November',
+                        'December' => 'December',
+                    ])
                     ->horizontal(),
 
                 Select::make('period.flag')
-                ->options([
-                    1  => 'Active',
-                    0  => 'Inactive',
-                ])
+                    ->options([
+                        1 => 'Active',
+                        0 => 'Inactive',
+                    ])
                     ->title('Flag')
                     ->help('Status for Active/Inactive period flag')
                     ->horizontal()
@@ -204,5 +205,25 @@ class NsinRegistrationPeriodListScreen extends Screen
         return [
             'period' => $period,
         ];
+    }
+
+    public function create(Request $request)
+    {
+        // Validate the incoming request data
+        $request->validate([
+            'period.year_id' => 'required',
+            'period.month' => 'required',
+            'period.flag' => 'required'
+        ]);
+
+        // Create a new NsinRegistrationPeriod record with the validated data
+        $period = new NsinRegistrationPeriod();
+        $period->year_id = $request->input('period.year_id');
+        $period->month = $request->input('period.month');
+        $period->flag = $request->input('period.flag');
+        $period->save();
+
+        // Redirect back with success message
+        return redirect()->back()->with('success', 'NSIN registration period has been created successfully.');
     }
 }
