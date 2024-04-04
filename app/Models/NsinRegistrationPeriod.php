@@ -15,9 +15,7 @@ class NsinRegistrationPeriod extends Model
     use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
     protected $fillabe = [
-        'year_id',
-        'month',
-        'flag'
+        'year_id'
     ];
 
     public $timestamps = false;

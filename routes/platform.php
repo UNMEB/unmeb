@@ -483,7 +483,7 @@ Route::screen('registration/periods/exam', ExamRegistrationPeriodListScreen::cla
 Route::screen('registration/periods/nsin', NsinRegistrationPeriodListScreen::class)
     ->name('platform.registration.periods.nsin');
 
-//Platform > Registration > Periods > NSIN
+//Platform > Biometric > Verification
 Route::screen('biometric/student_verification', StudentVerificationListScreen::class)
     ->name('platform.biometric.verification');
 

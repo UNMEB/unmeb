@@ -87,7 +87,7 @@ class NsinRegistrationPeriodListScreen extends Screen
                     ->render(function (NsinRegistrationPeriod $period) {
                         $editButton = ModalToggle::make('Edit Period')
                             ->modal('editPeriodModal')
-                            ->modalTitle('Edit Period ' . $period->year)
+                            ->modalTitle('Edit NSIN Registration Period')
                             ->method('edit') // You can define your edit method here
                             ->asyncParameters([
                                 'period' => $period->id,
@@ -216,5 +216,28 @@ class NsinRegistrationPeriodListScreen extends Screen
 
         // Redirect back with success message
         return redirect()->back()->with('success', 'NSIN registration period has been created successfully.');
+    }
+
+    /**
+     * Update the specified NSIN Registration Period in storage.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function edit(Request $request, NsinRegistrationPeriod $period): void
+    {
+        $request->validate([
+            'period.year_id' => 'required',
+            'period.month' => 'required',
+            'period.flag' => 'required'
+        ]);
+
+        // $period->fill($request->input('period'))->save();
+        $period->year_id = $request->input('period.year_id');
+        $period->month = $request->input('period.month');
+        $period->flag = $request->input('period.flag');
+        $period->save();
+
+        redirect()->back()->with('success', 'NSIN Registration period updated');
     }
 }
