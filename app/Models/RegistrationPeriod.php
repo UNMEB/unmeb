@@ -26,6 +26,11 @@ class RegistrationPeriod extends Model
         'flag'
     ];
 
+    protected $casts = [
+        'reg_start_date' => 'date:Y-m-d',
+        'reg_end_date' => 'date:Y-m-d'
+    ];
+
     public $timestamps = false;
 
     /**
