@@ -231,7 +231,7 @@ class PlatformProvider extends OrchidServiceProvider
 
                     Menu::make('Resolution Center')
                         ->route('platform.tickets.manager')
-                        ->permission('platform.tickets.resolve')
+                        ->permission('platform.ticktes.resolve')
                 ]),
 
             Menu::make(__('Users'))
