@@ -64,6 +64,21 @@ class Ticket extends Model
         return $this->hasMany(TicketComment::class);
     }
 
+    public function status()
+    {
+        return $this->belongsTo(TicketStatus::class);
+    }
+
+    public function priority()
+    {
+        return $this->belongsTo(TicketPriority::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     protected static function booted()
     {
         $user = auth()->user() ?? null;

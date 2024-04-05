@@ -72,4 +72,9 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Institution::class);
     }
+
+    public function scopeUserCanResolveTickets($query)
+    {
+        return $query;
+    }
 }

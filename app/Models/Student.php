@@ -125,6 +125,15 @@ class Student extends Model
         return '<img src="' . asset('placeholder/avatar.png') . '" style="width: 180px; border-radius: 10px;">';
     }
 
+    public function getHasRealPictureAttribute()
+    {
+        if ($this->passport) {
+            return true;
+        }
+
+        return false;
+    }
+
     public function nsinStudentRegistrations(): HasMany
     {
         return $this->hasMany(NsinStudentRegistration::class);

@@ -6,6 +6,8 @@ use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
 use App\Models\TicketStatus;
+use Orchid\Screen\Actions\DropDown;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Input;
@@ -68,7 +70,12 @@ class TicketManagementScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Ticket Manager';
+        return 'Ticket Resolution Center';
+    }
+
+    public function description(): string|null
+    {
+        return 'Resolve, archive and respond to support tickets';
     }
 
     /**
@@ -127,9 +134,23 @@ class TicketManagementScreen extends Screen
                     Layout::table('tickets', [
                         TD::make('id', 'ID'),
                         TD::make('subject', 'Subject'),
-                        TD::make('status', 'Status'),
-                        TD::make('priority', 'Priority'),
-                        TD::make('updated_at', 'Last Updated At'),
+                        TD::make('status', 'Status')->render(fn($ticket) => optional($ticket->status)->name),
+                        TD::make('priority', 'Priority')->render(fn($ticket) => optional($ticket->priority)->name),
+                        TD::make('created_at', 'Created At')
+                            ->usingComponent(DateTimeSplit::class),
+                        TD::make('updated_at', 'Updated At')
+                            ->usingComponent(DateTimeSplit::class),
+                        TD::make('actions', 'Actions')
+                            ->render(
+                                fn(Ticket $ticket) => DropDown::make()
+                                    ->icon('bs.three-dots-vertical')
+                                    ->list([
+                                        Link::make(__('Resolve Ticket'))
+                                            ->route('platform.tickets.response', $ticket->id)
+                                            ->icon('bs.eye'),
+
+                                    ])
+                            )
                     ])
                 ],
                 'Configurations' => [

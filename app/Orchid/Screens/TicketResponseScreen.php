@@ -6,9 +6,12 @@ use App\Models\Ticket;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
 use App\Models\TicketStatus;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
@@ -67,7 +70,15 @@ class TicketResponseScreen extends Screen
      */
     public function commandBar(): array
     {
-        return [];
+        return [
+            ModalToggle::make('Assign User')
+                ->modalTitle('Assign ticket to Agent')
+                ->modal('assignUser')
+                ->method('assign', [
+                    'ticket' => $this->ticket->id,
+                ])
+                ->canSee($this->ticket->exists)
+        ];
     }
 
     /**
@@ -79,13 +90,25 @@ class TicketResponseScreen extends Screen
     {
         return [
             Layout::view('support_ticket_comments'),
+            Layout::modal('assignUser', [
+                Layout::rows([
+                    Relation::make('user_id')
+                        ->title('Assign Agent')
+                        ->placeholder('Select User to assign this ticket')
+                        ->fromModel(User::class, 'name')
+                        ->applyScope('userCanResolveTickets')
+                        ->required()
+                ])
+            ])
         ];
     }
 
     public function submit(Request $request)
     {
         if ($this->ticket->exists) {
-            // We are performing an update operation
+
+            // Add a new comment for this particular ticket
+
         } else {
             // Validate the incoming request data
             $request->validate([
@@ -112,8 +135,22 @@ class TicketResponseScreen extends Screen
             // Alert::success('Action Completed', 'Your support ticket has been logged. You\'ll be notifed when its resolved by an admin')->persistent(true, false);
 
             return redirect(route('platform.tickets.response', $ticket->id))->with('success', 'Your support ticket has been logged. You\'ll be notifed when its resolved by an admin');
-
-
         }
+
+
+    }
+
+    public function assign(Request $request, Ticket $ticket)
+    {
+        if (!$ticket->exists) {
+            return;
+        }
+
+        dd($request->all());
+
+        $agentId = $request->get('user_id');
+
+        $ticket->agent_id = $agentId;
+        $ticket->save();
     }
 }

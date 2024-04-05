@@ -2,7 +2,7 @@
     <div class="row">
         <div class="col-md-12">
             @if ($ticket->exists)
-                <h2 class="mb-4">Support Ticket Details</h2>
+                <h4 class="my-4">Support Ticket Details</h4>
 
                 <!-- Ticket Details -->
                 <div class="card mb-4">
@@ -10,11 +10,11 @@
                         Ticket #{{ $ticket->id }} - {{ $ticket->subject }}
                     </div>
                     <div class="card-body">
-                        <p><strong>Status:</strong> {{ $ticket->status->name }}</p>
+                        <p><strong>Status:</strong> {{ optional($ticket->status)->name }}</p>
                         <p><strong>Created:</strong> {{ $ticket->created_at->format('F j, Y g:i A') }}</p>
                         <p><strong>Submitted By:</strong> {{ $ticket->user->name }}</p>
                         <p><strong>Description:</strong></p>
-                        <p>{{ $ticket->content }}</p>
+                        <p>{!! $ticket->content !!}</p>
                     </div>
                 </div>
 
