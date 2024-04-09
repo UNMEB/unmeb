@@ -16,10 +16,12 @@ class AssetRewriteMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
-
-        if(app()->environment('local')) {
+        if (app()->environment('local')) {
             return $next($request);
         }
+
+        // Rewrite URLs in the request
+        $this->rewriteRequestUrls($request);
 
         // Handle the request and get the response
         $response = $next($request);
@@ -35,6 +37,20 @@ class AssetRewriteMiddleware
         }
 
         return $response;
+    }
+
+    /**
+     * Rewrite URLs in the request to include the "unmeb" subdirectory.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return void
+     */
+    private function rewriteRequestUrls(Request $request)
+    {
+        $path = $request->getPathInfo();
+        if (strpos($path, '/unmeb/') !== 0) {
+            $request->server->set('REQUEST_URI', '/unmeb' . $path);
+        }
     }
 
     /**
