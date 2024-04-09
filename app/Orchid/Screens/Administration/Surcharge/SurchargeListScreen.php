@@ -225,46 +225,46 @@ class SurchargeListScreen extends Screen
      */
     public function upload(Request $request)
     {
-        // Define custom error messages for validation
-        $customMessages = [
-            'file.required' => 'Please select a file to upload.',
-            'file.file' => 'The uploaded file is not valid.',
-            'file.mimes' => 'The file must be a CSV file.',
-            'file.max' => 'The file size must not exceed 64MB.',
-        ];
+        // // Define custom error messages for validation
+        // $customMessages = [
+        //     'file.required' => 'Please select a file to upload.',
+        //     'file.file' => 'The uploaded file is not valid.',
+        //     'file.mimes' => 'The file must be a CSV file.',
+        //     'file.max' => 'The file size must not exceed 64MB.',
+        // ];
 
-        // Validate the request data using the defined rules and custom messages
-        $validator = Validator::make($request->all(), [
-            'file' => 'required|file|mimes:csv|max:64000', // 64MB in kilobytes
-            // Add any other validation rules you need for other fields
-        ], $customMessages);
+        // // Validate the request data using the defined rules and custom messages
+        // $validator = Validator::make($request->all(), [
+        //     'file' => 'required|file|mimes:csv|max:64000', // 64MB in kilobytes
+        //     // Add any other validation rules you need for other fields
+        // ], $customMessages);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
+        // if ($validator->fails()) {
+        //     return redirect()->back()->withErrors($validator)->withInput();
+        // }
 
-        // Retrieve the uploaded file from the request
-        $uploadedFile = $request->file('file');
+        // // Retrieve the uploaded file from the request
+        // $uploadedFile = $request->file('file');
 
-        // Use Laravel Excel to import the data using your custom importer
-        try {
-            // Get the path of the uploaded file
-            $filePath = $uploadedFile->path();
+        // // Use Laravel Excel to import the data using your custom importer
+        // try {
+        //     // Get the path of the uploaded file
+        //     $filePath = $uploadedFile->path();
 
-            // Import the data using your custom importer
-            Excel::import(new SurchargeImport, $filePath);
+        //     // Import the data using your custom importer
+        //     Excel::import(new SurchargeImport, $filePath);
 
-            // Display a success message using SweetAlert
-            Alert::success("Surcharge data imported successfully");
+        //     // Display a success message using SweetAlert
+        //     Alert::success("Surcharge data imported successfully");
 
-            // Data import was successful
-            return redirect()->back()->with('success', 'Surcharges data imported successfully.');
-        } catch (\Exception $e) {
-            // Handle any exceptions that may occur during import
-            Alert::error($e->getMessage());
+        //     // Data import was successful
+        //     return redirect()->back()->with('success', 'Surcharges data imported successfully.');
+        // } catch (\Exception $e) {
+        //     // Handle any exceptions that may occur during import
+        //     Alert::error($e->getMessage());
 
-            return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
-        }
+        //     return redirect()->back()->with('error', 'An error occurred during import: ' . $e->getMessage());
+        // }
     }
 
     /**
@@ -274,6 +274,6 @@ class SurchargeListScreen extends Screen
      */
     public function download(Request $request)
     {
-        return Excel::download(new SurchargeExport, 'surcharges.csv', ExcelExcel::CSV);
+        // return Excel::download(new SurchargeExport, 'surcharges.csv', ExcelExcel::CSV);
     }
 }

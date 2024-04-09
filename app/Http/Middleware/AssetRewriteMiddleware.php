@@ -16,6 +16,11 @@ class AssetRewriteMiddleware
      */
     public function handle(Request $request, Closure $next)
     {
+
+        if(app()->environment('local')) {
+            return $next($request);
+        }
+
         // Handle the request and get the response
         $response = $next($request);
 
