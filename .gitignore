@@ -2,7 +2,8 @@
 /node_modules
 # /public/build
 /public/hot
-/public/storage
+/public/storage/*
+!/public/storage/templates/
 /storage/*.key
 /vendor
 .env
@@ -21,3 +22,5 @@ yarn-error.log
 unmeb.zip
 
 /public/photos/*
+
+/publ
