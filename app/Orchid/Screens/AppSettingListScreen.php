@@ -100,11 +100,13 @@ class AppSettingListScreen extends Screen
                     Group::make(([
                         Picture::make('signature.registra_signature')
                             ->title('Registrar Signature')
-                            ->value($settings['signature.registra_signature']),
+                            ->value($settings['signature.registra_signature'])
+                            ->targetRelativeUrl(),
 
                         Picture::make('signature.finance_signature')
                             ->title('Finance Signature')
-                            ->value($settings['signature.finance_signature']),
+                            ->value($settings['signature.finance_signature'])
+                            ->targetRelativeUrl(),
 
                     ])),
                 ])

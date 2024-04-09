@@ -89,6 +89,7 @@ class StaffEditScreen extends Screen
                             ->title('Staff Member Photo')
                             ->width('270')
                             ->height('270')
+                            ->targetRelativeUrl()
                     ]),
 
                     Group::make([

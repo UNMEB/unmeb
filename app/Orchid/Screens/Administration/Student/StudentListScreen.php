@@ -245,7 +245,8 @@ class StudentListScreen extends Screen
                     ->placeholder('Enter student passport photo')
                     ->width(270)
                     ->height(270)
-                    ->required(),
+                    ->required()
+                    ->targetRelativeUrl(),
 
                 Group::make([
                     Input::make('student.surname')
