@@ -183,6 +183,7 @@ class NewNsinApplicationsScreen extends Screen
             'institution_id' => $institutionId,
             'course_id' => $courseId,
             'student_ids' => $studentIds,
+            'logbook_fee' => $logbookFee->course_fee
         ]);
 
         $nsinRegistrationPeriod = NsinRegistrationPeriod::find($nrpID);
@@ -196,7 +197,7 @@ class NewNsinApplicationsScreen extends Screen
         \Log::info('Institution data:', ['institution' => $institution]);
 
         foreach ($studentIds as $studentId) {
-            $fees = $nsinRegistrationFee + $logbookFee;
+            $fees = $nsinRegistrationFee + $logbookFee->course_fee;
 
             if ($fees > $institution->account->balance) {
                 Alert::error('Account balance too low to complete this transaction. Please top up to continue');
@@ -243,7 +244,7 @@ class NewNsinApplicationsScreen extends Screen
 
                 // Create Transaction for logbook fee for this student
                 $logbookTransaction = new Transaction([
-                    'amount' => $logbookFee,
+                    'amount' => $logbookFee->course_fee,
                     'type' => 'debit',
                     'account_id' => $institution->account->id,
                     'institution_id' => $institution->id,
