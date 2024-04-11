@@ -4,6 +4,7 @@ namespace App\Orchid\Screens;
 
 use App\Models\District;
 use App\Models\Institution;
+use App\Models\LogbookFee;
 use App\Models\NsinRegistration;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\NsinStudentRegistration;
@@ -150,13 +151,18 @@ class NewNsinApplicationsScreen extends Screen
 
     public function submit(Request $request)
     {
-        // dd($request->all());
-
-        // dd(session()->all());
+        $nrpID = session('nsin_registration_period_id');
+        $institutionId = session('institution_id');
+        $courseId = session('course_id');
 
         $settings = \Config::get('settings');
         $nsinRegistrationFee = $settings['fees.nsin_registration'];
-        $logbookFee = $settings['fees.logbook_fee'];
+        $logbookFee = LogbookFee::firstWhere('course_id', $courseId);
+
+        if($logbookFee == null) {
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed','Logbook Fee for this course is not yet set. Please contact support at UNMEB');
+            return back();
+        }
 
         // Log the start of the function
         \Log::info('NSIN registration submission started.');
@@ -168,9 +174,7 @@ class NewNsinApplicationsScreen extends Screen
             return;
         }
 
-        $nrpID = session('nsin_registration_period_id');
-        $institutionId = session('institution_id');
-        $courseId = session('course_id');
+       
         $studentIds = collect($request->get('students'))->values();
 
         // Log session and input data
