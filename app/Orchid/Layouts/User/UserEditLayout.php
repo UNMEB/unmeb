@@ -21,14 +21,7 @@ class UserEditLayout extends Rows
     public function fields(): array
     {
         return [
-
-            // Relation::make('user.institution_id')
-            //     ->title('Insitution')
-            //     ->placeholder('Select User Institution')
-            //     ->help('Select institution user is assigned to')
-            //     ->fromModel(Institution::class, 'institution_name', 'id')
-            //     ->required(),
-
+            
             Relation::make('user.institution_id')
                 ->title('Select Institution')
                 ->fromModel(Institution::class, 'institution_name', 'id')
