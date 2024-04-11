@@ -13,7 +13,8 @@ class SurchargeFee extends Model
     use HasFactory, AsSource, Filterable, Sortable;
 
     protected $fillable = [
-        'course_fee'
+        'course_fee',
+        'course_id'
     ];
 
     public function surcharge()

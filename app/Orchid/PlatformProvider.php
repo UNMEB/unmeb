@@ -208,7 +208,12 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make('Surcharges & Fees')
                 ->icon('bs.archive')
                 ->route('platform.surcharges')
-                ->permission('platform.surcharges.list')
+                ->permission('platform.surcharges.list'),
+
+            Menu::make('Logbook Fees')
+                ->icon('bs.archive')
+                ->route('platform.logbook_fees')
+                ->permission('platform.logbook_fees.module')
                 ->divider(),
 
             Menu::make('Student Research')
@@ -375,6 +380,14 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.surcharges.fees.export', 'Export Surcharge Fees'),
 
 
+                // Manage Logbbok Fees
+            ItemPermission::group('Manage Logbook Fees')
+            ->addPermission('platform.logbook_fees.module', 'Manage Logbook Fees')
+            ->addPermission('platform.logbook_fees.list', 'View Logbook Fees')
+            ->addPermission('platform.logbook_fees.create', 'Create Logbook Fee')
+            ->addPermission('platform.logbook_fees.update', 'Update Logbook Fee')
+            ->addPermission('platform.logbook_fees.delete', 'Delete Logbook Fee')
+            ->addPermission('platform.logbook_fees.export', 'Export Logbook Fees'),
 
             ItemPermission::group(__('System'))
                 ->addPermission('platform.systems.roles', __('Roles'))

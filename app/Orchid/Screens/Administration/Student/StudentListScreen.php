@@ -122,11 +122,6 @@ class StudentListScreen extends Screen
             Layout::rows([
 
                 Group::make([
-                    // Select::make('institution_id')
-                    //     ->fromModel(Institution::class, 'institution_name')
-                    //     ->title('Filter By Institution Name')
-                    //     ->empty('Non Selected'),
-
                     Relation::make('institution_id')
                         ->title('Select Institution')
                         ->fromModel(Institution::class, 'institution_name')
@@ -215,8 +210,6 @@ class StudentListScreen extends Screen
                                 ]),
                         ])),
             ]),
-
-
 
             Layout::modal('createStudentModal', AddNewStudentForm::class)
                 ->size(Modal::SIZE_LG)
@@ -307,8 +300,6 @@ class StudentListScreen extends Screen
                 ]),
 
                 Group::make([
-
-
                     Input::make('student.nin')
                         ->title('National Identification Number / Passport Number')
                         ->required(),
@@ -436,8 +427,6 @@ class StudentListScreen extends Screen
         return redirect()->back();
     }
 
-
-
     public function currentUser(): User
     {
         return auth()->user();
@@ -496,10 +485,6 @@ class StudentListScreen extends Screen
      */
     public function download(Request $request)
     {
-        //Excel::store(new StudentExport, 'students.csv', ExcelExcel::CSV);
-
-        // (new StudentExport)->queue('students.csv');
-
         (new StudentExport(auth()->user()->institution_id))->queue('students.csv', ExcelExcel::CSV);
 
         Toast::success('Student list is being exported. Please wait');
