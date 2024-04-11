@@ -182,7 +182,7 @@ class PendingTransactionListScreen extends Screen
                                 ])
                         ]);
                 })->alignCenter()
-                    ->canSee(auth()->user()->inRole('system-admin') || auth()->user()->inRole('accountant'))
+                    ->canSee(auth()->user()->hasAccess('platform.finance.approve'))
             ]),
 
             Layout::modal('approveTransactionModal', [
