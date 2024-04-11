@@ -19,7 +19,8 @@ class User extends Authenticatable
         'email',
         'password',
         'permissions',
-        'picture'
+        'picture',
+        'institution_id'
     ];
 
     /**
