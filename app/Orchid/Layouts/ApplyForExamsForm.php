@@ -153,7 +153,7 @@ class ApplyForExamsForm extends Listener
             $this->course = Course::find($courseId);
         }
 
-        if ($yearOfStudy != null && $courseId != null) {
+        if ($yearOfStudy != null && $courseId != null && $this->course != null) {
 
             $papers = Paper::select('papers.*', 'course_paper.course_id as pivot_course_id', 'course_paper.paper_id as pivot_paper_id', 'course_paper.flag as pivot_flag')
                 ->join('course_paper', 'papers.id', '=', 'course_paper.paper_id')
