@@ -30,12 +30,12 @@ class NsinApplicationListScreen extends Screen
     {
         $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
 
-        $query = NsinRegistration::
+        $query = Student::
             withoutGlobalScopes()
             ->select('s.*')
-            ->from('nsin_registrations as nr')
-            ->join('nsin_student_registrations as nsr', 'nr.id', '=','nsr.nsin_registration_id')
-            ->join('students as s', 'nsr.student_id', '=','s.id')
+            ->from('students as s')
+            ->join('nsin_student_registrations as nsr', 's.id', '=','nsr.student_id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=','nr.id')
             ->join('nsin_registration_periods as nsp', function ($join) {
                 $join->on('nr.year_id', '=', 'nsp.year_id')
                     ->on('nr.month', '=', 'nsp.month');
