@@ -76,8 +76,8 @@ class TicketListScreen extends Screen
             Layout::table('tickets', [
                 TD::make('id', 'ID'),
                 TD::make('subject', 'Subject'),
-                TD::make('status', 'Status'),
-                TD::make('priority', 'Priority'),
+                TD::make('status.name', 'Status'),
+                TD::make('priority.name', 'Priority'),
                 TD::make('updated_at', 'Last Updated At'),
                 TD::make('actions', 'Actions')
                     ->render(
