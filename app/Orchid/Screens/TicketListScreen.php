@@ -9,6 +9,7 @@ use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
@@ -77,8 +78,11 @@ class TicketListScreen extends Screen
                 TD::make('id', 'ID'),
                 TD::make('subject', 'Subject'),
                 TD::make('status', 'Status')->render(fn($ticket) => optional($ticket->status)->name),
-                        TD::make('priority', 'Priority')->render(fn($ticket) => optional($ticket->priority)->name),
-                TD::make('updated_at', 'Last Updated At'),
+                TD::make('priority', 'Priority')->render(fn($ticket) => optional($ticket->priority)->name),
+                TD::make('created_at', 'Created At')
+                            ->usingComponent(DateTimeSplit::class),
+                TD::make('updated_at', 'Updated At')
+                            ->usingComponent(DateTimeSplit::class),
                 TD::make('actions', 'Actions')
                     ->render(
                         fn(Ticket $ticket) => DropDown::make()
