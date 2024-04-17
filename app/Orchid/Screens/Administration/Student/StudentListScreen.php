@@ -329,10 +329,6 @@ class StudentListScreen extends Screen
     public function saveStudent(Request $request, Student $student): void
     {
         $request->validate([
-            'students.email' => [
-                'required',
-                Rule::unique(Student::class, 'email')->ignore($student),
-            ],
             'students.dob' => [
                 'required',
                 function ($attribute, $value, $fail) {
@@ -393,12 +389,19 @@ class StudentListScreen extends Screen
 
         if ($previousNSIN != null) {
             $student = Student::firstWhere('nsin', $previousNSIN);
-            $student->nsin = null;
+            
+            // Check if $student is not null before accessing its properties
+            if ($student != null) {
+                $student->nsin = null;
+            } else {
+                // If $student is null, create a new instance
+                $student = new Student();
+            }
         } else {
             $student = new Student();
-            $student->nsin = null;
         }
 
+        // Assign other properties
         $student->firstname = $request->input('student.firstname');
         $student->surname = $request->input('student.surname');
         $student->othername = $request->input('student.othername');
@@ -417,11 +420,9 @@ class StudentListScreen extends Screen
         $student->location = $request->input('student.location');
         $student->applied_program = $request->input('student.applied_program');
 
-        // dd($student);
-
+        // Save the student
         $student->save();
 
-        // Alert::success("Student record uploaded");
         \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Student records saved.');
 
         return redirect()->back();
