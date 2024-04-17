@@ -4,6 +4,7 @@ namespace App\Orchid\Screens;
 
 use App\Models\District;
 use App\Models\Institution;
+use App\Models\NsinRegistration;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\Student;
 use App\Orchid\Layouts\ApplyForNSINsForm;
@@ -29,37 +30,29 @@ class NsinApplicationListScreen extends Screen
     {
         $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
 
-        $pendingQuery = Student::query()
-            ->join('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
-            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+        $query = NsinRegistration::
+            withoutGlobalScopes()
+            ->select('s.*')
+            ->from('nsin_registrations as nr')
+            ->join('nsin_student_registrations as nsr', 'nr.id', '=','nsr.nsin_registration_id')
+            ->join('students as s', 'nsr.student_id', '=','s.id')
             ->join('nsin_registration_periods as nsp', function ($join) {
                 $join->on('nr.year_id', '=', 'nsp.year_id')
                     ->on('nr.month', '=', 'nsp.month');
-            })
-            ->whereNotNull('nsp.id')
-            ->where('nsp.id', '=', $activeNsinPeriod->id)
-            ->where('nsr.verify', 0)
-            ->whereNull('nsr.nsin')
-            ->select('students.*')
-            ->orderBy('surname', 'asc')
-            ->paginate();
+            });
 
-        $approvedQuery = Student::query()
-            ->join('nsin_student_registrations as nsr', 'students.id', '=', 'nsr.student_id')
-            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->join('nsin_registration_periods as nsp', function ($join) {
-                $join->on('nr.year_id', '=', 'nsp.year_id')
-                    ->on('nr.month', '=', 'nsp.month');
-            })
-            ->whereNotNull('nsp.id')
-            ->where('nsp.id', '=', $activeNsinPeriod->id)
-            ->where('nsr.verify', 1)
-            ->select('students.*')
-            ->orderBy('surname', 'asc')
-            ->paginate();
+        if (auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
+
+        $query->where('nsp.id', '=', $activeNsinPeriod->id);
+
+        $query->orderBy('surname', 'asc');
+
+        // dd($query->toRawSql());
+
         return [
-            'pending_students' => $pendingQuery,
-            'approved_students' => $approvedQuery,
+            'pending_students' => $query->paginate(),
         ];
     }
 
