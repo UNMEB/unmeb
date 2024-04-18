@@ -377,4 +377,23 @@ class TransactionListScreen extends Screen
         return $pdf->stream('account_statement.pdf');
     }
 
+    public function filter(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        $transactionType = $request->input('transaction_type');
+        $transactionMethod = $request->input('transaction_method');
+        $dateRange = $request->input('date_range');
+
+        // Define the filter parameters
+        $filterParams = [];
+
+        if (!empty ($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        $url = route('platform.systems.finance.complete', $filterParams);
+
+        return redirect()->to($url);
+    }
+
 }
