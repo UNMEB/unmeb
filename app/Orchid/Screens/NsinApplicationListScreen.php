@@ -30,31 +30,41 @@ class NsinApplicationListScreen extends Screen
     {
         $activeNsinPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
 
-        $query = Student::
-            withoutGlobalScopes()
-            ->select('s.*')
+        $baseQuery = Student::withoutGlobalScopes()
+            ->filters()
+            ->select([
+                's.id',
+                's.surname', 
+                's.firstname', 
+                's.othername', 
+                's.dob', 
+                's.gender',
+                's.country_id', 
+                's.district_id', 
+                's.nin', 
+                's.passport_number', 
+                's.refugee_number',
+                's.nsin'
+                ])
             ->from('students as s')
-            ->join('nsin_student_registrations as nsr', 's.id', '=','nsr.student_id')
-            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=','nr.id')
-            ->join('nsin_registration_periods as nsp', function ($join) {
-                $join->on('nr.year_id', '=', 'nsp.year_id')
-                    ->on('nr.month', '=', 'nsp.month');
-            });
+            ->join('nsin_student_registrations as nsr', 's.id', '=', 'nsr.student_id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id');
 
-        if (auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
+        if(auth()->user()->inRole('institution')) {
+            $baseQuery->where('nr.institution_id', auth()->user()->institution_id);
         }
 
-        $query->where('nsp.id', '=', $activeNsinPeriod->id);
+        $baseQuery->orderBy('s.surname', 'asc');
 
-        $query->orderBy('surname', 'asc');
-
-        // dd($query->toRawSql());
+        $pendingStudentsQuery = clone $baseQuery;
+        $approvedStudentsQuery = clone $baseQuery;
 
         return [
-            'pending_students' => $query->paginate(),
+            'pending_students' => $pendingStudentsQuery->where('nsr.verify', 0)->paginate(),
+            'approved_students' => $approvedStudentsQuery->where('nsr.verify', 1)->paginate(),
         ];
     }
+
 
     /**
      * The name of the screen displayed in the header.
@@ -98,13 +108,48 @@ class NsinApplicationListScreen extends Screen
             Layout::modal('newNSINApplicationModal', ApplyForNSINsForm::class)
                 ->applyButton('Register for NSINs'),
 
+            Layout::rows([
+
+                Group::make([
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->applyScope('userInstitutions')
+                        ->chunk(20),
+
+                    Input::make('name')
+                        ->title('Filter By Name'),
+
+                    Relation::make('district_id')
+                        ->fromModel(District::class, 'district_name')
+                        ->title('Filter By District of origin'),
+
+                    Select::make('gender')
+                        ->title('Filter By Gender')
+                        ->options([
+                            'Male' => 'Male',
+                            'Female' => 'Female'
+                        ])
+                        ->empty('Not Selected')
+                ]),
+                Group::make([
+                    Button::make('Filter Students')
+                        ->method('filter',[
+                            'section' => 'pending' 
+                        ]),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ]),
 
             Layout::tabs([
 
                 'Pending NSINs (Current Period)' => [
-                    Layout::rows([
-
-                    ]),
+                    
                     Layout::table('pending_students', [
                         TD::make('id', 'ID'),
                         TD::make('fullName', 'Name'),
@@ -124,7 +169,7 @@ class NsinApplicationListScreen extends Screen
                     TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
                     TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
                     TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
-                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
+                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
                 ]),
             ])
         ];
@@ -183,5 +228,15 @@ class NsinApplicationListScreen extends Screen
         $url = route('platform.registration.nsin.applications.list', $filterParams);
 
         return redirect()->to($url);
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
+    public function reset(Request $request)
+    {
+        return redirect()->route('platform.registration.nsin.applications.list');
     }
 }
