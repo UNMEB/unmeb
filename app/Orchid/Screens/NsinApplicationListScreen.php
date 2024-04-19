@@ -48,7 +48,8 @@ class NsinApplicationListScreen extends Screen
                 ])
             ->from('students as s')
             ->join('nsin_student_registrations as nsr', 's.id', '=', 'nsr.student_id')
-            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id');
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->whereNotNull('s.institution_id');
 
         if(auth()->user()->inRole('institution')) {
             $baseQuery->where('nr.institution_id', auth()->user()->institution_id);
