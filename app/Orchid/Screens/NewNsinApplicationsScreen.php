@@ -62,6 +62,7 @@ class NewNsinApplicationsScreen extends Screen
 
         $query = Student::withoutGlobalScopes()
         ->from('students as s')
+        ->whereNull('s.nsin')
         ->orderBy('s.surname', 'asc');
 
         if(auth()->user()->inRole('institution')) {
