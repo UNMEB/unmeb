@@ -60,20 +60,16 @@ class NewNsinApplicationsScreen extends Screen
 
         $currentPeriod = NsinRegistrationPeriod::query()->where('id', session('nsin_registration_period_id'))->first();
 
-        $query = Student::select('students.*')
-            ->leftJoin('nsin_student_registrations', 'students.id', '=', 'nsin_student_registrations.student_id')
-            ->whereNull('nsin_student_registrations.id')
-            ->whereExists(function ($query) use ($currentPeriod) {
-                $query->select(DB::raw(1))
-                    ->from('nsin_registrations')
-                    ->where('month', $currentPeriod->month)
-                    ->where('year_id', $currentPeriod->year_id);
-            })
-            ->get();
-        ;
+        $query = Student::withoutGlobalScopes()
+        ->from('students as s')
+        ->orderBy('s.surname', 'asc');
+
+        if(auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
 
         return [
-            'students' => $query
+            'students' => $query->paginate(100)
         ];
     }
 

@@ -15,7 +15,7 @@ use Orchid\Support\Facades\Layout;
 class ApplyForNSINsForm extends Listener
 {
 
-    public $courses  = null;
+    public $courses  = [];
     public $institutionId;
 
     /**
@@ -67,9 +67,8 @@ class ApplyForNSINsForm extends Listener
 
                 Select::make('course_id')
                     ->title('Select Program')
-                    ->empty('No Course Selected')
+                    ->empty('No Program Selected')
                     ->options($this->courses)
-                    ->canSee($this->courses != null)
                     ->required(),
 
             ])
