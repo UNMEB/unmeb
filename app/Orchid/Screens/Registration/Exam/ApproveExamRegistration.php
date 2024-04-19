@@ -54,7 +54,7 @@ class ApproveExamRegistration extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
@@ -98,6 +98,7 @@ class ApproveExamRegistration extends Screen
                     ->render(function ($data) {
                         $regs = StudentRegistration::query()
                             ->where('registration_id', $data->registration_id)
+                            ->whereNotNull('registration_id')
                             ->count();
                         return $regs;
                     }),

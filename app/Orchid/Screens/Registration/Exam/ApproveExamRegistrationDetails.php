@@ -52,9 +52,9 @@ class ApproveExamRegistrationDetails extends Screen
      */
     public function query(): iterable
     {
-        $students = Student::
-            filters()->
-            select(
+        $students = Student::withoutGlobalScopes()
+            ->filters()
+            ->select(
                 'students.id',
                 'institutions.institution_name',
                 'courses.course_name',
@@ -72,7 +72,7 @@ class ApproveExamRegistrationDetails extends Screen
 
 
         return [
-            'students' => $students->paginate(),
+            'students' => $students->paginate(100),
         ];
     }
 
