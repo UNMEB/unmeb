@@ -265,6 +265,9 @@ class ApproveNsinRegistration extends Screen
         $courseId = $request->get('course_id');
         $studentIds = $request->get('student_ids');
 
+        // Sort student IDs based on surnames
+        $students = Student::whereIn('id', $studentIds)->orderBy('surname')->pluck('id')->toArray();
+
         $nsinRegistrationPeriod = NsinRegistrationPeriod::find($nrpID);
 
         $yearId = $nsinRegistrationPeriod->year_id;
@@ -304,7 +307,7 @@ class ApproveNsinRegistration extends Screen
         }
 
         // For each student in the list create a NsinStudentRegistration if not already registered
-        foreach ($studentIds as $studentId) {
+        foreach ($students as $key => $studentId) {
             // Check if the student is already registered for the same period, institution, and course
             $existingRegistration = NsinStudentRegistration::where([
                 'nsin_registration_id' => $nsinRegistration->id,
@@ -317,6 +320,11 @@ class ApproveNsinRegistration extends Screen
                 $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                 $nsinStudentRegistration->student_id = $studentId;
                 $nsinStudentRegistration->verify = 0;
+
+                // Generate student code
+                $studentCode = str_pad($key + 1, 3, '0', STR_PAD_LEFT);
+                $nsinStudentRegistration->student_code = $studentCode;
+                
                 $nsinStudentRegistration->save();
             }
         }
