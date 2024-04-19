@@ -253,7 +253,7 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make('Settings')
                 ->icon('fa.wrench')
                 ->route('platform.system.settings')
-                ->permissions('platform.system.settings')
+                ->permissions('platform.systems.settings')
                 ->divider()
         ];
     }
@@ -391,7 +391,8 @@ class PlatformProvider extends OrchidServiceProvider
 
             ItemPermission::group(__('System'))
                 ->addPermission('platform.systems.roles', __('Roles'))
-                ->addPermission('platform.systems.users', __('Users')),
+                ->addPermission('platform.systems.users', __('Users'))
+                ->addPermission('platform.systems.settings', __('System Settings')),
 
             ItemPermission::group(__('Internals'))
                 ->addPermission('platform.internals.all_institutions', 'View all institutions'),
