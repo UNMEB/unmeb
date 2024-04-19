@@ -36,11 +36,16 @@ class TransactionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $transactions = Transaction::with('institution', 'account')
+        $query = Transaction::with('institution', 'account')
         ->filters()
-        ->whereIn('status', ['approved', 'flagged'])->latest();
+        ->whereIn('status', ['approved', 'flagged']);
+
+        if(auth()->user()->inRole('accountant')) {
+            $query->where('type', 'credit');
+        }
+
         return [
-            'transactions' => $transactions->paginate()
+            'transactions' => $query->paginate()
         ];
     }
 
