@@ -32,7 +32,8 @@ class NsinRegistration extends Model
         'nsin',
         'nsin_verify',
         'old',
-        'date_time'
+        'date_time',
+        'student_code'
     ];
 
     protected $allowedFilters = [

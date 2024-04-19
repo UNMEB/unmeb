@@ -55,7 +55,7 @@ class NsinStudentRegistrationObserver
             $nsinYear = Str::substr($nsinRegistration->year->year, 2); // Accessing year from the eager loaded relationship
 
             // Generate the NSIN using interpolation
-            $nsin = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}/{$nsinStudentRegistration->student_id}";
+            $nsin = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}/{$nsinStudentRegistration->student_code}";
 
             $nsinStudentRegistration->nsin = $nsin;
             $nsinStudentRegistration->saveQuietly();
