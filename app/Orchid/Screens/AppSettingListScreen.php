@@ -30,6 +30,13 @@ class AppSettingListScreen extends Screen
         $this->settings = Settings::all();
     }
 
+    public function permission(): ?iterable
+    {
+        return [
+            'platform.systems.settings',
+        ];
+    }
+
     /**
      * Fetch data to be displayed on the screen.
      *

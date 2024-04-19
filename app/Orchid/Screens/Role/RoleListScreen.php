@@ -52,7 +52,7 @@ class RoleListScreen extends Screen
      *
      * @return Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Link::make(__('Add'))

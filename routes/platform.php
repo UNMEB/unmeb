@@ -560,4 +560,4 @@ Route::screen('student_research', StudentResearchListScreen::class)
 
 // Platform > System > Settings
 Route::screen('settings', AppSettingListScreen::class)
-    ->name('platform.system.settings');
+    ->name('platform.systems.settings');

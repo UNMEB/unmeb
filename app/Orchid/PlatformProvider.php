@@ -252,7 +252,7 @@ class PlatformProvider extends OrchidServiceProvider
 
             Menu::make('Settings')
                 ->icon('fa.wrench')
-                ->route('platform.system.settings')
+                ->route('platform.systems.settings')
                 ->permissions('platform.systems.settings')
                 ->divider()
         ];
