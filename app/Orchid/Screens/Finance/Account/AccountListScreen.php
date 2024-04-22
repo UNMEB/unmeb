@@ -165,7 +165,7 @@ class AccountListScreen extends Screen
     {
         $institution = null;
 
-        if ($this->currentUser()->inRole('system-admin')) {
+        if ($this->currentUser()->inRole('administrator')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
             $institution = $this->currentUser()->institution;

@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Fields\DateTimer;
 use Orchid\Screen\Fields\Group;
@@ -73,6 +74,13 @@ class TransactionListScreen extends Screen
                 ->icon('wallet')
                 ->class('btn btn-sm btn-success link-success'),
 
+            ModalToggle::make('Offset Funds')
+                ->modal('offsetFundsModal')
+                ->method('offset')
+                ->icon('wallet')
+                ->class('btn btn-sm btn-primary link-primary')
+                ->canSee(auth()->user()->inRole('administrator') || auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
+
             ModalToggle::make('Generate Statement')
                 ->modal('createStatementModal')
                 ->method('createStatement')
@@ -99,7 +107,7 @@ class TransactionListScreen extends Screen
                     ->title('Select Institution')
                     ->placeholder('Select an institution')
                     ->applyScope('userInstitutions')
-                    ->canSee($this->currentUser()->inRole('system-admin')),
+                    ->canSee($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')),
 
                 Input::make('amount')
                     ->required()
@@ -122,6 +130,35 @@ class TransactionListScreen extends Screen
             ]))
                 ->title('Deposit Funds')
                 ->applyButton('Deposit Funds'),
+
+            Layout::modal('offsetFundsModal', Layout::rows([
+                Relation::make('institution_id')
+                    ->fromModel(Institution::class, 'institution_name')
+                    ->chunk(20)
+                    ->title('Select Institution')
+                    ->placeholder('Select an institution')
+                    ->applyScope('userInstitutions')
+                    ->canSee($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')),
+
+                Input::make('amount')
+                    ->required()
+                    ->title('Enter amount to deposit')
+                    ->mask([
+                        'alias' => 'currency',
+                        'prefix' => 'Ush ',
+                        'groupSeparator' => ',',
+                        'digitsOptional' => true,
+                    ])
+                    ->help('Enter the exact amount paid to bank'),
+
+                Input::make('remarks')
+                        ->title('Remark')
+                        ->help('Reason for offsetting funds')
+                        ->required(),
+
+                ]))
+            ->title('Offset Funds')
+            ->applyButton('Offset Institution Funds'),
 
             Layout::modal('createStatementModal', Layout::rows([
                 Relation::make('institution_id')
@@ -193,7 +230,7 @@ class TransactionListScreen extends Screen
                 TD::make('id', 'Transaction ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
                     return $data->institution->institution_name;
-                })->canSee($this->currentUser()->inRole('system-admin')),
+                })->canSee($this->currentUser()->inRole('administrator')),
                 TD::make('type', 'Transaction Type')->render(function ($data) {
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
                 }),
@@ -219,15 +256,48 @@ class TransactionListScreen extends Screen
                     ->usingComponent(DateTimeSplit::class),
                 TD::make('updated_at', 'Updated At')
                     ->usingComponent(DateTimeSplit::class),
-                TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {
-                    return Button::make('Print Receipt')
-                        ->method('print', [
-                            'id' => $data->id
-                        ])
-                        ->disabled($data->status != 'approved')
-                        ->class('btn btn-sm btn-success')
-                        ->rawClick(false);
-                })
+                // TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {
+                //     return Button::make('Print Receipt')
+                //         ->method('print', [
+                //             'id' => $data->id
+                //         ])
+                //         ->disabled($data->status != 'approved')
+                //         ->class('btn btn-sm btn-success')
+                //         ->rawClick(false);
+                // })
+
+                TD::make('actions', 'Actions')
+                ->render(fn (Transaction $data) =>
+                     DropDown::make()
+                    ->icon('bs.three-dots-vertical')
+                    ->list([
+
+                        Button::make(__('Print Receipt'))
+                            ->icon('bs.receipt')
+                            ->confirm(__('Confirm Action to print receipt for ' . $data->institution->institution_name))
+                            ->method('print', [
+                                'id' => $data->id,
+                            ]),
+
+                        Button::make(__('Rollback Transaction'))
+                            ->icon('bs.trash3')
+                            ->confirm(__('This transaction will be rolled back to initial state of pending.'))
+                            ->method('rollback', [
+                                'id' => $data->id,
+                            ])
+                            ->class('btn link-danger')
+                            ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
+
+                        Button::make(__('Delete Transaction'))
+                            ->icon('bs.trash3')
+                            ->confirm(__('This action can not be reversed. Are you sure you need to delete this transaction.'))
+                            ->method('remove', [
+                                'id' => $data->id,
+                            ])
+                            ->class('btn link-danger')
+                            ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
+                    ])
+                ),
             ])
         ];
     }
@@ -241,8 +311,6 @@ class TransactionListScreen extends Screen
 
         // Amount in words
         $amountInWords = (new NumberFormatter('en_US', NumberFormatter::SPELLOUT))->format($amount);
-
-
 
         // Html for address
         $address = " Plot 157 Ssebowa Road,Kiwatule, Nakawa division, <br />
@@ -262,7 +330,6 @@ class TransactionListScreen extends Screen
             'finance_signature' => $settings['signature.finance_signature'] ?? '',
             'status' => $transaction->status,
             'date' => $transaction->updated_at,
-
         ];
 
         $pdf = Pdf::loadView('receipt', $receiptData);
@@ -275,11 +342,57 @@ class TransactionListScreen extends Screen
      *
      * @return void
      */
+    public function offset(Request $request)
+    {
+        $institution = null;
+
+        if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
+            $institution = Institution::find($request->input('institution_id'));
+        } else {
+            $institution = $this->currentUser()->institution;
+        }
+
+        $account = $institution->account;
+
+        $amount = (int) Str::of($request->input('amount'))->replace(['Ush', ','], '')->trim()->toString();
+        $remarks = $request->input('remarks');
+
+        if($amount > $account->balance) {
+
+            \RealRashid\SweetAlert\Facades\Alert::error('Insufficient funds', 'Unable to offset funds from this account. The current account balance is low<br /> <strong>Account Balance: Ush ' . number_format($account->balance) . '</strong>')->toHtml();
+
+            return;
+        }
+
+        $newBalance = $account->balance - $amount;
+        $account->balance = $newBalance;
+        $account->save();
+
+        // Create a new transaction
+        $transaction = new Transaction([
+            'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
+            'account_id' => $account->id,
+            'type' => 'debit',
+            'institution_id' => $institution->id,
+            'initiated_by' => auth()->user()->id,
+            'status' => 'approved',
+        ]);
+
+        $transaction->save();
+
+        \RealRashid\SweetAlert\Facades\Alert::success('Account Updated', 'Institution account successfully updated. The new account balance is <br /> <strong>Account Balance: Ush ' . number_format($account->balance) . '</strong>')->toHtml();
+    }
+
+    /**
+     * @param \Illuminate\Http\Request $request
+     *
+     * @return void
+     */
     public function deposit(Request $request)
     {
         $institution = null;
 
-        if ($this->currentUser()->inRole('system-admin')) {
+        if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
             $institution = Institution::find($request->input('institution_id'));
         } else {
             $institution = $this->currentUser()->institution;

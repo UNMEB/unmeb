@@ -7,6 +7,7 @@ use App\Mail\NotifyAdminsAboutPendingTransaction;
 use App\Mail\NotifyInstitutionAboutPendingTransaction;
 use App\Mail\NotifyInstitutionAboutTransactionApproved;
 use App\Models\Transaction;
+use App\Models\TransactionLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use Orchid\Platform\Models\Role;
@@ -18,7 +19,7 @@ class TransactionObserver
     {
         if ($transaction->status == 'pending'  && $transaction->type == 'credit') {
 
-            $adminRole = Role::firstWhere('slug', 'system-admin');
+            $adminRole = Role::firstWhere('slug', 'administrator');
             $accountRole = Role::firstWhere('slug', 'accountant');
 
             $adminEmails = [];
@@ -61,7 +62,23 @@ class TransactionObserver
             if ($institutionEmail) {
                 Mail::to($transaction->institution->email)->cc($userEmails)->send(new NotifyInstitutionAboutTransactionApproved($transaction));
             }
-
         }
+    }
+
+    /**
+     * Log transaction activity.
+     *
+     * @param  \App\Models\Transaction  $transaction
+     * @param  string  $action
+     * @return void
+     */
+    protected function logTransaction(Transaction $transaction, $action)
+    {
+        TransactionLog::create([
+            'transaction_id' => $transaction->id,
+            'user_id' => $transaction->user_id,
+            'action' => $action,
+            'description' => "Transaction {$action}.",
+        ]);
     }
 }

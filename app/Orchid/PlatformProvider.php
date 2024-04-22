@@ -154,7 +154,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ])->divider(),
 
             // Manage Finance
-            Menu::make(__('Finance'))
+            Menu::make(__('Manage Finances'))
                 ->icon('bs.book')
                 ->badge(function () {
                     $pendingTransactionCount = Transaction::where('status', 'pending')->count();

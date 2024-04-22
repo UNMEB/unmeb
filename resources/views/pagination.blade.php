@@ -7,6 +7,6 @@
         @endif
     </div>
     <div class="col-auto">
-        {!! \Orchid\Screen\Actions\Button::make(__('Submit Data'))->method('submit')->rawClick(false)->class('btn btn-success') !!}
+        {!! \Orchid\Screen\Actions\Button::make(__('Submit Data'))->method('submit')->class('btn btn-success') !!}
     </div>
 </footer>
