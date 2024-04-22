@@ -118,6 +118,9 @@ class NsinApplicationListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::modal('newNSINApplicationModal', ApplyForNSINsForm::class)
+                ->applyButton('Register for NSINs'),
+
             Layout::table('applications', [
                 TD::make('registration_id', 'NR ID'),
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
@@ -136,6 +139,25 @@ class NsinApplicationListScreen extends Screen
                 )
             ])
         ];
+    }
+
+    public function applyForNSINs(Request $request)
+    {
+        session()->forget('institution_id');
+        session()->forget('course_id');
+        session()->forget('nsin_registration_period_id');
+
+        $institutionId = $request->get('institution_id');
+        $nsin_registration_period_id = $request->get('nsin_registration_period_id');
+        $courseId = $request->get('course_id');
+
+        $url = route('platform.registration.nsin.applications.new', [
+            'institution_id' => $institutionId,
+            'course_id' => $courseId,
+            'nsin_registration_period_id' => $nsin_registration_period_id
+        ]);
+
+        return redirect()->to($url);
     }
 
 
