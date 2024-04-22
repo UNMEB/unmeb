@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('transaction_logs', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('transaction_id')->unsigned();
+            $table->bigInteger('user_id')->unsigned();
+            $table->enum('action', ['created', 'updated', 'deleted']);
+            $table->text('description')->nullable();
+            $table->timestamp('created_at')->nullable();
+
+            $table->foreign('transaction_id')
+                ->references('id')
+                ->on('transactions')
+                ->onDelete('cascade');
+
+            $table->index('transaction_id');
             $table->timestamps();
         });
     }
