@@ -50,7 +50,12 @@ class NsinApplicationListScreen extends Screen
             ->from('students as s')
             ->join('nsin_student_registrations as nsr', 's.id', '=', 'nsr.student_id')
             ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->whereNotNull('nr.institution_id');
+            ->join('nsin_registration_periods as rp', function ($join) {
+                $join->on('nr.month', '=', 'rp.month')
+                     ->on('nr.year_id', '=', 'rp.year_id');
+            })
+            ->whereNotNull('nr.institution_id')
+            ->where('rp.flag', '=', 1);
 
         if(auth()->user()->inRole('institution')) {
             $baseQuery->where('nr.institution_id', auth()->user()->institution_id);
