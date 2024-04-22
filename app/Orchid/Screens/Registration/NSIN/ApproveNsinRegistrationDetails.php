@@ -16,6 +16,12 @@ class ApproveNsinRegistrationDetails extends Screen
 {
     public function __construct(Request $request)
     {
+        
+    }
+
+
+    public function query(Request $request): iterable
+    {
         // Clear previous values
         session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
 
@@ -29,41 +35,33 @@ class ApproveNsinRegistrationDetails extends Screen
         session()->put("nsin_registration_id", $nsin_registration_id);
         session()->put('institution_id', $institution_id);
         session()->put('course_id', $course_id);
-    }
-
-
-    public function query(): iterable
-    {
-        $institutionId = session('institution_id');
 
         $query = Student::query()
             ->select([
-                's.id as id',
-                'i.institution_name',
-                'i.id as institution_id',
-                'c.course_name',
-                's.*',
-                'nr.id as registration_id',
-                'nr.created_at as registration_date',
-            ])
+                's.id',
+                's.surname', 
+                's.firstname', 
+                's.othername', 
+                's.dob', 
+                's.gender',
+                's.country_id', 
+                's.district_id', 
+                's.nin', 
+                's.passport_number', 
+                's.refugee_number',
+                ])
             ->from('students as s')
             ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
             ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
             ->join('courses AS c', 'c.id', '=', 'nr.course_id')
             ->join('years as y', 'nr.year_id', '=', 'y.id')
-            ->whereNull('nsr.nsin')
             ->where('nsr.verify', 0)
-            ->where('nr.institution_id', session('institution_id'))
-            ->where('nr.course_id', session('course_id'))
-        ;
+            ->where('nr.institution_id', $institution_id)
+            ->where('c.id', $course_id)
+            ->where('nr.id', $nsin_registration_id);
 
-        $registrations = $query
-            // ->orderBy('registration_year', 'desc')
-            // ->orderBy('registration_month', 'desc')
-            // ->orderBy('registrations_count', 'desc')
-            // ->orderBy('latest_created_at', 'desc')
-            ->orderBy('surname', 'asc')
+        $registrations = $query->orderBy('surname', 'asc')
             ->paginate();
 
         return [
