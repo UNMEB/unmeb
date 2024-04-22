@@ -59,6 +59,11 @@ class NsinApplicationListScreen extends Screen
             ->whereNull('nsr.nsin')
             ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_year', 'registration_month', 'registration_id');
 
+
+        if(auth()->user()->inRole('institution')) {
+            $query->where('nr.institution_id', auth()->user()->institution_id);
+        }
+   
         $query->orderBy('registration_year', 'desc');
 
         return [
@@ -114,7 +119,7 @@ class NsinApplicationListScreen extends Screen
         return [
             Layout::table('applications', [
                 TD::make('registration_id', 'NR ID'),
-                TD::make('institution_name', 'Institution'),
+                TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
                 TD::make('registration_month', 'Month'),
                 TD::make('registration_year', 'Year'),
