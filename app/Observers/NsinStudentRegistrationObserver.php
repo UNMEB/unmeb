@@ -62,17 +62,11 @@ class NsinStudentRegistrationObserver
 
             $studentId = $nsinStudentRegistration->student_id;
 
-            Student::whereId($studentId)->update([
-                'nsin' => $nsin
-            ]);
-
-            // Student::find($nsinStudentRegistration->student_id)->update([
-            //     'nsin' => $nsin
-            // ]);
-
-            // $nsinStudentRegistration->student()->update([
-            //     'nsin' => $nsin
-            // ]);
+            $student = Student::where("id", $studentId)->first();
+            if ($student) {
+                $student->nsin = $nsin;
+                $student->saveQuietly();
+            }
 
             // Reset the flag
             $nsinStudentRegistration->is_observer_triggered = false;

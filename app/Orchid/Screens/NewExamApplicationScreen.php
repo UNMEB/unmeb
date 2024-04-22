@@ -65,15 +65,6 @@ class NewExamApplicationScreen extends Screen
         $query->where('nsr.verify', 1);
         $query->orderBy('nsr.updated_at', 'desc');
 
-        // We need to select students now that have no exam registration
-        // $query->leftJoin('student_registrations as sr', 's.id', '=', 'sr.student_id');
-        // $query->whereNull('sr.student_id');
-
-
-        if(auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
-        }
-
         return [
             'applications' => $query->paginate(),
         ];

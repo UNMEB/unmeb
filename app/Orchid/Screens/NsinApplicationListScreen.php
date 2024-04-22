@@ -57,7 +57,7 @@ class NsinApplicationListScreen extends Screen
             ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
             ->join('courses AS c', 'c.id', '=', 'nr.course_id')
             ->join('years as y', 'nr.year_id', '=', 'y.id')
-            ->whereNull('nsr.nsin')
+            ->whereNull('s.nsin')
             ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_year', 'registration_month', 'registration_id');
 
 
