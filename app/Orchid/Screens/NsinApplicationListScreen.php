@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
@@ -49,14 +50,13 @@ class NsinApplicationListScreen extends Screen
             ->from('students as s')
             ->join('nsin_student_registrations as nsr', 's.id', '=', 'nsr.student_id')
             ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->whereNotNull('s.institution_id')
             ->whereNotNull('nr.institution_id');
 
         if(auth()->user()->inRole('institution')) {
             $baseQuery->where('nr.institution_id', auth()->user()->institution_id);
         }
 
-        $baseQuery->orderBy('s.surname', 'asc');
+        $baseQuery->orderBy('nsr.created_at', 'asc');
 
         $pendingStudentsQuery = clone $baseQuery;
         $approvedStudentsQuery = clone $baseQuery;
@@ -95,7 +95,13 @@ class NsinApplicationListScreen extends Screen
                 ->modal('newNSINApplicationModal')
                 ->modalTitle('Create New NSIN Applications')
                 ->class('btn btn-success')
-                ->method('applyForNSINs')
+                ->method('applyForNSINs'),
+
+            ModalToggle::make('Export NSIN Applications')
+            ->class('btn btn-primary')
+            ->modal('exportNSINApplications')
+            ->modalTitle('Export NSIN Applications')
+            ->method('exportNSINApplications')
         ];
     }
 
@@ -106,9 +112,52 @@ class NsinApplicationListScreen extends Screen
      */
     public function layout(): iterable
     {
+        $registrationPeriods = NsinRegistrationPeriod::select('nsin_registration_periods.id', 'years.year', 'month')
+        ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
+        ->where('nsin_registration_periods.flag', 1)
+        ->get();
+
+        $yearOptions = [];
+
+        foreach ($registrationPeriods as $registrationPeriod) {
+            $yearOptions[$registrationPeriod->id] = $registrationPeriod->month . ' - ' . $registrationPeriod->year;
+        }
+    
         return [
             Layout::modal('newNSINApplicationModal', ApplyForNSINsForm::class)
                 ->applyButton('Register for NSINs'),
+
+            Layout::modal('exportNSINApplications', Layout::rows([
+
+                Relation::make('institution_id')
+                    ->title('Select Institution')
+                    ->placeholder('Select User Institution')
+                    ->fromModel(Institution::class, 'institution_name', 'id')
+                    ->applyScope('userInstitutions')
+                    ->value(auth()->user()->institution_id)
+                    // ->disabled(!auth()->user()->hasAccess('platform.internals.all_institutions'))
+                    ->required(),
+
+                // Select Nsin Registration Period
+                Select::make('nsin_registration_period_id')
+                    ->options($yearOptions)
+                    ->empty('None Selected')
+                    ->title('Select Nsin Registration Period'),
+
+                Relation::make('course_id')
+                        ->fromModel(Course::class, 'course_name')
+                        ->title('Course Name'),
+
+
+                Select::make('status')
+                ->title('Application Status')
+                ->options([
+                    'pending' => 'Pending',
+                    'approved' => 'Approved'
+                ])
+            ]))
+            ->applyButton('Export Data')
+            ,
 
             Layout::rows([
 
