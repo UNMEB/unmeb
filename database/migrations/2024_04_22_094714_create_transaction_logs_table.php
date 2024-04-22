@@ -17,7 +17,6 @@ return new class extends Migration
             $table->bigInteger('user_id')->unsigned();
             $table->enum('action', ['created', 'updated', 'deleted']);
             $table->text('description')->nullable();
-            $table->timestamp('created_at')->nullable();
 
             $table->foreign('transaction_id')
                 ->references('id')
