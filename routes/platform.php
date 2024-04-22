@@ -44,6 +44,7 @@ use App\Orchid\Screens\InstitutionUnAssignCoursesListScreen;
 use App\Orchid\Screens\LogbookPurchaseScreen;
 use App\Orchid\Screens\NewExamApplicationScreen;
 use App\Orchid\Screens\NewSupportRequestScreen;
+use App\Orchid\Screens\NSINApplicationListDetails;
 use App\Orchid\Screens\PackingListReportScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Registration\Exam\AcceptedExamRegistration;
@@ -364,6 +365,10 @@ Route::screen('registrations/nsin/applications/list', NsinApplicationListScreen:
 
 Route::screen('registrations/nsin/applications/new', NewNsinApplicationsScreen::class)
     ->name('platform.registration.nsin.applications.new');
+
+Route::screen('registrations/nsin/applications/details', NSINApplicationListDetails::class)
+    ->name('platform.registration.nsin.applications.details');
+
 
 // Exam Applications
 Route::screen('registrations/exam/applications/list', ExamApplicationListScreen::class)
