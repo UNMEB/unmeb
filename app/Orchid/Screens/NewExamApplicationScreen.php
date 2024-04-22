@@ -51,38 +51,34 @@ class NewExamApplicationScreen extends Screen
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
-        // Retrieve institution, course, and exam period IDs from session
-        $institutionId = session('institution_id');
-        $courseId = session('course_id');
-        $examPeriodId = session('exam_registration_period_id');
+
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
 
         $query = Student::withoutGlobalScopes()
-                    ->select([
-                        's.id as id',
-                        's.surname',
-                        's.firstname',
-                        's.othername',
-                        's.gender',
-                        's.dob',
-                        's.country_id',
-                        's.district_id',
-                        's.nin',
-                        's.lin',
-                        's.passport_number',
-                        's.refugee_number',
-                        's.nsin'
-                    ])
-                    ->from('students as s')
-                    ->whereNotNull('s.nsin')
-                    ->whereNotNull('s.surname')
-                    ->whereNotNull('s.firstname')
-                    ->orderBy('s.surname', 'asc');
+        ->select([
+            's.id',
+            's.surname', 
+            's.firstname', 
+            's.othername', 
+            's.dob', 
+            's.gender',
+            's.country_id', 
+            's.district_id', 
+            's.nin', 
+            's.passport_number', 
+            's.refugee_number',
+            's.nsin'
+            ])
+        ->from('students as s')
+        ->leftJoin('nsin_student_registrations as nsr', 's.id','=','nsr.student_id')
+        ->orderBy('s.surname', 'asc');
 
-            if(auth()->user()->inRole('institution')) {
-                $query->where('s.institution_id', auth()->user()->institution_id);
-            }
+        if(auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
 
         return [
             'students' => $query->paginate(100)
