@@ -18,7 +18,7 @@ class RegisterStudentsForExamsTable extends FormTable
      *
      * @var string
      */
-    protected $target = 'students';
+    protected $target = 'applications';
 
     /**
      * Get the table cells to be displayed.
@@ -30,14 +30,17 @@ class RegisterStudentsForExamsTable extends FormTable
         return [
             TD::make('id', 'ID'),
             // Show passport picture
-            // TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
+            TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
             TD::make('fullName', 'Name'),
             TD::make('gender', 'Gender'),
             TD::make('dob', 'Date of Birth'),
+            TD::make('district.district_name', 'District'),
             TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
-            TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
+            TD::make('location', 'Location'),
             TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
             TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
+            TD::make('telephone', 'Phone Number'),
+            TD::make('email', 'Email')->defaultHidden(),
             TDCheckbox::make('students', 'Students'),
         ];
     }

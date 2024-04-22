@@ -9,5 +9,7 @@ class CoursePaper extends Model
 {
     use HasFactory;
 
+    protected $table = 'course_paper';
+
     
 }

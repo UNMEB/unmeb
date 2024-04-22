@@ -60,4 +60,9 @@ class NsinRegistration extends Model
     {
         return LogOptions::defaults();
     }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 }
