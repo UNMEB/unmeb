@@ -183,8 +183,6 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function submit(Request $request)
     {
-        dd($request->all());
-
         // Define validation rules
         $rules = [
             'approve_students.*' => [

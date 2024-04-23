@@ -6,6 +6,7 @@ use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Orchid\Layouts\ApplyForExamsForm;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
@@ -15,6 +16,8 @@ use Orchid\Support\Facades\Layout;
 class ExamApplicationListScreen extends Screen
 {
     public $filters = [];
+
+    public $registrationId;
 
     /**
      * Fetch data to be displayed on the screen.
@@ -30,12 +33,17 @@ class ExamApplicationListScreen extends Screen
             'i.institution_name',
             'c.id as course_id',
             'c.course_name as course_name',
+
+            DB::raw('COUNT(*) as registrations_count')
         ])
         ->from('students AS s')
         ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
         ->join('registrations as r', 'sr.registration_id','=','r.id')
         ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
         ->join('courses AS c', 'c.id', '=', 'r.course_id')
+
+        ->where('sr.sr_flag', 1)
+
         ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
 
         if(auth()->user()->inRole('institution')) {
@@ -100,17 +108,16 @@ class ExamApplicationListScreen extends Screen
                 TD::make('registration_id', 'Reg. ID'),
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
+                TD::make('registrations_count', 'Applications')->render(fn($data) => "$data->registrations_count Students"),
                 TD::make('actions', 'Actions')->render(
                     fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
                         ->route('platform.registration.exam.applications.details', [
                             'institution_id' => $data->institution_id,
                             'course_id' => $data->course_id,
-                            'nsin_registration_id' => $data->registration_id
                         ])
                 )
-            ])
-            
+            ])  
         ];
     }
 

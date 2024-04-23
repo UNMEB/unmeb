@@ -139,6 +139,7 @@ class NSINApplicationListDetails extends Screen
         return [
             Button::make('Export Applications')
             ->icon('bs.receipt')
+            ->class('btn btn-success')
         ];
     }
 

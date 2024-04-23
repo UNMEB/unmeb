@@ -124,7 +124,7 @@ class NsinApplicationListScreen extends Screen
                 TD::make('course_name', 'Program'),
                 TD::make('registration_month', 'Month'),
                 TD::make('registration_year', 'Year'),
-                TD::make('registrations_count', 'Pending Approval')->render(fn($data) => "$data->registrations_count Students"),
+                TD::make('registrations_count', 'Applications')->render(fn($data) => "$data->registrations_count Students"),
                 TD::make('actions', 'Actions')->render(
                     fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
