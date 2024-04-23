@@ -36,8 +36,7 @@ class ExamApplicationListScreen extends Screen
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
 
-        $results = $query->paginate();
-
+    
        return [
         'applications' => $query->paginate(10),
        ];
