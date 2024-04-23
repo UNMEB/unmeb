@@ -32,23 +32,23 @@ class NewNsinApplicationsScreen extends Screen
     public $courseId;
     public $nsinRegistrationPeriodId;
 
-    public function __construct(Request $request)
-    {
-        session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
+    // public function __construct(Request $request)
+    // {
+    //     session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
 
-        $this->institutionId = request()->get('institution_id');
-        $this->courseId = request()->get('course_id');
-        $this->nsinRegistrationPeriodId = request()->get('nsin_registration_period_id');
+    //     $this->institutionId = request()->get('institution_id');
+    //     $this->courseId = request()->get('course_id');
+    //     $this->nsinRegistrationPeriodId = request()->get('nsin_registration_period_id');
 
-        $institutionId = $request->input('institution_id');
-        $courseId = $request->input('course_id');
-        $nsinRegistrationPeriodId = $request->input('nsin_registration_period_id');
+    //     $institutionId = $request->input('institution_id');
+    //     $courseId = $request->input('course_id');
+    //     $nsinRegistrationPeriodId = $request->input('nsin_registration_period_id');
 
-        // Save to session
-        session()->put('institution_id', $institutionId);
-        session()->put('course_id', $courseId);
-        session()->put('nsin_registration_period_id', $nsinRegistrationPeriodId);
-    }
+    //     // Save to session
+    //     
+    //     session()->put('course_id', $courseId);
+    //     session()->put('nsin_registration_period_id', $nsinRegistrationPeriodId);
+    // }
 
 
     /**
@@ -56,8 +56,11 @@ class NewNsinApplicationsScreen extends Screen
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
+        session()->put('institution_id', $request->get('institution_id'));
+        session()->put('course_id', $request->get('course_id'));
+        session()->put('nsin_registration_period_id', $request->get('nsin_registration_period_id'));
 
         $currentPeriod = NsinRegistrationPeriod::query()->where('id', session('nsin_registration_period_id'))->first();
 
@@ -80,11 +83,10 @@ class NewNsinApplicationsScreen extends Screen
         ->leftJoin('nsin_student_registrations as nsr', 's.id','=','nsr.student_id')
         ->whereNull('s.nsin')
         ->whereNull('nsr.student_id')
+        ->where('s.institution_id', session('institution_id'))
         ->orderBy('s.surname', 'asc');
 
-        if(auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
-        }
+        
 
         return [
             'students' => $query->paginate(100)

@@ -26,19 +26,15 @@ class NsinApplicationListScreen extends Screen
 {
     public $filters = [];
 
-    public function __construct(Request $request)
-    {
-        session()->flush();
-        $this->filters = $request->get("filter");
-    }
-
     /**
      * Fetch data to be displayed on the screen.
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
+        $this->filters = $request->get("filter");
+
         $query = Student::withoutGlobalScopes()
             ->select([
                 'nr.id as registration_id',
@@ -143,10 +139,6 @@ class NsinApplicationListScreen extends Screen
 
     public function applyForNSINs(Request $request)
     {
-        session()->forget('institution_id');
-        session()->forget('course_id');
-        session()->forget('nsin_registration_period_id');
-
         $institutionId = $request->get('institution_id');
         $nsin_registration_period_id = $request->get('nsin_registration_period_id');
         $courseId = $request->get('course_id');

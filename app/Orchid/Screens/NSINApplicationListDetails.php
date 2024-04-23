@@ -199,6 +199,7 @@ class NSINApplicationListDetails extends Screen
 
     public function filter(Request $request)
     {
+        dd($request->query());
 
         $institutionId = $request->input('institution_id');
         $name = $request->input('name');
