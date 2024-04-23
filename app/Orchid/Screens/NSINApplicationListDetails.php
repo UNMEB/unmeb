@@ -2,12 +2,15 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\District;
 use App\Models\NsinRegistration;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Relation;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
@@ -113,6 +116,18 @@ class NSINApplicationListDetails extends Screen
                 Group::make([
                     Input::make('name')
                         ->title('Filter By Student Name'),
+
+                    Relation::make('district_id')
+                    ->fromModel(District::class, 'district_name')
+                    ->title('Filter By District of origin'),
+
+                    Select::make('gender')
+                        ->title('Filter By Gender')
+                        ->options([
+                            'Male' => 'Male',
+                            'Female' => 'Female'
+                        ])
+                        ->empty('Not Selected')
                 ]),
 
                 Group::make([
