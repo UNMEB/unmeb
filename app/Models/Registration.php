@@ -18,6 +18,10 @@ class Registration extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
+    protected $fillable = [
+        'institution_id'
+    ];
+
     protected $allowedFilters = [
         'institution_name' => Like::class,
         'course_name' => Like::class,

@@ -47,6 +47,15 @@ use Orchid\Screen\Fields\Picture;
 
 class StudentListScreen extends Screen
 {
+
+    public $filters = [];
+
+    public function __construct(Request $request)
+    {
+        session()->flush();
+        $this->filters = $request->get("filter");
+    }
+
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -54,12 +63,68 @@ class StudentListScreen extends Screen
      */
     public function query(): iterable
     {
+
+        $query = Student::withoutGlobalScopes()
+                ->with('district')
+                ->select([
+                    's.id as id',
+                    's.surname',
+                    's.firstname',
+                    's.othername',
+                    's.gender',
+                    's.dob',
+                    's.district_id',
+                    's.country_id',
+                    's.location',
+                    's.nsin as nsin',
+                    's.passport_number',
+                    's.nin',
+                    's.telephone',
+                    's.refugee_number',
+                    's.lin'
+                ])
+                ->from('students As s')
+                ->leftJoin('nsin_student_registrations as nsr', 's.id', '=', 'nsr.id')
+                ->orderBy('s.surname', 'asc');
+        
+        if(auth()->user()->inRole('institution')) {
+            $query->where('nr.institution_id', auth()->user()->institution_id);
+        }
+
+        if (!empty($this->filters)) {
+            if (isset($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
+                $institutionId = $this->filters['institution_id'];
+                $query->where('s.institution_id', '=', $institutionId);
+            }
+
+            if (isset($this->filters['district_id']) && $this->filters['district_id'] !== null) {
+                $districtId = $this->filters['district_id'];
+                $query->where('s.district_id', '=', $districtId);
+            }
+
+            if (isset($this->filters['name']) && $this->filters['name'] !== null) {
+                $name = $this->filters['name'];
+                $terms = explode(' ', $name);
+                if (count($terms) == 2) {
+                    [$firstTerm, $secondTerm] = $terms;
+                    $query->where(function ($query) use ($firstTerm, $secondTerm) {
+                        $query->where('firstname', 'like', '%' . $firstTerm . '%')
+                        ->where('surname', 'like', '%' . $secondTerm . '%');
+                    })->orWhere(function ($query) use ($firstTerm, $secondTerm) {
+                        // Check if the first term matches the surname and the second term matches the firstname
+                        $query->where('surname', 'like', '%' . $firstTerm . '%')
+                            ->where('firstname', 'like', '%' . $secondTerm . '%');
+                    });
+                }   
+
+                $query->where('firstname', 'like', '%' . $name . '%')
+                        ->orWhere('surname', 'like', '%' . $name . '%')
+                        ->orWhere('othername', 'like', '%' . $name . '%');
+            }
+        }
+
         return [
-            'students' => Student::with('district')
-                ->filters()
-                ->latest()
-                ->orderBy('surname', 'desc')
-                ->paginate(),
+            'students' => $query->paginate(),
         ];
     }
 
