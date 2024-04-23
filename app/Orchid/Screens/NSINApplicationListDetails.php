@@ -50,8 +50,10 @@ class NSINApplicationListDetails extends Screen
         $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');
         $query->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id');
         $query->join('courses AS c', 'c.id', '=', 'nr.course_id');
+        $query->join('years as y', 'nr.year_id', '=', 'y.id');
         $query->where('nr.institution_id', $institutionId);
         $query->where('nr.course_id', $courseId);
+        $query->where('nr.id', $this->nsinRegistrationId);
         $query->where('nsr.verify', 0);
         $query->orderBy('nsr.updated_at', 'desc');
 
