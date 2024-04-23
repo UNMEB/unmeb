@@ -70,7 +70,7 @@ class NewExamApplicationScreen extends Screen
         $query->where('nr.course_id', $courseId);
         $query->where('nsr.verify', 1);
 
-        $query->where('s.institution_id', $institutionId);
+        $query->where('nr.institution_id', $institutionId);
 
         $query->whereNull('sr.id');
 
