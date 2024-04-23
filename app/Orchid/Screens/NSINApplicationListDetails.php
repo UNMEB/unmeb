@@ -38,7 +38,7 @@ class NSINApplicationListDetails extends Screen
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
         $this->nsinRegistrationId = $request->get('nsin_registration_id');
-        
+
         $query = Student::withoutGlobalScopes();
         $query->select([
             's.id as id',
@@ -66,44 +66,27 @@ class NSINApplicationListDetails extends Screen
         $query->where('nr.course_id', $courseId);
         $query->where('nr.id', $this->nsinRegistrationId);
         $query->where('nsr.verify', 0);
-        $query->orderBy('nsr.updated_at', 'desc');
 
         if (!empty($this->filters)) {
-            if (isset($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
-                $institutionId = $this->filters['institution_id'];
-                $query->where('s.institution_id', '=', $institutionId);
-            }
+            $query->when(isset($this->filters['district_id']) && $this->filters['district_id'] !== null, function ($query) {
+                $query->where('s.district_id', '=', $this->filters['district_id']);
+            });
 
-            if (isset($this->filters['district_id']) && $this->filters['district_id'] !== null) {
-                $districtId = $this->filters['district_id'];
-                $query->where('s.district_id', '=', $districtId);
-            }
-
-            if (isset($this->filters['name']) && $this->filters['name'] !== null) {
+            $query->when(isset($this->filters['name']) && $this->filters['name'] !== null, function ($query) {
                 $name = $this->filters['name'];
-                $terms = explode(' ', $name);
-                if (count($terms) == 2) {
-                    [$firstTerm, $secondTerm] = $terms;
-                    $query->where(function ($query) use ($firstTerm, $secondTerm) {
-                        $query->where('firstname', 'like', '%' . $firstTerm . '%')
-                        ->where('surname', 'like', '%' . $secondTerm . '%');
-                    })->orWhere(function ($query) use ($firstTerm, $secondTerm) {
-                        // Check if the first term matches the surname and the second term matches the firstname
-                        $query->where('surname', 'like', '%' . $firstTerm . '%')
-                            ->where('firstname', 'like', '%' . $secondTerm . '%');
-                    });
-                }   
-
-                $query->where('firstname', 'like', '%' . $name . '%')
+                $query->where(function ($query) use ($name) {
+                    $query->where('firstname', 'like', '%' . $name . '%')
                         ->orWhere('surname', 'like', '%' . $name . '%')
                         ->orWhere('othername', 'like', '%' . $name . '%');
-            }
+                });
+            });
 
-            if (isset($this->filters['gender']) && $this->filters['gender'] !== null) {
-                $gender = $this->filters['gender'];
-                $query->where('s.gender', '=', $gender);
-            }
+            $query->when(isset($this->filters['gender']) && $this->filters['gender'] !== null, function ($query) {
+                $query->where('s.gender', '=', $this->filters['gender']);
+            });
         }
+
+        $query->orderBy('nsr.updated_at', 'desc');
 
         return [
             'applications' => $query->paginate(),
