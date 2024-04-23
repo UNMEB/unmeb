@@ -7,12 +7,14 @@ use App\Traits\OrderByLatest;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Orchid\Filters\Filterable;
+use Orchid\Screen\AsSource;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class NsinStudentRegistration extends Model
 {
-    use HasFactory, OrderByLatest, LogsActivity;
+    use HasFactory, OrderByLatest, LogsActivity, Filterable, AsSource;
 
     protected $fillable = [
         'student_code',

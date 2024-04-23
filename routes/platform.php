@@ -46,6 +46,8 @@ use App\Orchid\Screens\LogbookPurchaseScreen;
 use App\Orchid\Screens\NewExamApplicationScreen;
 use App\Orchid\Screens\NewSupportRequestScreen;
 use App\Orchid\Screens\NSINApplicationListDetails;
+use App\Orchid\Screens\NSINRegistrationsDetailScreen;
+use App\Orchid\Screens\NSINRegistrationsListScreen;
 use App\Orchid\Screens\PackingListReportScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Registration\Exam\AcceptedExamRegistration;
@@ -361,6 +363,12 @@ Route::screen('students', StudentListScreen::class)
         ->push(__('Students'), route('platform.students')));
 
 // NSIN Applications
+Route::screen('registrations/nsin/registrations/list', NSINRegistrationsListScreen::class)
+    ->name('platform.registration.nsin.registrations.list');
+
+Route::screen('registrations/nsin/registrations/details', NSINRegistrationsDetailScreen::class)
+    ->name('platform.registration.nsin.registrations.details');
+
 Route::screen('registrations/nsin/applications/list', NsinApplicationListScreen::class)
     ->name('platform.registration.nsin.applications.list');
 
