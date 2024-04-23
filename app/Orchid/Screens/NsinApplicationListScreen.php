@@ -96,7 +96,8 @@ class NsinApplicationListScreen extends Screen
                 ->modal('newNSINApplicationModal')
                 ->modalTitle('Create New NSIN Applications')
                 ->class('btn btn-success')
-                ->method('applyForNSINs'),
+                ->method('applyForNSINs')
+                ->rawClick(false),
 
             ModalToggle::make('Export NSIN Applications')
             ->class('btn btn-primary')

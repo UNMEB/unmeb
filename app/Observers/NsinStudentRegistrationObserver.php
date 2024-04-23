@@ -28,7 +28,6 @@ class NsinStudentRegistrationObserver
      */
     public function updated(NsinStudentRegistration $nsinStudentRegistration): void
     {
-
         // Check if the observer should proceed
         if ($nsinStudentRegistration->is_observer_triggered) {
             return;

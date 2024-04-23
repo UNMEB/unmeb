@@ -52,8 +52,7 @@ class StudentListScreen extends Screen
 
     public function __construct(Request $request)
     {
-        session()->flush();
-        $this->filters = $request->get("filter");
+        
     }
 
     /**
@@ -61,8 +60,9 @@ class StudentListScreen extends Screen
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
+        $this->filters = $request->get("filter");
 
         $query = Student::withoutGlobalScopes()
                 ->with('district')
@@ -81,15 +81,16 @@ class StudentListScreen extends Screen
                     's.nin',
                     's.telephone',
                     's.refugee_number',
-                    's.lin'
+                    's.lin',
+                    's.date_time'
                 ])
                 ->from('students As s')
                 ->leftJoin('nsin_student_registrations as nsr', 's.id', '=', 'nsr.id')
                 ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=','nr.id')
-                ->orderBy('s.surname', 'asc');
+                ->orderBy('s.created_at', 'desc');
         
         if(auth()->user()->inRole('institution')) {
-            $query->where('nr.institution_id', auth()->user()->institution_id);
+            $query->where('s.institution_id', auth()->user()->institution_id);
         }
 
         if (!empty($this->filters)) {

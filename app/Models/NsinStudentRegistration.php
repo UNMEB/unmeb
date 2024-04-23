@@ -15,6 +15,8 @@ class NsinStudentRegistration extends Model
     use HasFactory, OrderByLatest, LogsActivity;
 
     protected $fillable = [
+        'student_code',
+        'nsin',
         'verify',
         'remarks',
     ];

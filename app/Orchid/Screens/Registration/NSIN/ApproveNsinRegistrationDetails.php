@@ -11,15 +11,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Orchid\Screen\Screen;
+use RealRashid\SweetAlert\Facades\Alert;
 
 class ApproveNsinRegistrationDetails extends Screen
 {
-    public function __construct(Request $request)
-    {
-        
-    }
-
-
     public function query(Request $request): iterable
     {
         // Clear previous values
@@ -141,6 +136,23 @@ class ApproveNsinRegistrationDetails extends Screen
             $rejectionReason = $request->input('reject_reasons')[$studentId];
             $this->processRegistration($studentId, 'reject', $rejectionReason);
         }
+
+        Alert::success('NSIN Applications Approved', "
+        <table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'>
+            <tbody>
+                <tr>
+                    <td>Number of Students Approved</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>Number of Students Rejected</td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+        ")
+        ->persistent(true)
+        ->toHtml();
     }
 
     public function processRegistration($studentId, $action, $rejectionReason = null)

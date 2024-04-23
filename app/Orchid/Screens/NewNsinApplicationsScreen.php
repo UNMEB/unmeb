@@ -172,65 +172,74 @@ class NewNsinApplicationsScreen extends Screen
             $nrpID = session('nsin_registration_period_id');
             $institutionId = session('institution_id');
             $courseId = session('course_id');
-
+    
             $settings = \Config::get('settings');
             $nsinRegistrationFee = $settings['fees.nsin_registration'];
-
+    
             if ($nsinRegistrationFee == 0 || is_null($nsinRegistrationFee)) {
                 throw new Exception('NSIN Student registration fee not yet set. Please contact support at UNMEB');
             }
-
+    
             $logbookFee = LogbookFee::firstWhere('course_id', $courseId);
-
+    
             if( !$logbookFee ) {
                 throw new Exception("Unable to register students at the moment. The logbook fees for this course are not yet set. Please contact UNMEB Support", 1);   
             }
-
+    
             $students = collect($request->get('students'))->keys();
-
+    
             if ($students->count() == 0) {
                 throw new Exception('Unable to submit data. You have not selected any students to register');
             }
-
+    
             $studentIds = collect($request->get('students'))->values();
-
+    
+            $sortedStudentIds = Student::whereIn('id', $studentIds)->orderBy('surname')->pluck('id')->toArray();
+    
             $nsinRegistrationPeriod = NsinRegistrationPeriod::find($nrpID);
-
+    
             $yearId = $nsinRegistrationPeriod->year_id;
             $month = $nsinRegistrationPeriod->month;
-
+    
             $institution = Institution::find($institutionId);
 
-            foreach ($studentIds as $studentId) {
-
+            // Find or create the NSIN registration
+            $nsinRegistration = NsinRegistration::firstOrCreate([
+                'year_id' => $yearId,
+                'month' => $month,
+                'institution_id' => $institutionId,
+                'course_id' => $courseId,
+            ]);
+    
+            // Get the last assigned student code
+            $lastStudentCode = NsinStudentRegistration::where('nsin_registration_id', $nsinRegistration->id)
+                                ->max('student_code');
+    
+            $lastStudentCode = $lastStudentCode ? $lastStudentCode : 0; // If no student registered yet, set it to 0
+    
+            foreach ($sortedStudentIds as $key => $studentId) {
+    
                 $fees = $nsinRegistrationFee + $logbookFee->course_fee;
-
+    
                 if ($fees > $institution->account->balance) {
                     throw new Exception('Account balance too low to complete this transaction. Please top up to continue');
                 }
-
-                // Find or create the NSIN registration
-                $nsinRegistration = NsinRegistration::firstOrCreate([
-                    'year_id' => $yearId,
-                    'month' => $month,
-                    'institution_id' => $institutionId,
-                    'course_id' => $courseId,
-                ]);
-
+    
                 // Check if the student is already registered for the same period, institution, and course
                 $existingRegistration = NsinStudentRegistration::where([
                     'nsin_registration_id' => $nsinRegistration->id,
                     'student_id' => $studentId,
                     'verify' => 0
                 ])->first();
-
+    
                 if (!$existingRegistration) {
                     $nsinStudentRegistration = new NsinStudentRegistration();
                     $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                     $nsinStudentRegistration->student_id = $studentId;
                     $nsinStudentRegistration->verify = 0;
+                    $nsinStudentRegistration->student_code = str_pad($lastStudentCode + $key + 1, 3, '0', STR_PAD_LEFT);
                     $nsinStudentRegistration->save();
-    
+                    
                     // Create Transaction for NSIN registration fee for this student
                     $nsinTransaction = new Transaction([
                         'amount' => $nsinRegistrationFee,
@@ -267,18 +276,18 @@ class NewNsinApplicationsScreen extends Screen
                         'balance' => $newBalance,
                     ]);
                 }
-
+    
                 $numberOfStudents = count($studentIds);
                 $nsinTotal = $nsinRegistrationFee * $numberOfStudents;
                 $logbookTotal = $logbookFee->course_fee * $numberOfStudents;
                 $totalDeduction = $nsinTotal + $logbookTotal;
                 $remainingBalance = $institution->account->balance;
-
+    
                 $amountForNSIN = 'Ush ' . number_format($nsinTotal);
                 $amountForLogbook = 'Ush ' . number_format($logbookTotal);
                 $totalDeductionFormatted = 'Ush ' . number_format($totalDeduction);
                 $remainingBalanceFormatted = 'Ush ' . number_format($remainingBalance);
-
+    
                 \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Registration</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Registration</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
             }
         } catch (\Throwable $th) {

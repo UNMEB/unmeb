@@ -29,19 +29,14 @@ class ApproveNsinRegistration extends Screen
 {
     public $filters = [];
 
-    public function __construct(Request $request)
-    {
-        session()->flush();
-        $this->filters = $request->get("filter");
-    }
-
     /**
      * Fetch data to be displayed on the screen.
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
+        $this->filters = $request->get("filter");
 
         $query = Student::query()
             ->select([
@@ -320,11 +315,6 @@ class ApproveNsinRegistration extends Screen
                 $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                 $nsinStudentRegistration->student_id = $studentId;
                 $nsinStudentRegistration->verify = 0;
-
-                // Generate student code
-                $studentCode = str_pad($key + 1, 3, '0', STR_PAD_LEFT);
-                $nsinStudentRegistration->student_code = $studentCode;
-                
                 $nsinStudentRegistration->save();
             }
         }
