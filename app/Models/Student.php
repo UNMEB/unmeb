@@ -58,11 +58,7 @@ class Student extends Model
     ];
 
     protected $allowedFilters = [
-        'students.institution_id' => Where::class,
-        'gender' => Like::class,
-        'district_id' => Where::class,
-        'name' => StudentNameFilter::class,
-
+        
     ];
 
     public function district()
