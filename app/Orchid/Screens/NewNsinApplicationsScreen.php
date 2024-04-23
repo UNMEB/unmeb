@@ -131,6 +131,7 @@ class NewNsinApplicationsScreen extends Screen
                         ->title('Select Institution')
                         ->fromModel(Institution::class, 'institution_name')
                         ->applyScope('userInstitutions')
+                        ->canSee(!auth()->user()->inRole('institution'))
                         ->chunk(20),
 
                     Input::make('name')

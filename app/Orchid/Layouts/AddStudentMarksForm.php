@@ -66,6 +66,7 @@ class AddStudentMarksForm extends Listener
                         ->fromModel(Institution::class, 'institution_name')
                         ->applyScope('userInstitutions')
                         ->placeholder('Select Institution')
+                        ->canSee(!auth()->user()->inRole('institution'))
                         ->required(),
                 ]),
 

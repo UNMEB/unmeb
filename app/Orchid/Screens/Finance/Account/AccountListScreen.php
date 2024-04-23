@@ -96,6 +96,7 @@ class AccountListScreen extends Screen
                         ->fromModel(Institution::class, 'institution_name')
                         ->chunk(20)
                         ->title('Filter By Institution')
+                        ->canSee(!auth()->user()->inRole('institution'))
                         ->placeholder('Start typing...'),
                 ]),
 

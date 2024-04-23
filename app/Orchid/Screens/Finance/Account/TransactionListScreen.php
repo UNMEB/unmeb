@@ -107,7 +107,7 @@ class TransactionListScreen extends Screen
                     ->title('Select Institution')
                     ->placeholder('Select an institution')
                     ->applyScope('userInstitutions')
-                    ->canSee($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')),
+                    ->canSee(!auth()->user()->inRole('institution')),
 
                 Input::make('amount')
                     ->required()

@@ -179,7 +179,8 @@ class StaffEditScreen extends Screen
                             ->fromModel(Institution::class, 'institution_name')
                             ->applyScope('userInstitutions')
                             ->title('Select Institution')
-                            ->placeholder('Select an institution'),
+                            ->placeholder('Select an institution')
+                            ->canSee(!auth()->user()->inRole('institution')),
 
 
                         Select::make('staff.status')

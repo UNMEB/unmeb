@@ -85,6 +85,7 @@ class StudentListScreen extends Screen
                 ])
                 ->from('students As s')
                 ->leftJoin('nsin_student_registrations as nsr', 's.id', '=', 'nsr.id')
+                ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=','nr.id')
                 ->orderBy('s.surname', 'asc');
         
         if(auth()->user()->inRole('institution')) {
@@ -191,6 +192,7 @@ class StudentListScreen extends Screen
                         ->title('Select Institution')
                         ->fromModel(Institution::class, 'institution_name')
                         ->applyScope('userInstitutions')
+                        ->canSee(!auth()->user()->inRole('institution'))
                         ->chunk(20),
 
                     Input::make('name')

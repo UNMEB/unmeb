@@ -65,6 +65,7 @@ class LogbookPurchaseScreen extends Screen
                         ->applyScope('userInstitutions')
                         ->value(auth()->user()->institution_id)
                         // ->disabled(!auth()->user()->hasAccess('platform.internals.all_institutions'))
+                        ->canSee(!auth()->user()->inRole('institution'))
                         ->required(),
 
                     Input::make('number_of_students')

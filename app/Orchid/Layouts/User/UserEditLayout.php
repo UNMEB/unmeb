@@ -26,6 +26,7 @@ class UserEditLayout extends Rows
                 ->title('Select Institution')
                 ->fromModel(Institution::class, 'institution_name', 'id')
                 ->applyScope('userInstitutions')
+                ->canSee(!auth()->user()->inRole('institution'))
                 ->chunk(20),
 
             Picture::make('user.picture')

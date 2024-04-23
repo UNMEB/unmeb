@@ -82,7 +82,8 @@ class ExamRegistrationReportScreen extends Screen
                 Group::make([
                     Relation::make('institution_id')
                         ->title('Filter By Institution')
-                        ->fromModel(Institution::class, 'institution_name'),
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->canSee(!auth()->user()->inRole('institution')),
 
                     Relation::make('course_id')
                         ->title('Filter By Program')

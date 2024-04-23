@@ -64,7 +64,8 @@ class RegisterStudentsForExamForm extends Listener
                     ->title('Select Institution')
                     ->fromModel(Institution::class, 'institution_name')
                     ->applyScope('userInstitutions')
-                    ->placeholder('Select Institution'),
+                    ->placeholder('Select Institution')
+                    ->canSee(!auth()->user()->inRole('institution')),
 
                 // Select Year of Study
                 Select::make('year_of_study')

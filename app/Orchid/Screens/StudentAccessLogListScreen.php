@@ -52,7 +52,7 @@ class StudentAccessLogListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Button::make('Export Access Log')
@@ -74,7 +74,8 @@ class StudentAccessLogListScreen extends Screen
                 Group::make([
                     Relation::make('institution_id')
                         ->fromModel(Institution::class, 'institution_name')
-                        ->title('institution Name'),
+                        ->title('institution Name')
+                        ->canSee(!auth()->user()->inRole('institution')),
 
                     Relation::make('course_id')
                         ->fromModel(Course::class, 'course_name')

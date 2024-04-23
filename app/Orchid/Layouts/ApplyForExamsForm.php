@@ -72,6 +72,7 @@ class ApplyForExamsForm extends Listener
                     ->applyScope('userInstitutions')
                     ->placeholder('Select Institution')
                     ->value(auth()->user()->institution_id)
+                    ->canSee(!auth()->user()->inRole('institution'))
                     ->required(),
 
                 // Select Year of Study

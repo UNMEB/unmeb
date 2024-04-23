@@ -94,6 +94,7 @@ class AddNewStudentForm extends Listener
                     ->fromModel(Institution::class, 'institution_name', 'id')
                     ->applyScope('userInstitutions')
                     ->value(auth()->user()->institution_id ?? null)
+                    ->canSee(!auth()->user()->inRole('institution'))
                     ->required(),
 
                 Relation::make('student.applied_program')

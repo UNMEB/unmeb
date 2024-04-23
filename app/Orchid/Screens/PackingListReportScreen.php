@@ -119,7 +119,8 @@ class PackingListReportScreen extends Screen
                     Relation::make('Institution')
                         ->title("Filter By Institution")
                         ->placeholder("Institution")
-                        ->fromModel(Institution::class, 'institution_name'),
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->canSee(!auth()->user()->inRole('institution')),
 
                     // Select Year of Study
                     Select::make('year_of_study')
