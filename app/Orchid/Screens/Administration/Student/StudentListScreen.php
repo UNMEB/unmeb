@@ -82,7 +82,8 @@ class StudentListScreen extends Screen
                     's.telephone',
                     's.refugee_number',
                     's.lin',
-                    's.date_time'
+                    's.date_time',
+                    's.passport'
                 ])
                 ->from('students As s')
                 ->leftJoin('nsin_student_registrations as nsr', 's.id', '=', 'nsr.id')
@@ -442,7 +443,6 @@ class StudentListScreen extends Screen
             'student.district_id' => 'required',
             'student.applied_program' => 'required',
             'student.country_id' => 'required',
-            'student.institution_id' => 'required',
             'student.dob' => [
                 'required',
                 function ($attribute, $value, $fail) {
@@ -454,7 +454,7 @@ class StudentListScreen extends Screen
             ],
         ]);
 
-        $institutionId = $request->input('student.institution_id');
+        $institutionId = auth()->user()->inRole('institution') ? auth()->user()->institution_id : $request->input('student.institution_id');
 
         $student = null;
 
