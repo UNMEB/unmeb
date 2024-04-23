@@ -34,6 +34,7 @@ class NewExamApplicationScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+
         session()->put("exam_registration_period_id", $request->get('exam_registration_period_id'));
         session()->put("institution_id", $request->get('institution_id'));
         session()->put("course_id", $request->get('course_id'));
@@ -54,17 +55,24 @@ class NewExamApplicationScreen extends Screen
             's.dob',
             's.district_id',
             's.country_id',
-            's.nsin as nsin'
+            's.nsin as nsin',
+            's.telephone',
+            's.passport',
+            's.passport_number',
+            's.lin',
+            's.email'
         ]);
         $query->from('students As s');
         $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');
         $query->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id');
-        // $query->join('courses AS c', 'c.id', '=', 'nr.course_id');
-        // $query->where('nr.institution_id', $institutionId);
+        
+        $query->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id');
         $query->where('nr.course_id', $courseId);
         $query->where('nsr.verify', 1);
 
         $query->where('s.institution_id', $institutionId);
+
+        $query->whereNull('sr.id');
 
         $query->orderBy('nsr.id', 'desc');
 
@@ -121,13 +129,12 @@ class NewExamApplicationScreen extends Screen
             $trial = session('trial');
             $yearOfStudy = session('year_of_study');
 
-            // Get necessary settings
             $settings = \Config::get('settings');
+
             $costPerPaper = (float) $settings['fees.paper_registration'];
 
-            // Get necessary data
-            $institution = Institution::with('account')->find($institutionId);
-            $course = Course::find($courseId);
+            $institution = Institution::with('account')->findOrFail($institutionId);
+            $course = Course::findOrFail($courseId);
             $studentIds = $request->input('students');
 
             // Get surcharge for normal registration
@@ -137,86 +144,80 @@ class NewExamApplicationScreen extends Screen
                 ->where('surcharges.flag', 1)
                 ->firstOrFail();
 
-            // Account Balance
             $accountBalance = (float) $institution->account->balance;
 
             // Calculate amount to pay
             if ($trial == 'First') {
-                $amountToPay = $normalCharge->course_fee * count($studentIds);
+                $amountToPay = $normalCharge->course_fee;
             } elseif ($trial == 'Second' || $trial == 'Third') {
-                $amountToPay = $costPerPaper * count($paperIds) * count($studentIds);
+                $amountToPay = $costPerPaper * count($paperIds);
             }
 
-            // Check account balance
-            if ($amountToPay > $accountBalance) {
+            if ((count($studentIds) * $amountToPay ) > $accountBalance) {
                 throw new \Exception("Insufficient account balance. Please top up your account before proceeding.");
             }
 
-            // Find or create the registration
-            $registration = Registration::firstOrNew([
-                'institution_id' => $institutionId,
-                'course_id' => $courseId,
-                'year_of_study' => $yearOfStudy,
-                'registration_period_id' => $examRegistrationPeriodId,
-            ]);
-
-            if (!$registration->exists) {
+            $registration = Registration::where('institution_id', $institution->id)
+                            ->where('course_id', $course->id)
+                            ->first();
+            if ($registration == null) {
+                $registration = new Registration();
+                $registration->institution_id = $institution->id;
+                $registration->course_id = $course->id;
+                $registration->year_of_study = $yearOfStudy;
+                $registration->registration_period_id = $examRegistrationPeriodId;
+                $registration->date_time = now();
                 $registration->amount = 0;
                 $registration->surcharge_id = $normalCharge->surcharge_id;
                 $registration->save();
             }
 
-            // Proceed with registration for each student
-            foreach ($studentIds as $studentId) {
 
+            foreach ($studentIds as $studentId) {
                 $student = Student::find($studentId);
 
-                // Register Student Exam Registration
-                $existingRegistration = StudentRegistration::firstOrNew([
+                $studentRegistration = StudentRegistration::firstOrNew([
                     'registration_id' => $registration->id,
                     'student_id' => $student->id,
                     'trial' => $trial,
                 ]);
 
-                if ($existingRegistration->exists) {
-                    $courseCodes = Paper::whereIn('id', $paperIds)->pluck('code');
+                $courseCodes = Paper::whereIn('id', $paperIds)->pluck('code');
 
-                    $existingRegistration->course_codes = $courseCodes;
-                    $existingRegistration->no_of_papers = count($paperIds);
-                    $existingRegistration->sr_flag = 0;
-                    $existingRegistration->save();
+                $studentRegistration->course_codes = $courseCodes;
+                $studentRegistration->no_of_papers = count($paperIds);
+                $studentRegistration->sr_flag = 0;
+                $studentRegistration->save();
 
-                    // Create a transaction for this student registration
-                    $transaction = new Transaction([
-                        'amount' => ($trial == 'First') ? $normalCharge->course_fee : ($costPerPaper * count($paperIds)),
-                        'type' => 'debit',
-                        'account_id' => $institution->account->id,
-                        'institution_id' => $institution->id,
-                        'initiated_by' => auth()->user()->id,
-                        'status' => 'approved',
-                        'comment' => 'Exam Registration for student ID: ' . $student->id,
-                    ]);
-                    $transaction->save();
+                // Create a transaction for this student registration
+                $transaction = new Transaction([
+                    'amount' => ($trial == 'First') ? $normalCharge->course_fee : ($costPerPaper * count($paperIds)),
+                    'type' => 'debit',
+                    'account_id' => $institution->account->id,
+                    'institution_id' => $institution->id,
+                    'initiated_by' => auth()->user()->id,
+                    'status' => 'approved',
+                    'comment' => 'Exam Registration for student ID: ' . $student->id,
+                ]);
+                $transaction->save();
 
-                    // Update account balance and complete registration
-                    $newBalance = $institution->account->balance - $amountToPay;
-                    $institution->account->update(['balance' => $newBalance]);
+                // Update account balance and complete registration
+                $newBalance = $institution->account->balance - $amountToPay;
+                $institution->account->update(['balance' => $newBalance]);
 
-                    // Register Student Papers
-                    $studentCoursePapers = CoursePaper::where('course_id', $course->id)
+                $studentCoursePapers = CoursePaper::where('course_id', $course->id)
                         ->whereIn('paper_id', $paperIds)
                         ->pluck('id');
 
-                    $studentPaperRegistrations = [];
-                    foreach ($studentCoursePapers as $coursePaperId) {
-                        $studentPaperRegistrations[] = [
-                            'student_registration_id' => $existingRegistration->id,
-                            'course_paper_id' => $coursePaperId,
-                        ];
-                    }
-
-                    StudentPaperRegistration::insert($studentPaperRegistrations);
+                $studentPaperRegistrations = [];
+                foreach ($studentCoursePapers as $coursePaperId) {
+                    $studentPaperRegistrations[] = [
+                        'student_registration_id' => $studentRegistration->id,
+                        'course_paper_id' => $coursePaperId,
+                    ];
                 }
+
+                StudentPaperRegistration::insert($studentPaperRegistrations);
             }
 
             $numberOfStudents = count($studentIds);
@@ -230,10 +231,9 @@ class NewExamApplicationScreen extends Screen
 
 
             \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>Exam Registration</th><td>$examTotal</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
-
         } catch (\Throwable $th) {
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
-        }
+        }  
     }
 
 }

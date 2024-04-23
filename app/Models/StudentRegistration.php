@@ -15,6 +15,16 @@ class StudentRegistration extends Model
 {
     use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
+    protected $fillable = [
+        'student_id',
+        'registration_id',
+        'trial',
+        'course_codes',
+        'no_of_papers',
+        'sr_flag',
+        'remarks'
+    ];
+
     public function student()
     {
         return $this->belongsTo(Student::class);

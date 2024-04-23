@@ -137,20 +137,24 @@ class ApproveNsinRegistrationDetails extends Screen
             $this->processRegistration($studentId, 'reject', $rejectionReason);
         }
 
-        Alert::success('NSIN Applications Approved', "
-        <table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'>
-            <tbody>
-                <tr>
-                    <td>Number of Students Approved</td>
-                    <td></td>
-                </tr>
-                <tr>
-                    <td>Number of Students Rejected</td>
-                    <td></td>
-                </tr>
-            </tbody>
-        </table>
-        ")
+        // Alert::success('NSIN Applications Approved', "
+        // <table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'>
+        //     <tbody>
+        //         <tr>
+        //             <td>Number of Students Approved</td>
+        //             <td></td>
+        //         </tr>
+        //         <tr>
+        //             <td>Number of Students Rejected</td>
+        //             <td></td>
+        //         </tr>
+        //     </tbody>
+        // </table>
+        // ")
+        // ->persistent(true)
+        // ->toHtml();
+
+        Alert::success('NSIN Applications Approved', "Selected NSIN Applications have been successfully approved.")
         ->persistent(true)
         ->toHtml();
     }

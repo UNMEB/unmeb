@@ -86,8 +86,6 @@ class StudentListScreen extends Screen
                     's.passport'
                 ])
                 ->from('students As s')
-                ->leftJoin('nsin_student_registrations as nsr', 's.id', '=', 'nsr.id')
-                ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=','nr.id')
                 ->orderBy('s.created_at', 'desc');
         
         if(auth()->user()->inRole('institution')) {
@@ -180,7 +178,13 @@ class StudentListScreen extends Screen
                 ->method('download')
                 ->rawClick(false)
                 ->canSee(auth()->user()->hasAccess('platform.students.export'))
-                ->class('btn btn-primary')
+                ->class('btn btn-primary'),
+
+            DropDown::make()
+            ->icon('bs.three-dots-vertical')
+            ->list([
+                ModalToggle::make('Rollback Action')
+            ])->canSee(auth()->user()->inRole('administrator'))
         ];
     }
 
