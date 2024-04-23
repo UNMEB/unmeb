@@ -26,7 +26,8 @@ class ExamApplicationListScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-       $query = Student::from('students AS s')
+       $query = Student::withoutGlobalScopes()
+       ->from('students AS s')
        ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
        ->join('registrations as r', 'sr.registration_id','=','r.id')
        ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
