@@ -26,33 +26,21 @@ class ExamApplicationListScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-        $query = Student::withoutGlobalScopes()
-        ->select([
-            'r.id as registration_id',
-            'i.id as institution_id',
-            'i.institution_name',
-            'c.id as course_id',
-            'c.course_name as course_name',
+       $query = Student::from('students AS s')
+       ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
+       ->join('registrations as r', 'sr.registration_id','=','r.id')
+       ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
+       ->join('courses AS c', 'c.id', '=', 'r.course_id');
 
-            DB::raw('COUNT(*) as registrations_count')
-        ])
-        ->from('students AS s')
-        ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
-        ->join('registrations as r', 'sr.registration_id','=','r.id')
-        ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
-        ->join('courses AS c', 'c.id', '=', 'r.course_id')
-
-        ->where('sr.sr_flag', 1)
-
-        ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
-
-        if(auth()->user()->inRole('institution')) {
-            $query->where('r.institution_id', auth()->user()->institution_id);
+       if(auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
         }
 
-        return [
-            'applications' => $query->paginate()
-        ];
+        $results = $query->paginate();
+
+       return [
+        'applications' => $query->paginate(10),
+       ];
     }
 
     /**
@@ -108,6 +96,7 @@ class ExamApplicationListScreen extends Screen
                 TD::make('registration_id', 'Reg. ID'),
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
+                TD::make('year_of_study', 'Semester'),
                 TD::make('registrations_count', 'Applications')->render(fn($data) => "$data->registrations_count Students"),
                 TD::make('actions', 'Actions')->render(
                     fn($data) => Link::make('Details')

@@ -95,7 +95,6 @@
                 <!--  -->
 
                 <div class="d-flex justify-content-end">
-                    {!! \Orchid\Screen\Actions\Button::make(__('Rollback'))->method('rollback')->class('btn btn-primary me-2')->canSee($hasRollback) !!}
                     {!! \Orchid\Screen\Actions\Button::make(__('Submit Data'))->method('submit')->class('btn btn-success') !!}
                 </div>
             </div>
