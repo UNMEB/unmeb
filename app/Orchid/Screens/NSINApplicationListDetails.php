@@ -80,10 +80,9 @@ class NSINApplicationListDetails extends Screen
         $nsinRegistration = NsinRegistration::find($this->nsinRegistrationId);
         if($nsinRegistration) {
             $year = $nsinRegistration->year->year;
-            $institution = $nsinRegistration->institution->name;
-            return $year .' '. $institution;
+            $institution = $nsinRegistration->institution->institution_name;
+            return 'NSIN Applications for '. $institution . 'for the period ' . $nsinRegistration->month . '/' . $year;
         }
-        dd($nsinRegistration);
         return '';
     }
 
