@@ -56,8 +56,6 @@ class ApplyForNSINsForm extends Listener
                     ->fromModel(Institution::class, 'institution_name', 'id')
                     ->applyScope('userInstitutions')
                     ->value(auth()->user()->institution_id)
-                    // ->disabled(!auth()->user()->hasAccess('platform.internals.all_institutions'))
-                    // ->canSee(!auth()->user()->inRole('institution'))
                     ->required(),
 
                 // Select Nsin Registration Period
