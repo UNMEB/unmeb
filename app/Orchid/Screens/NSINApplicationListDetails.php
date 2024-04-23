@@ -51,7 +51,8 @@ class NSINApplicationListDetails extends Screen
             's.nin',
             's.telephone',
             's.refugee_number',
-            's.lin'
+            's.lin',
+            's.passport'
         ]);
         $query->from('students As s');
         $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');

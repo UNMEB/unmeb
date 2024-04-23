@@ -2,6 +2,7 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
 use App\Models\LogbookFee;
@@ -16,6 +17,7 @@ use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
@@ -210,15 +212,33 @@ class NewNsinApplicationsScreen extends Screen
                 'institution_id' => $institutionId,
                 'course_id' => $courseId,
             ]);
-    
-            // Get the last assigned student code
-            $lastStudentCode = NsinStudentRegistration::where('nsin_registration_id', $nsinRegistration->id)
-                                ->max('student_code');
-    
-            $lastStudentCode = $lastStudentCode ? $lastStudentCode : 0; // If no student registered yet, set it to 0
-    
+
+
+            $institutionCode = Institution::where('id', $nsinRegistration->institution_id)->value('code');
+            $courseCode = Course::where('id', $nsinRegistration->course_id)->value('course_code');
+
+            $nsinMonth = Str::upper(Str::limit($nsinRegistration->month, 3, ''));
+            $nsinYear = Str::substr($nsinRegistration->year->year, 2); // Accessing year from the eager loaded relationship
+
+            // Generate the NSIN pattern
+            $nsinPattern = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}";
+
+            // Fetch NSINs from students table matching the pattern
+            $matchingNSINs = Student::where('nsin', 'LIKE', "%$nsinPattern%")
+            ->orderBy('nsin', 'desc')
+            ->first();
+
+            if ($matchingNSINs) {
+                $lastCode = substr($matchingNSINs->nsin, -3);
+                $lastCode = intval($lastCode);
+                $lastCode = str_pad($lastCode, 3, '0', STR_PAD_LEFT);
+            } else {
+                // If no matching NSIN found, set initial code to '001'
+                $lastCode = '000';
+            }
+
             foreach ($sortedStudentIds as $key => $studentId) {
-    
+
                 $fees = $nsinRegistrationFee + $logbookFee->course_fee;
     
                 if ($fees > $institution->account->balance) {
@@ -231,15 +251,15 @@ class NewNsinApplicationsScreen extends Screen
                     'student_id' => $studentId,
                     'verify' => 0
                 ])->first();
-    
+
                 if (!$existingRegistration) {
                     $nsinStudentRegistration = new NsinStudentRegistration();
                     $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                     $nsinStudentRegistration->student_id = $studentId;
                     $nsinStudentRegistration->verify = 0;
-                    $nsinStudentRegistration->student_code = str_pad($lastStudentCode + $key + 1, 3, '0', STR_PAD_LEFT);
+                    $nsinStudentRegistration->student_code = str_pad($lastCode + $key + 1, 3, '0', STR_PAD_LEFT);
                     $nsinStudentRegistration->save();
-                    
+
                     // Create Transaction for NSIN registration fee for this student
                     $nsinTransaction = new Transaction([
                         'amount' => $nsinRegistrationFee,
@@ -276,7 +296,7 @@ class NewNsinApplicationsScreen extends Screen
                         'balance' => $newBalance,
                     ]);
                 }
-    
+
                 $numberOfStudents = count($studentIds);
                 $nsinTotal = $nsinRegistrationFee * $numberOfStudents;
                 $logbookTotal = $logbookFee->course_fee * $numberOfStudents;
@@ -290,6 +310,7 @@ class NewNsinApplicationsScreen extends Screen
     
                 \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Registration</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Registration</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
             }
+            
         } catch (\Throwable $th) {
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
         }

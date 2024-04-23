@@ -26,6 +26,7 @@ use App\Orchid\Screens\Biometric\StudentEnrollmentListScreen;
 use App\Orchid\Screens\Biometric\StudentVerificationListScreen;
 use App\Orchid\Screens\Comment\CommentListScreen;
 use App\Orchid\Screens\CourseUnAssignPapersListScreen;
+use App\Orchid\Screens\ExamApplicationDetailScreen;
 use App\Orchid\Screens\ExamApplicationListScreen;
 use App\Orchid\Screens\Examples\ExampleActionsScreen;
 use App\Orchid\Screens\Examples\ExampleCardsScreen;
@@ -376,6 +377,9 @@ Route::screen('registrations/exam/applications/list', ExamApplicationListScreen:
 
 Route::screen('registrations/exam/applications/new', NewExamApplicationScreen::class)
     ->name('platform.registration.exam.applications.new');
+
+Route::screen('registrations/exam/applications/details', ExamApplicationDetailScreen::class)
+    ->name('platform.registration.exam.applications.details');
 
 // Platform > Registration > NSIN > Incomplete > Details
 Route::screen('registrations/nsin/incomplete/details', IncompleteNsinRegistrationDetails::class)

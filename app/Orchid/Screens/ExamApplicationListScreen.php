@@ -6,6 +6,7 @@ use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Orchid\Layouts\ApplyForExamsForm;
 use Illuminate\Http\Request;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
@@ -13,42 +14,36 @@ use Orchid\Support\Facades\Layout;
 
 class ExamApplicationListScreen extends Screen
 {
+    public $filters = [];
+
     /**
      * Fetch data to be displayed on the screen.
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
-        $activeExamPeriod = RegistrationPeriod::whereFlag(1, true)->first();
+        $query = Student::withoutGlobalScopes()
+        ->select([
+            'r.id as registration_id',
+            'i.id as institution_id',
+            'i.institution_name',
+            'c.id as course_id',
+            'c.course_name as course_name',
+        ])
+        ->from('students AS s')
+        ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
+        ->join('registrations as r', 'sr.registration_id','=','r.id')
+        ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
+        ->join('courses AS c', 'c.id', '=', 'r.course_id')
+        ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
 
-        $pendingQuery = Student
-            ::withoutGlobalScopes()
-            ->from('students as s')
-            ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
-            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
-            ->where('rp.id', $activeExamPeriod->id)
-            ->where('sr.sr_flag', 0)
-            ->where('i.id', auth()->user()->institution_id)
-            ->paginate();
-
-        $approvedQuery = Student::withoutGlobalScopes()
-            ->from('students as s')
-            ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
-            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->join('institutions as i', 'r.institution_id', '=', 'i.id')
-            ->where('rp.id', $activeExamPeriod->id)
-            ->where('sr.sr_flag', 1)
-            ->where('i.id', auth()->user()->institution_id)
-            ->paginate();
-
+        if(auth()->user()->inRole('institution')) {
+            $query->where('r.institution_id', auth()->user()->institution_id);
+        }
 
         return [
-            'pending_students' => $pendingQuery,
-            'approved_students' => $approvedQuery,
+            'applications' => $query->paginate()
         ];
     }
 
@@ -77,9 +72,16 @@ class ExamApplicationListScreen extends Screen
         return [
             ModalToggle::make('New Exam Applications')
                 ->modal('newExamApplicationModal')
-                ->modalTitle('New Exam Applications')
+                ->modalTitle('Create New Exam Applications')
                 ->class('btn btn-success')
                 ->method('applyForExams')
+                ->rawClick(false),
+
+            ModalToggle::make('Export Exam Applications')
+            ->class('btn btn-primary')
+            ->modal('exportExamApplications')
+            ->modalTitle('Export Exam Applications')
+            ->method('exportExamApplications')
         ];
     }
 
@@ -94,31 +96,23 @@ class ExamApplicationListScreen extends Screen
             Layout::modal('newExamApplicationModal', ApplyForExamsForm::class)
                 ->applyButton('Register for Exams'),
 
-            Layout::tabs([
-                'Pending Exam Registrations' => Layout::table('pending_students', [
-                    TD::make('id', 'ID'),
-                    TD::make('fullName', 'Name'),
-                    TD::make('gender', 'Gender'),
-                    TD::make('dob', 'Date of Birth'),
-                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
-                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
-                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
-                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
-                ]),
-                'Approved Exam Registrations' => Layout::table('approved_students', [
-                    TD::make('id', 'ID'),
-                    TD::make('fullName', 'Name'),
-                    TD::make('gender', 'Gender'),
-                    TD::make('dob', 'Date of Birth'),
-                    TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
-                    TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
-                    TD::make('identifier', 'Identifier')->render(fn(Student $student) => $student->identifier),
-                    TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin == null ? 'NOT APPROVED' : $student->nsin),
-                ]),
+            Layout::table('applications', [
+                TD::make('registration_id', 'Reg. ID'),
+                TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
+                TD::make('course_name', 'Program'),
+                TD::make('actions', 'Actions')->render(
+                    fn($data) => Link::make('Details')
+                        ->class('btn btn-primary btn-sm link-primary')
+                        ->route('platform.registration.exam.applications.details', [
+                            'institution_id' => $data->institution_id,
+                            'course_id' => $data->course_id,
+                            'nsin_registration_id' => $data->registration_id
+                        ])
+                )
             ])
+            
         ];
     }
-
 
     public function applyForExams(Request $request)
     {
@@ -140,4 +134,5 @@ class ExamApplicationListScreen extends Screen
 
         return redirect()->to($url);
     }
+
 }
