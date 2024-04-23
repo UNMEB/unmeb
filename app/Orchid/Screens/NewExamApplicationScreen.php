@@ -66,13 +66,13 @@ class NewExamApplicationScreen extends Screen
         $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');
         $query->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id');
         
-        $query->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id');
+        // $query->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id');
         $query->where('nr.course_id', $courseId);
         $query->where('nsr.verify', 1);
 
         $query->where('nr.institution_id', $institutionId);
 
-        $query->whereNull('sr.id');
+        // $query->whereNull('sr.id');
 
         $query->orderBy('nsr.id', 'desc');
 
