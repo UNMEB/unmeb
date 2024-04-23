@@ -122,6 +122,11 @@ class StudentListScreen extends Screen
                         ->orWhere('surname', 'like', '%' . $name . '%')
                         ->orWhere('othername', 'like', '%' . $name . '%');
             }
+
+            if (isset($this->filters['gender']) && $this->filters['gender'] !== null) {
+                $gender = $this->filters['gender'];
+                $query->where('s.gender', '=', $gender);
+            }
         }
 
         return [
