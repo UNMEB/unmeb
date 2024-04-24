@@ -54,7 +54,7 @@ class ExamApplicationListScreen extends Screen
         }
         
         // Debugging
-        dd($query->toSql(), $query->getBindings());
+        // dd($query->toSql(), $query->getBindings());
         
         return [
             'applications' => $query->paginate(10),
