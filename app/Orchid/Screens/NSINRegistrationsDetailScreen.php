@@ -48,6 +48,7 @@ class NSINRegistrationsDetailScreen extends Screen
                 's.nin', 
                 's.passport_number', 
                 's.refugee_number',
+                's.nsin'
                 ])
             ->from('students as s')
             ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
