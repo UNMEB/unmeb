@@ -127,8 +127,23 @@ class ExamApplicationListScreen extends Screen
                 TD::make('semester', 'Semester'),
                 TD::make('start_date', 'Start Date'),
                 TD::make('end_date', 'End Date'),
-                TD::make('registrations_count', 'Applications')->render(function ($data) {
-                    return 0;
+                TD::make('pending', 'Pending')->render(function ($data) {
+                    return StudentRegistration::where([
+                        'registration_id' => $data->registration_id,
+                        'sr_flag' => 0
+                    ])->count('id');
+                }),
+                TD::make('approved', 'Approved')->render(function ($data) {
+                    return StudentRegistration::where([
+                        'registration_id' => $data->registration_id,
+                        'sr_flag' => 1
+                    ])->count('id');
+                }),
+                TD::make('rejected', 'Rejected')->render(function ($data) {
+                    return StudentRegistration::where([
+                        'registration_id' => $data->registration_id,
+                        'sr_flag' => 2
+                    ])->count('id');
                 }),
                 TD::make('actions', 'Actions')->render(
                     fn($data) => Link::make('Details')
