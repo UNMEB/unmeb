@@ -51,7 +51,7 @@ class ExamApplicationListScreen extends Screen
             ->groupBy('i.institution_name', 'c.course_name', 'r.id');
 
         if(auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
+            $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
         return [
