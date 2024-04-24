@@ -117,7 +117,7 @@ class PlatformScreen extends Screen
             'student_registration_by_course' => $query1->get(),
             'gender_distribution_by_course' => collect($query2->get()),
             'metrics' => [
-                'account_balance' => number_format((float) Account::where('institution_id', $institutionId)->sum('balance'), 0),
+                'account_balance' => number_format((float) Account::where('institution_id', $institutionId)->value('balance')),
                 'pending_balance' => number_format((float) Transaction::where('institution_id', $institutionId)
                     ->where('type', 'credit')
                     ->where('status', 'PENDING')
