@@ -202,7 +202,7 @@ class NewExamApplicationScreen extends Screen
                 $transaction->save();
 
                 // Update account balance and complete registration
-                $newBalance = $institution->account->balance - ($trial == 'First') ? $normalCharge->course_fee : ($costPerPaper * count($paperIds));
+                $newBalance = $institution->account->balance - (($trial == 'First') ? $normalCharge->course_fee : ($costPerPaper * count($paperIds)));
                 $institution->account->update(['balance' => $newBalance]);
 
                 $studentCoursePapers = CoursePaper::where('course_id', $course->id)
@@ -221,7 +221,7 @@ class NewExamApplicationScreen extends Screen
             }
 
             $numberOfStudents = count($studentIds);
-            $examTotal = $amountToPay;
+            $examTotal = $amountToPay * $numberOfStudents;
             $totalDeduction = $examTotal;
             $remainingBalance = $institution->account->balance;
 
@@ -235,5 +235,6 @@ class NewExamApplicationScreen extends Screen
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
         }  
     }
+
 
 }

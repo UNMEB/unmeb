@@ -17,7 +17,7 @@ return new class extends Migration
         // Create the required roles
         $adminRole = new Role();
         $adminRole->name = 'System Admin';
-        $adminRole->slug = 'system-admin';
+        $adminRole->slug = 'administrator';
         $adminRole->permissions = [
             'platform.index'                                                    => 1,
         ];

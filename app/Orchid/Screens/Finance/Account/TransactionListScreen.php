@@ -390,38 +390,42 @@ class TransactionListScreen extends Screen
      */
     public function deposit(Request $request)
     {
-        $institution = null;
+        try {
+            $institution = null;
 
-        if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
-            $institution = Institution::find($request->input('institution_id'));
-        } else {
-            $institution = $this->currentUser()->institution;
+            if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
+                $institution = Institution::find($request->input('institution_id'));
+            } else {
+                $institution = $this->currentUser()->institution;
+            }
+
+            $accountId = $institution->account->id;
+
+            $amount = $request->input('amount');
+            $method = $request->input('method');
+            $remoteTxId = $request->input('transaction_id');
+
+            $transaction = new Transaction([
+                'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
+                'method' => $method,
+                'account_id' => $accountId,
+                'type' => 'credit',
+                'institution_id' => $institution->id,
+                'deposited_by' => $request->input('deposited_by'),
+                'initiated_by' => auth()->user()->id,
+                'transaction_id' => $remoteTxId,
+            ]);
+
+            $transaction->save();
+
+            // Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
+
+            \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', 'Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
+
+            return back();
+        } catch (\Throwable $th) {
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to deposit funds for this institution. No institution access provided');
         }
-
-        $accountId = $institution->account->id;
-
-        $amount = $request->input('amount');
-        $method = $request->input('method');
-        $remoteTxId = $request->input('transaction_id');
-
-        $transaction = new Transaction([
-            'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
-            'method' => $method,
-            'account_id' => $accountId,
-            'type' => 'credit',
-            'institution_id' => $institution->id,
-            'deposited_by' => $request->input('deposited_by'),
-            'initiated_by' => auth()->user()->id,
-            'transaction_id' => $remoteTxId,
-        ]);
-
-        $transaction->save();
-
-        // Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
-
-        \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', 'Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
-
-        return back();
     }
 
 
