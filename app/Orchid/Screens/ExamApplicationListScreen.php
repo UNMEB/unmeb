@@ -31,21 +31,41 @@ class ExamApplicationListScreen extends Screen
             ->where('flag', 1)
             ->first();
 
-            $query = StudentRegistration::withoutGlobalScopes()
+            // $query = StudentRegistration::withoutGlobalScopes()
+            // ->from('student_registrations as sr')
+            // ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            // ->join('students as s', 'sr.student_id', '=', 's.id')
+            // ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
+            // ->join('courses AS c', 'c.id', '=', 'r.course_id')
+            // ->where('r.registration_period_id', $activePeriod->id)
+            // ->select([
+            //     'r.id as registration_id',
+            //     'i.institution_name',
+            //     'c.course_name',
+            //     'r.year_of_study as semester',
+            //     ''
+            // ])
+            // ->groupBy('i.institution_name', 'c.course_name', 'r.id');
+
+        $query = StudentRegistration::withoutGlobalScopes()
             ->from('student_registrations as sr')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('students as s', 'sr.student_id', '=', 's.id')
             ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
             ->join('courses AS c', 'c.id', '=', 'r.course_id')
-            ->where('r.registration_period_id', $activePeriod->id)
+            ->join('registration_periods AS rp', 'r.registration_period_id', '=', 'rp.id')
+            ->where('rp.flag', 1)
             ->select([
                 'r.id as registration_id',
                 'i.institution_name',
                 'c.course_name',
-                'r.academic_year',
+                'r.year_of_study as semester',
+                'rp.reg_start_date as start_date',
+                'rp.reg_end_date as end_date',
+                'rp.academic_year',
             ])
             ->groupBy('i.institution_name', 'c.course_name', 'r.id');
-        
+
         return [
             'applications' => $query->paginate(10),
         ];
