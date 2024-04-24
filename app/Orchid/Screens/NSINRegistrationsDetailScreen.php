@@ -25,6 +25,7 @@ class NSINRegistrationsDetailScreen extends Screen
     public function query(Request $request): iterable
     {
         $data = $request->all();
+        dd($data);
 
         // Check and handle null values for keys
         $nsin_registration_id = $data['nsin_registration_id'] ?? null;
