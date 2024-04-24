@@ -28,17 +28,16 @@ class ExamApplicationListScreen extends Screen
     public function query(Request $request): iterable
     {
         $activePeriod = RegistrationPeriod::query()
-            ->where('flag', 1)
-            ->first();
-
-        $query = StudentRegistration::withoutGlobalScopes()
+        ->where('flag', 1)
+        ->first();
+    
+        $query = StudentRegistration::query()
             ->from('student_registrations as sr')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('students as s', 'sr.student_id', '=', 's.id')
             ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
             ->join('courses AS c', 'c.id', '=', 'r.course_id')
             ->join('registration_periods AS rp', 'r.registration_period_id', '=', 'rp.id')
-            ->where('rp.flag', 1)
             ->select([
                 'r.id as registration_id',
                 'i.institution_name',
@@ -49,11 +48,14 @@ class ExamApplicationListScreen extends Screen
                 'rp.academic_year',
             ])
             ->groupBy('i.institution_name', 'c.course_name', 'r.id');
-
-        if(auth()->user()->inRole('institution')) {
+        
+        if (auth()->user()->inRole('institution')) {
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
-
+        
+        // Debugging
+        dd($query->toSql(), $query->getBindings());
+        
         return [
             'applications' => $query->paginate(10),
         ];
