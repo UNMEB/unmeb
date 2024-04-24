@@ -31,22 +31,6 @@ class ExamApplicationListScreen extends Screen
             ->where('flag', 1)
             ->first();
 
-            // $query = StudentRegistration::withoutGlobalScopes()
-            // ->from('student_registrations as sr')
-            // ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            // ->join('students as s', 'sr.student_id', '=', 's.id')
-            // ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
-            // ->join('courses AS c', 'c.id', '=', 'r.course_id')
-            // ->where('r.registration_period_id', $activePeriod->id)
-            // ->select([
-            //     'r.id as registration_id',
-            //     'i.institution_name',
-            //     'c.course_name',
-            //     'r.year_of_study as semester',
-            //     ''
-            // ])
-            // ->groupBy('i.institution_name', 'c.course_name', 'r.id');
-
         $query = StudentRegistration::withoutGlobalScopes()
             ->from('student_registrations as sr')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
@@ -65,6 +49,10 @@ class ExamApplicationListScreen extends Screen
                 'rp.academic_year',
             ])
             ->groupBy('i.institution_name', 'c.course_name', 'r.id');
+
+        if(auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
 
         return [
             'applications' => $query->paginate(10),
