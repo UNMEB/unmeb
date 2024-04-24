@@ -6,6 +6,7 @@ use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\Student;
 use App\Models\Ticket;
+use App\Orchid\Screens\ActivityLogListScreen;
 use App\Orchid\Screens\Administration\Course\CourseAssignPapersListScreen;
 use App\Orchid\Screens\Administration\Course\CourseListScreen;
 use App\Orchid\Screens\Administration\District\DistrictListScreen;
@@ -108,6 +109,9 @@ use Illuminate\Support\Facades\URL;
 // Main
 Route::screen('/main', PlatformScreen::class)
     ->name('platform.main');
+
+// Activity Log
+Route::screen('/activity', ActivityLogListScreen::class)->name('platform.activity');
 
 // Ticket Manager Screen
 Route::screen('/tickets/manager', TicketManagementScreen::class)
