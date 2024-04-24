@@ -174,6 +174,12 @@ class NSINRegistrationsListScreen extends Screen
                         'verify' => 2
                     ])->count('id');
                 }),
+                TD::make('invalid', 'Invalid NSINS')->render(function ($data) {
+                    return NsinStudentRegistration::where('nsin_registration_id', $data->registration_id)
+                        ->whereIn('verify', [1, 2])
+                        ->whereRaw("NOT REGEXP '^[A-Z]{3}[0-9]{2}/[A-Z0-9]{4}/[A-Z]{2}/[0-9]{3}$'") // Use regex to check the pattern
+                        ->count('id');
+                }),
                 TD::make('actions', 'Actions')
                 ->render(fn ($data) => Link::make('Details')
                 ->class('btn btn-primary btn-sm link-primary')

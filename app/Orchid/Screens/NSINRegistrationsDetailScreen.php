@@ -48,6 +48,7 @@ class NSINRegistrationsDetailScreen extends Screen
                 's.nin', 
                 's.passport_number', 
                 's.refugee_number',
+                's.telephone',
                 's.nsin'
                 ])
             ->from('students as s')
