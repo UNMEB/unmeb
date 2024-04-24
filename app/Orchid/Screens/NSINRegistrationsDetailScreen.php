@@ -24,13 +24,10 @@ class NSINRegistrationsDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-        $data = $request->all();
-        dd($data);
-
         // Check and handle null values for keys
-        $nsin_registration_id = $data['nsin_registration_id'] ?? null;
-        $institution_id = $request->get('institution_id') ?? null;
-        $course_id = $request->get('course_id') ?? null;
+        $nsin_registration_id = $request->get('nsin_registration_id');
+        $institution_id = $request->get('institution_id');
+        $course_id = $request->get('course_id');
 
         session()->put("nsin_registration_id", $nsin_registration_id);
         session()->put('institution_id', $institution_id);
