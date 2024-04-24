@@ -28,10 +28,10 @@ class ExamApplicationListScreen extends Screen
     public function query(Request $request): iterable
     {
         $activePeriod = RegistrationPeriod::query()
-        ->where('flag', 1)
-        ->first();
-        
-        $query = StudentRegistration::withoutGlobalScopes()
+            ->where('flag', 1)
+            ->first();
+
+            $query = StudentRegistration::withoutGlobalScopes()
             ->from('student_registrations as sr')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('students as s', 'sr.student_id', '=', 's.id')
@@ -39,13 +39,16 @@ class ExamApplicationListScreen extends Screen
             ->join('courses AS c', 'c.id', '=', 'r.course_id')
             ->where('r.registration_period_id', $activePeriod->id)
             ->select([
-                'i.institution_name'
-            ]);
-
-    
-       return [
-        'applications' => $query->paginate(10),
-       ];
+                'r.id as registration_id',
+                'i.institution_name',
+                'c.course_name',
+                DB::raw('COUNT(*) as total_applications')
+            ])
+            ->groupBy('i.institution_name', 'c.course_name', 'r.id');
+        
+        return [
+            'applications' => $query->paginate(10),
+        ];
     }
 
     /**
