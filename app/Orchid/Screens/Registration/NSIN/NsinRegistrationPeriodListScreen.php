@@ -116,6 +116,7 @@ class NsinRegistrationPeriodListScreen extends Screen
                 FieldsRelation::make('period.year_id')
                     ->title('Period Year')
                     ->fromModel(Year::class, 'year', 'id')
+                    ->allowAdd()
                     ->horizontal(),
 
                 Select::make('period.month')
@@ -207,9 +208,18 @@ class NsinRegistrationPeriodListScreen extends Screen
             'period.flag' => 'required'
         ]);
 
+        $year = Year::find($request->input('period.year_id'));
+
+        if(is_null($year)) {
+            $year = new Year();
+            $year->year = $request->input('period.year_id');
+            $year->flag = 1;
+            $year->save();
+        }
+
         // Create a new NsinRegistrationPeriod record with the validated data
         $period = new NsinRegistrationPeriod();
-        $period->year_id = $request->input('period.year_id');
+        $period->year_id = $year->id;
         $period->month = $request->input('period.month');
         $period->flag = $request->input('period.flag');
         $period->save();

@@ -66,14 +66,16 @@ class PlatformProvider extends OrchidServiceProvider
                 ->list([
 
                     Menu::make(__('NSIN Applications'))
+                        ->icon('bs.arrow-right')
                         ->route('platform.registration.nsin.applications.list')
                         ->permission('platform.registration.nsin.applications.list'),
 
                     Menu::make(__('NSIN Registrations'))
-                    ->route('platform.registration.nsin.registrations.list')
-                    ,
+                        ->icon('bs.arrow-right')
+                        ->route('platform.registration.nsin.registrations.list')
+                        ->permission('platform.registration.nsin.applications.list'),
 
-                    Menu::make('NSIN Registration Approval')
+                    Menu::make('Registration Approval')
                         ->route('platform.registration.nsin.approve')
                         ->permission('platform.registration.nsin.approve'),
                 ]),

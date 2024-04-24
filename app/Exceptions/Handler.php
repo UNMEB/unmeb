@@ -27,4 +27,27 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    public function render($request, Throwable $exception)
+    {
+        if ($this->isHttpException($exception)) {
+            // If the exception is an instance of HttpException
+            // You can return a custom error view based on the exception status code
+            switch ($exception->getStatusCode()) {
+                case 404:
+                    return response()->view('errors.404', [], 404);
+                    break;
+
+                case 403:
+                    return response()->view('errors.403', [], 403);
+                    break;
+
+                default:
+                    return $this->renderHttpException($exception);
+                    break;
+            }
+        } else {
+            return parent::render($request, $exception);
+        }
+    }
 }
