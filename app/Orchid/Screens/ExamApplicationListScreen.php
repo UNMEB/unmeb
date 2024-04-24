@@ -52,6 +52,8 @@ class ExamApplicationListScreen extends Screen
         if (auth()->user()->inRole('institution')) {
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
+
+        $query->where('rp.id', $activePeriod->id);
         
         // Debugging
         // dd($query->toSql(), $query->getBindings());
