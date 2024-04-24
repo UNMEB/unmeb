@@ -64,7 +64,9 @@ class NSINRegistrationsDetailScreen extends Screen
         })
         ->join('nsin_student_registrations AS sr', 'r.id', '=','sr.nsin_registration_id')
         ->join('students as s', 'sr.student_id', '=','s.id')
-        ->where('rp.id', $registration_period_id);
+        ->where('rp.id', $registration_period_id)
+        ->where('r.institution_id', $institution_id)
+        ->where('r.course_id', $course_id);
 
         
 
