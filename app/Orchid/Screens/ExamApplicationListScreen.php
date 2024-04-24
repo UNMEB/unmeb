@@ -42,7 +42,7 @@ class ExamApplicationListScreen extends Screen
                 'r.id as registration_id',
                 'i.institution_name',
                 'c.course_name',
-                DB::raw('COUNT(*) as total_applications')
+                'r.academic_year',
             ])
             ->groupBy('i.institution_name', 'c.course_name', 'r.id');
         
