@@ -31,18 +31,17 @@ class NSINRegistrationTable extends Table
     {
         return [
             TD::make('id', 'ID'),
-            TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
-            TD::make('fullName', 'Name'),
-            TD::make('gender', 'Gender'),
-            TD::make('dob', 'Date of Birth'),
-            TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
-            TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
-            TD::make('telephone', 'Phone Number'),
-            TD::make('nsin','NSIN'),
-            TD::make('Status', 'Status')->render(function ($row) {
-                return $row->verify == 1 ? 'Approved' : '';
+            TD::make('passport', 'Photo')->render(function ($data) {
+                return '<img src="' . $data->passport . '" width="50px">';
             }),
-            TDCheckbox::make('student')
+            TD::make('name', 'Student Name')->render(function ($data) {
+                return $data->surname .' '. $data->othername .' '. $data->firstname;
+            }),
+            TD::make('gender', 'Gender'),
+            TD::make('dob', 'Birth Date'),
+            TD::make('telephone', 'Phone Number'),
+            TD::make('nsin', 'NSIN'),
+            TDCheckbox::make('students')
         ];
     }
 

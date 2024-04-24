@@ -32,4 +32,10 @@ class NsinRegistrationPeriod extends Model
     {
         return LogOptions::defaults();
     }
+
+    public function registrations()
+    {
+        return $this->hasMany(NsinRegistration::class, 'month', 'month')
+                    ->where('year_id', $this->year_id);
+    }
 }

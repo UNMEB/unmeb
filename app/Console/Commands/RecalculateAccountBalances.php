@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Account;
 use App\Models\Transaction;
+use App\Models\Institution;
 use Illuminate\Console\Command;
 
 class RecalculateAccountBalances extends Command
@@ -13,7 +14,7 @@ class RecalculateAccountBalances extends Command
      *
      * @var string
      */
-    protected $signature = 'accounts:recalculate-balances';
+    protected $signature = 'accounts:recalculate-balances {institution_id : The ID of the institution}';
 
     /**
      * The console command description.
@@ -27,7 +28,21 @@ class RecalculateAccountBalances extends Command
      */
     public function handle()
     {
-        $accounts = Account::withoutGlobalScopes()->get();
+        $institutionId = $this->argument('institution_id');
+        
+        if (!$institutionId) {
+            $this->error('Institution ID is required!');
+            return;
+        }
+
+        $institution = Institution::find($institutionId);
+
+        if (!$institution) {
+            $this->error('Institution not found!');
+            return;
+        }
+
+        $accounts = Account::withoutGlobalScopes()->where('institution_id', $institutionId)->get();
 
         foreach ($accounts as $account) {
             $transactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)->get();
@@ -45,6 +60,6 @@ class RecalculateAccountBalances extends Command
             $account->save();
         }
 
-        $this->info('Account balances recalculated successfully!');
+        $this->info('Account balances recalculated successfully for institution: ' . $institution->institution_name);
     }
 }
