@@ -124,7 +124,9 @@ class ExamApplicationListScreen extends Screen
                 TD::make('registration_id', 'Reg. ID'),
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
-                TD::make('year_of_study', 'Semester'),
+                TD::make('semester', 'Semester'),
+                TD::make('start_date', 'Start Date'),
+                TD::make('end_date', 'End Date'),
                 TD::make('registrations_count', 'Applications')->render(function ($data) {
                     return 0;
                 }),
