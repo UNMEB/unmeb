@@ -202,7 +202,7 @@ class NewExamApplicationScreen extends Screen
                 $transaction->save();
 
                 // Update account balance and complete registration
-                $newBalance = $institution->account->balance - $amountToPay;
+                $newBalance = $institution->account->balance - ($trial == 'First') ? $normalCharge->course_fee : ($costPerPaper * count($paperIds));
                 $institution->account->update(['balance' => $newBalance]);
 
                 $studentCoursePapers = CoursePaper::where('course_id', $course->id)

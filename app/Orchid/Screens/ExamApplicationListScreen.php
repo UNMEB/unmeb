@@ -4,6 +4,7 @@ namespace App\Orchid\Screens;
 
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
+use App\Models\StudentRegistration;
 use App\Orchid\Layouts\ApplyForExamsForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -26,16 +27,20 @@ class ExamApplicationListScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-       $query = Student::withoutGlobalScopes()
-       ->from('students AS s')
-       ->join('student_registrations as sr', 's.id', '=', 'sr.student_id')
-       ->join('registrations as r', 'sr.registration_id','=','r.id')
-       ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
-       ->join('courses AS c', 'c.id', '=', 'r.course_id');
-
-       if(auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
-        }
+        $activePeriod = RegistrationPeriod::query()
+        ->where('flag', 1)
+        ->first();
+        
+        $query = StudentRegistration::withoutGlobalScopes()
+            ->from('student_registrations as sr')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('students as s', 'sr.student_id', '=', 's.id')
+            ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
+            ->join('courses AS c', 'c.id', '=', 'r.course_id')
+            ->where('r.registration_period_id', $activePeriod->id)
+            ->select([
+                'i.institution_name'
+            ]);
 
     
        return [
@@ -97,7 +102,9 @@ class ExamApplicationListScreen extends Screen
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
                 TD::make('year_of_study', 'Semester'),
-                TD::make('registrations_count', 'Applications')->render(fn($data) => "$data->registrations_count Students"),
+                TD::make('registrations_count', 'Applications')->render(function ($data) {
+                    return 0;
+                }),
                 TD::make('actions', 'Actions')->render(
                     fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
