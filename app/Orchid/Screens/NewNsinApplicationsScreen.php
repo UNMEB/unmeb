@@ -83,7 +83,6 @@ class NewNsinApplicationsScreen extends Screen
             ])
         ->from('students as s')
         ->leftJoin('nsin_student_registrations as nsr', 's.id','=','nsr.student_id')
-        ->whereNull('s.nsin')
         ->whereNull('nsr.student_id')
         ->where('s.institution_id', session('institution_id'))
         ->orderBy('s.surname', 'asc');
