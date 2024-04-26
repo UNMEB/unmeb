@@ -235,7 +235,7 @@
                         <td>{{ $transaction->type == 'credit' ? number_format($transaction->amount) : '' }}</td>
                         <td>
                             <?php
-                            $balance += $transaction->type == 'debit' ? -$transaction->amount : $transaction->amount;
+                            $balance += $transaction->type == 'debit' ? $transaction->amount : $transaction->amount;
                             echo number_format($balance);
                             ?>
                         </td>
