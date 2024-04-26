@@ -116,27 +116,29 @@ class ExamRegistrationDetailScreen extends Screen
 
     public function rollback(Request $request)
     {
-
         $registration_period_id = session()->get('registration_period_id');
         $registration_id = session()->get('registration_id');
         $institution_id = session()->get('institution_id');
         $course_id = session()->get('course_id');
-
+    
         // Get Student IDs from form
         $studentIds = collect($request->get('students'))->values();
-
+    
         foreach ($studentIds as $key => $studentId) {
-
+    
             // Find the registration and delete it
             $registration = StudentRegistration::where([
                 'student_id' => $studentId,
                 'registration_id' => $registration_id,
             ])->delete();
-
+    
             // Find the NSIN transaction and reverse it
             $examTransaction = Transaction::where('comment', '=', 'Exam Registration Fee for Student ID: ' . $studentId)->first();
-
+    
             if ($examTransaction) {
+                // Retrieve the account associated with the transaction
+                $account = $examTransaction->account;
+    
                 // Create a new transaction to record the reversal
                 $reversalTransaction = new Transaction([
                     'amount' => $examTransaction->amount, // reverse the amount
@@ -148,15 +150,17 @@ class ExamRegistrationDetailScreen extends Screen
                     'comment' => 'Reversal of Exam Registration Fee for Student ID: ' . $studentId,
                 ]);
                 $reversalTransaction->save();
-
+    
                 // Update the original transaction to mark it as reversed
                 $examTransaction->status = 'reversed';
                 $examTransaction->save();
-                
-                
+    
+                // Update the account balance
+                $account->balance += $examTransaction->amount;
+                $account->save();
             }
         }
-
+    
         Alert::success('Action Complete', count($studentIds) . ' Exam registration successfully recalled and transactions reversed.')->persistent(true);
     }
 
