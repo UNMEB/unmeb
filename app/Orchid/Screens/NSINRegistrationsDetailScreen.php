@@ -190,9 +190,9 @@ class NSINRegistrationsDetailScreen extends Screen
                 $nsinTransaction->save();
             }
 
-            // Find student record and replace NSIN with NSIN RECALLED
+            // Find student record and replace NSIN with null
             Student::where('id', $studentId)->update([
-                'nsin' => 'NSIN RECALLED'
+                'nsin' => null
             ]);
         }
 
