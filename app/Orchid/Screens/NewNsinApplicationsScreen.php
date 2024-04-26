@@ -47,6 +47,36 @@ class NewNsinApplicationsScreen extends Screen
 
         $currentPeriod = NsinRegistrationPeriod::query()->where('id', session('nsin_registration_period_id'))->first();
 
+        // $query = Student::withoutGlobalScopes()
+        // ->select([
+            // 's.id',
+            // 's.surname', 
+            // 's.firstname', 
+            // 's.othername', 
+            // 's.dob', 
+            // 's.gender',
+            // 's.country_id', 
+            // 's.district_id', 
+            // 's.nin', 
+            // 's.passport_number', 
+            // 's.refugee_number',
+            // 's.nsin'
+        //     ])
+        // ->from('students as s')
+        // ->leftJoin('nsin_student_registrations as nsr', function ($join) use ($currentPeriod) {
+        //     $join->on('s.id', '=', 'nsr.student_id')
+        //         ->where('nsr.nsin_registration_id', '=', $currentPeriod->id);
+        // })
+        // ->whereNull('nsr.student_id')
+        // ->orWhere(function ($query) use ($currentPeriod) {
+        //     $query->whereNotNull('nsr.student_id') 
+        //         ->where('nsr.nsin_registration_id', '!=', $currentPeriod->id)
+        //         ->where('s.institution_id', session('institution_id'));
+        // })
+        // ->where('s.institution_id', session('institution_id'))
+        // // ->orderBy('s.surname', 'asc')
+        // ->orderBy('s.nsin', 'desc');
+
         $query = Student::withoutGlobalScopes()
         ->select([
             's.id',
@@ -61,21 +91,27 @@ class NewNsinApplicationsScreen extends Screen
             's.passport_number', 
             's.refugee_number',
             's.nsin'
-            ])
+        ])
         ->from('students as s')
-        ->leftJoin('nsin_student_registrations as nsr', function ($join) use ($currentPeriod) {
-            $join->on('s.id', '=', 'nsr.student_id')
-                ->where('nsr.nsin_registration_id', '=', $currentPeriod->id);
-        })
-        ->whereNull('nsr.student_id')
         ->where('s.institution_id', session('institution_id'))
-        // ->orderBy('s.surname', 'asc')
-        ->orderBy('s.nsin', 'asc');
+        ->whereNotExists(function ($query) {
+            $query->select(DB::raw(1))
+                  ->from('nsin_student_registrations as nsr')
+                  ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+                  ->join('institutions as i', 'i.id', '=', 'nr.institution_id')
+                  ->join('nsin_registration_periods as nrp', function($join) {
+                         $join->on('nr.year_id', '=', 'nrp.year_id')
+                              ->on('nr.month', '=', 'nrp.month');
+                  })
+                  ->whereColumn('nsr.student_id', 's.id')
+                  ->where('i.id', session('institution_id'))
+                  ->where('nrp.flag', 1);
+        });
 
         
 
         return [
-            'students' => $query->paginate()
+            'students' => $query->paginate(10)
         ];
     }
 
@@ -216,10 +252,17 @@ class NewNsinApplicationsScreen extends Screen
             // Generate the NSIN pattern
             $nsinPattern = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}";
 
-            // Fetch NSINs from students table matching the pattern
-            $matchingNSINs = Student::where('nsin', 'LIKE', "%$nsinPattern%")
-            ->orderBy('nsin', 'desc')
+            $matchingNSINs = NsinStudentRegistration::where('nsin', 'LIKE', "$nsinPattern%")
+            ->select('nsin')
+            ->unionAll(function ($query) use ($nsinPattern) {
+                $query->select('nsin')
+                    ->from('students')
+                    ->where('nsin', 'LIKE', "$nsinPattern%");
+            })
+            ->orderBy('nsin',  'DESC')
             ->first();
+
+            // dd($matchingNSINs->nsin);
 
             if ($matchingNSINs) {
                 $lastCode = substr($matchingNSINs->nsin, -3);
@@ -233,7 +276,7 @@ class NewNsinApplicationsScreen extends Screen
             $feesTotal = 0;
 
             foreach ($sortedStudentIds as $key => $studentId) {
-                $feesTotal += $nsinRegistrationFee + $logbookFee->course_fee + $researchGuidelineFee;
+                $feesTotal += $nsinRegistrationFee + $logbookFee->course_fee + $isDiplomaCourse ? $researchGuidelineFee : 0;
             }
 
             if ($feesTotal > $institution->account->balance) {
