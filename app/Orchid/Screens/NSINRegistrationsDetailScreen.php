@@ -143,6 +143,32 @@ class NSINRegistrationsDetailScreen extends Screen
                 'nsin_registration_id' => $registration_id,
             ])->delete();
 
+            $researchGuidelineTransaction = Transaction::where('comment', 'Research Guideline Fee for Student ID: ' . $studentId)->first();
+            
+            if ($researchGuidelineTransaction) {
+                // Create a new transaction to record the reversal
+                $reversalResearchGuideTransaction = new Transaction([
+                    'amount' => -$researchGuidelineTransaction->amount, // reverse the amount
+                    'type' => 'credit', // credit the reversed amount
+                    'account_id' => $researchGuidelineTransaction->account_id,
+                    'institution_id' => $researchGuidelineTransaction->institution_id,
+                    'initiated_by' => auth()->user()->id,
+                    'status' => 'approved',
+                    'comment' => 'Reversal of Research Guide Fee for Student ID: ' . $studentId,
+                ]);
+                $reversalResearchGuideTransaction->save();
+
+                // Update the original transaction to mark it as reversed
+                $researchGuidelineTransaction->status = 'reversed';
+                $researchGuidelineTransaction->save();
+
+                // Update account balance with increment
+                $account = $researchGuidelineTransaction->account;
+                $account->balance += $researchGuidelineTransaction->amount; // Increment the balance by the original transaction amount
+                $account->save();
+            }
+
+
             // Find the logbook transaction for this student
             $logbookTransaction = Transaction::where('comment', '=', 'Logbook Fee for Student ID: ' . $studentId)->first();
 
