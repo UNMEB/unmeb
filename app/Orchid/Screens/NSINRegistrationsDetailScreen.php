@@ -150,7 +150,7 @@ class NSINRegistrationsDetailScreen extends Screen
 
                 // Create a new transaction to record the reversal
                 $reversalTransaction = new Transaction([
-                    'amount' => -$transaction->amount, // reverse the amount
+                    'amount' => $transaction->amount, // reverse the amount
                     'type' => 'credit', // credit the reversed amount
                     'account_id' => $transaction->account_id,
                     'institution_id' => $transaction->institution_id,
