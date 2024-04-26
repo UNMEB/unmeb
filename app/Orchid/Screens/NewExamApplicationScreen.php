@@ -61,20 +61,22 @@ class NewExamApplicationScreen extends Screen
             's.passport_number',
             's.lin',
             's.email'
-        ]);
-        $query->from('students As s');
-        $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');
-        $query->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id');
-        
-        // $query->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id');
-        $query->where('nr.course_id', $courseId);
-        $query->where('nsr.verify', 1);
-
-        $query->where('nr.institution_id', $institutionId);
-
-        // $query->whereNull('sr.id');
-
-        $query->orderBy('nsr.id', 'desc');
+        ])->from('students As s')
+        ->where('s.institution_id', session('institution_id'))
+        ->whereNotExists(function ($query) {
+            $query->select(DB::raw(1))
+            ->from('student_registrations as sr')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
+            ->join('courses as c', 'c.id', '=', 'r.course_id')
+            ->join('registration_periods as rp', 'rp.id','=','r.registration_period_id')
+            ->whereColumn('sr.student_id', 's.id')
+            ->where('i.id', session('institution_id'))
+            ->where('c.id', session('course_id'))
+            ->where('sr.sr_flag', 1); 
+        })
+        ->whereNotNull('nsin')
+        ->orderBy('s.nsin', 'asc');
 
         return [
             'applications' => $query->paginate(),

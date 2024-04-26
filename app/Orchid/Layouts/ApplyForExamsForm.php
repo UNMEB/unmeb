@@ -51,7 +51,7 @@ class ApplyForExamsForm extends Listener
         $yearOptions = [];
 
         foreach ($registrationPeriods as $registrationPeriod) {
-            $yearOptions[$registrationPeriod->id] = $registrationPeriod->reg_start_date . ' - ' . $registrationPeriod->reg_end_date;
+            $yearOptions[$registrationPeriod->id] = $registrationPeriod->reg_start_date->format('Y-m-d') . ' - ' . $registrationPeriod->reg_end_date->format('Y-m-d');
         }
 
         $selectedPapers = $this->selectedPapers;
