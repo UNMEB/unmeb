@@ -69,12 +69,13 @@ class NewNsinApplicationsScreen extends Screen
         })
         ->whereNull('nsr.student_id')
         ->where('s.institution_id', session('institution_id'))
-        ->orderBy('s.surname', 'asc');
+        // ->orderBy('s.surname', 'asc')
+        ->orderBy('s.nsin', 'asc');
 
         
 
         return [
-            'students' => $query->paginate(100)
+            'students' => $query->paginate()
         ];
     }
 
@@ -160,9 +161,14 @@ class NewNsinApplicationsScreen extends Screen
     
             $settings = \Config::get('settings');
             $nsinRegistrationFee = $settings['fees.nsin_registration'];
+            $researchGuidelineFee = $settings['fees.research_fee'];
     
             if ($nsinRegistrationFee == 0 || is_null($nsinRegistrationFee)) {
                 throw new Exception('NSIN Student registration fee not yet set. Please contact support at UNMEB');
+            }
+
+            if ($researchGuidelineFee == 0 || is_null($researchGuidelineFee)) {
+                throw new Exception('Research Guideline fees not yet set. Please contact support at UNMEB');
             }
     
             $logbookFee = LogbookFee::firstWhere('course_id', $courseId);
@@ -170,6 +176,10 @@ class NewNsinApplicationsScreen extends Screen
             if( !$logbookFee ) {
                 throw new Exception("Unable to register students at the moment. The logbook fees for this course are not yet set. Please contact UNMEB Support", 1);   
             }
+
+            // Check if the course is a diploma course
+            $courseCode = Course::where('id', $courseId)->value('course_code');
+            $isDiplomaCourse = Str::startsWith($courseCode, ['A', 'D']);
     
             $students = collect($request->get('students'))->keys();
     
@@ -220,12 +230,26 @@ class NewNsinApplicationsScreen extends Screen
                 $lastCode = '000';
             }
 
+            $feesTotal = 0;
+
+            foreach ($sortedStudentIds as $key => $studentId) {
+                $feesTotal += $nsinRegistrationFee + $logbookFee->course_fee + $researchGuidelineFee;
+            }
+
+            if ($feesTotal > $institution->account->balance) {
+                throw new Exception('Account balance too low to complete this transaction. Please top up to continue');
+            }
+
+            foreach ($sortedStudentIds as $key => $studentId) {
+                $student = Student::where('id', $studentId)->update(['nsin' => null]);
+            }
+
             foreach ($sortedStudentIds as $key => $studentId) {
 
                 $student = Student::where('id', $studentId)->update(['nsin' => null]);
 
-                $fees = $nsinRegistrationFee + $logbookFee->course_fee;
-    
+                $fees = $nsinRegistrationFee + $logbookFee->course_fee + $researchGuidelineFee;
+                
                 if ($fees > $institution->account->balance) {
                     throw new Exception('Account balance too low to complete this transaction. Please top up to continue');
                 }
