@@ -64,7 +64,7 @@ class RegisterStudentsForNinForm extends Listener
                     ->title('Select Institution')
                     ->fromModel(Institution::class, 'institution_name')
                     ->applyScope('userInstitutions')
-                    ->canSee(!auth()->user()->inRole('institution'))
+                    ->value(auth()->user()->inRole('institution') ? auth()->user()->institution_id : null)
                     ->chunk(20),
 
                 Select::make('course_id')

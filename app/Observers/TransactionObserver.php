@@ -9,6 +9,7 @@ use App\Mail\NotifyInstitutionAboutTransactionApproved;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Models\User;
+use App\Notifications\TransactionApproved;
 use Illuminate\Support\Facades\Mail;
 use Orchid\Platform\Models\Role;
 
@@ -38,6 +39,7 @@ class TransactionObserver
                 Mail::to('info@unmeb.go.ug')
                 ->cc($combinedEmails)
                 ->send(new NotifyAccountsAboutPendingTransaction($transaction, $accountUsers));
+
             } catch (\Throwable $th) {
                 //throw $th;
             }
@@ -62,6 +64,8 @@ class TransactionObserver
             if ($institutionEmail) {
                 Mail::to($transaction->institution->email)->cc($userEmails)->send(new NotifyInstitutionAboutTransactionApproved($transaction));
             }
+
+            User::find($transaction->initiated_by)->notify(new TransactionApproved($transaction));
         }
     }
 

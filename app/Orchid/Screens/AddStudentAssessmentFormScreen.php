@@ -125,7 +125,7 @@ class AddStudentAssessmentFormScreen extends Screen
      */
     public function name(): ?string
     {
-        $institution = Institution::find($this->institutionId)->institution_name;
+        $institution = optional(Institution::find($this->institutionId))->institution_name;
         $course = Course::find($this->courseId)->course_name;
         $paper = Paper::find($this->paperId)->paper_name;
 
@@ -134,7 +134,7 @@ class AddStudentAssessmentFormScreen extends Screen
 
     public function description(): ?string
     {
-        $institution = Institution::find($this->institutionId)->institution_name;
+        $institution = optional(Institution::find($this->institutionId))->institution_name;
         $course = Course::find($this->courseId)->course_name;
         $paper = Paper::find($this->paperId)->paper_name;
 
@@ -147,7 +147,7 @@ class AddStudentAssessmentFormScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }

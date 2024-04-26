@@ -47,36 +47,6 @@ class NewNsinApplicationsScreen extends Screen
 
         $currentPeriod = NsinRegistrationPeriod::query()->where('id', session('nsin_registration_period_id'))->first();
 
-        // $query = Student::withoutGlobalScopes()
-        // ->select([
-            // 's.id',
-            // 's.surname', 
-            // 's.firstname', 
-            // 's.othername', 
-            // 's.dob', 
-            // 's.gender',
-            // 's.country_id', 
-            // 's.district_id', 
-            // 's.nin', 
-            // 's.passport_number', 
-            // 's.refugee_number',
-            // 's.nsin'
-        //     ])
-        // ->from('students as s')
-        // ->leftJoin('nsin_student_registrations as nsr', function ($join) use ($currentPeriod) {
-        //     $join->on('s.id', '=', 'nsr.student_id')
-        //         ->where('nsr.nsin_registration_id', '=', $currentPeriod->id);
-        // })
-        // ->whereNull('nsr.student_id')
-        // ->orWhere(function ($query) use ($currentPeriod) {
-        //     $query->whereNotNull('nsr.student_id') 
-        //         ->where('nsr.nsin_registration_id', '!=', $currentPeriod->id)
-        //         ->where('s.institution_id', session('institution_id'));
-        // })
-        // ->where('s.institution_id', session('institution_id'))
-        // // ->orderBy('s.surname', 'asc')
-        // ->orderBy('s.nsin', 'desc');
-
         $query = Student::withoutGlobalScopes()
         ->select([
             's.id',

@@ -6,6 +6,7 @@ use App\Traits\HasInstitution;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Where;
 use Orchid\Screen\AsSource;
@@ -45,7 +46,7 @@ class Transaction extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    public function initiatedBy()
+    public function initiatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'initiated_by');
     }

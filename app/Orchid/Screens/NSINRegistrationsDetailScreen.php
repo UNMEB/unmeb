@@ -126,94 +126,48 @@ class NSINRegistrationsDetailScreen extends Screen
 
     public function rollback(Request $request)
     {
-
-        $registration_period_id = session()->get('registration_period_id');
         $registration_id = session()->get('registration_id');
-        $institution_id = session()->get('institution_id');
-        $course_id = session()->get('course_id');
 
         // Get Student IDs from form
         $studentIds = collect($request->get('students'))->values();
 
-        foreach ($studentIds as $key => $studentId) {
+        foreach ($studentIds as $studentId) {
 
             // Find the registration and delete it
-            $registration = NsinStudentRegistration::where([
+            NsinStudentRegistration::where([
                 'student_id' => $studentId,
                 'nsin_registration_id' => $registration_id,
             ])->delete();
 
-            $researchGuidelineTransaction = Transaction::where('comment', 'Research Guideline Fee for Student ID: ' . $studentId)->first();
-            
-            if ($researchGuidelineTransaction) {
-                // Create a new transaction to record the reversal
-                $reversalResearchGuideTransaction = new Transaction([
-                    'amount' => $researchGuidelineTransaction->amount, // reverse the amount
-                    'type' => 'credit', // credit the reversed amount
-                    'account_id' => $researchGuidelineTransaction->account_id,
-                    'institution_id' => $researchGuidelineTransaction->institution_id,
-                    'initiated_by' => auth()->user()->id,
-                    'status' => 'approved',
-                    'comment' => 'Reversal of Research Guide Fee for Student ID: ' . $studentId,
-                ]);
-                $reversalResearchGuideTransaction->save();
+            // Find the transactions for this student
+            $transactions = Transaction::whereIn('comment', [
+                'Research Guideline Fee for Student ID: ' . $studentId,
+                'Logbook Fee for Student ID: ' . $studentId,
+                'NSIN Registration Fee for Student ID: ' . $studentId
+            ])->get();
 
-                // Update the original transaction to mark it as reversed
-                $researchGuidelineTransaction->status = 'reversed';
-                $researchGuidelineTransaction->save();
+            foreach ($transactions as $transaction) {
 
-                // Update account balance with increment
-                $account = $researchGuidelineTransaction->account;
-                $account->balance += $researchGuidelineTransaction->amount; // Increment the balance by the original transaction amount
-                $account->save();
-            }
-
-
-            // Find the logbook transaction for this student
-            $logbookTransaction = Transaction::where('comment', '=', 'Logbook Fee for Student ID: ' . $studentId)->first();
-
-            if ($logbookTransaction) {
-                // Create a new transaction to record the reversal
-                $reversalLogbookTransaction = new Transaction([
-                    'amount' => $logbookTransaction->amount, // reverse the amount
-                    'type' => 'credit', // credit the reversed amount
-                    'account_id' => $logbookTransaction->account_id,
-                    'institution_id' => $logbookTransaction->institution_id,
-                    'initiated_by' => auth()->user()->id,
-                    'status' => 'approved',
-                    'comment' => 'Reversal of Logbook Fee for Student ID: ' . $studentId,
-                ]);
-                $reversalLogbookTransaction->save();
-
-                // Update the original transaction to mark it as reversed
-                $logbookTransaction->status = 'reversed';
-                $logbookTransaction->save();
-
-                // Update account balance with increment
-                $account = $logbookTransaction->account;
-                $account->balance += $logbookTransaction->amount; // Increment the balance by the original transaction amount
-                $account->save();
-            }
-
-            // Find the NSIN transaction and reverse it
-            $nsinTransaction = Transaction::where('comment', '=', 'NSIN Registration Fee for Student ID: ' . $studentId)->first();
-
-            if ($nsinTransaction) {
                 // Create a new transaction to record the reversal
                 $reversalTransaction = new Transaction([
-                    'amount' => $nsinTransaction->amount, // reverse the amount
+                    'amount' => -$transaction->amount, // reverse the amount
                     'type' => 'credit', // credit the reversed amount
-                    'account_id' => $nsinTransaction->account_id,
-                    'institution_id' => $nsinTransaction->institution_id,
+                    'account_id' => $transaction->account_id,
+                    'institution_id' => $transaction->institution_id,
                     'initiated_by' => auth()->user()->id,
                     'status' => 'approved',
-                    'comment' => 'Reversal of NSIN Registration Fee for Student ID: ' . $studentId,
+                    'comment' => 'Reversal of ' . $transaction->comment,
                 ]);
                 $reversalTransaction->save();
 
                 // Update the original transaction to mark it as reversed
-                $nsinTransaction->status = 'reversed';
-                $nsinTransaction->save();
+                $transaction->status = 'reversed';
+                $transaction->save();
+
+                // Update account balance
+                $account = $transaction->account;
+                $account->balance += $transaction->amount; // Increment the balance by the original transaction amount
+                $account->save();
             }
 
             // Find student record and replace NSIN with null

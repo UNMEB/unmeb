@@ -23,7 +23,6 @@ class NSINRegistrationsListScreen extends Screen
 {
     public $period;
     public $activePeriod;
-
     public $filters = [];
 
     /**
@@ -202,6 +201,5 @@ class NSINRegistrationsListScreen extends Screen
 
     public function details(Request $request)
     {
-
     }
 }
