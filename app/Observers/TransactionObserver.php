@@ -65,7 +65,7 @@ class TransactionObserver
                 Mail::to($transaction->institution->email)->cc($userEmails)->send(new NotifyInstitutionAboutTransactionApproved($transaction));
             }
 
-            User::find($transaction->initiated_by)->notify(new TransactionApproved($transaction));
+            // /User::find($transaction->initiated_by)->notify(new TransactionApproved($transaction));
         }
     }
 
