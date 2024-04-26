@@ -170,16 +170,20 @@ class AppSettingListScreen extends Screen
                             ->value($settings['fees.nsin_registration'])
                             ->required(),
 
-                        Input::make('fees.paper_registration')->title('Exam Registration Cost Per Paper')->type('number')->required()->min(1)
-                            ->value($settings['fees.paper_registration'] ?? null),
+                        Input::make('fees.paper_registration')->title('Exam Registration Cost Per Paper')
+                        ->type('number')
+                        ->required()
+                        ->min(1)
+                        ->value($settings['fees.paper_registration'] ?? null),
+
+                        Input::make('fees.research_fee')->title('Research Fees')
+                            ->type('number')
+                            ->required()->min(1)
+                            ->value($settings['fees.research_fee'] ?? null),
                     ]),
 
                     Group::make([
-                        Input::make('fees.logbook_fee')->title('Logbook Fees')->type('number')->required()->min(1)
-                            ->value($settings['fees.logbook_fee'] ?? null),
-
-                        Input::make('fees.research_fee')->title('Research Fees')->type('number')->required()->min(1)
-                            ->value($settings['fees.research_fee'] ?? null),
+                        
                     ]),
 
                     Input::make('finance.minimum_balance')->title('Minimum Institution Account Balance')

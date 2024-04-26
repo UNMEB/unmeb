@@ -38,6 +38,8 @@ use App\Orchid\Screens\Examples\ExampleGridScreen;
 use App\Orchid\Screens\Examples\ExampleLayoutsScreen;
 use App\Orchid\Screens\Examples\ExampleScreen;
 use App\Orchid\Screens\Examples\ExampleTextEditorsScreen;
+use App\Orchid\Screens\ExamRegistrationDetailScreen;
+use App\Orchid\Screens\ExamRegistrationListScreen;
 use App\Orchid\Screens\Finance\Account\AccountListScreen;
 use App\Orchid\Screens\Finance\Account\InstitutionTransactionListScreen;
 use App\Orchid\Screens\Finance\Account\PendingTransactionListScreen;
@@ -393,7 +395,15 @@ Route::screen('registrations/exam/applications/new', NewExamApplicationScreen::c
 Route::screen('registrations/exam/applications/details', ExamApplicationDetailScreen::class)
     ->name('platform.registration.exam.applications.details');
 
-// Platform > Registration > NSIN > Incomplete > Details
+// Exam Applications
+Route::screen('registrations/exam/registrations/list', ExamRegistrationListScreen::class)
+    ->name('platform.registration.exam.registrations.list');
+
+// Exam Applications
+Route::screen('registrations/exam/registrations/details', ExamRegistrationDetailScreen::class)
+->name('platform.registration.exam.registrations.details');
+
+    // Platform > Registration > NSIN > Incomplete > Details
 Route::screen('registrations/nsin/incomplete/details', IncompleteNsinRegistrationDetails::class)
     ->name('platform.registration.nsin.incomplete.details');
 

@@ -76,6 +76,7 @@ class PlatformProvider extends OrchidServiceProvider
                         ->permission('platform.registration.nsin.applications.list'),
 
                     Menu::make('Registration Approval')
+                        ->icon('bs.arrow-right')
                         ->route('platform.registration.nsin.approve')
                         ->permission('platform.registration.nsin.approve'),
                 ]),
@@ -85,14 +86,14 @@ class PlatformProvider extends OrchidServiceProvider
                 ->icon('fa.cubes')
                 ->list([
                     Menu::make(__('Exam Applications'))
+                        ->icon('bs.arrow-right')
                         ->route('platform.registration.exam.applications.list')
                         ->permission('platform.registration.exam.applications.list'),
 
-                    // Menu::make(__('Accepted Exam Registrations'))
-                    //     ->route('platform.registration.exam.accepted'),
-
-                    // Menu::make(__('Rejected Exam Registrations'))
-                    //     ->route('platform.registration.exam.rejected'),
+                    Menu::make(__('Exam Registrations'))
+                        ->icon('bs.arrow-right')
+                        ->route('platform.registration.exam.registrations.list')
+                        ->permission('platform.registration.exam.registrations.list'),
 
                     Menu::make(__('Approve Exam Registrations'))
                         ->route('platform.registration.exam.approve')

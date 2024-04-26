@@ -34,25 +34,6 @@ class NewNsinApplicationsScreen extends Screen
     public $courseId;
     public $nsinRegistrationPeriodId;
 
-    // public function __construct(Request $request)
-    // {
-    //     session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
-
-    //     $this->institutionId = request()->get('institution_id');
-    //     $this->courseId = request()->get('course_id');
-    //     $this->nsinRegistrationPeriodId = request()->get('nsin_registration_period_id');
-
-    //     $institutionId = $request->input('institution_id');
-    //     $courseId = $request->input('course_id');
-    //     $nsinRegistrationPeriodId = $request->input('nsin_registration_period_id');
-
-    //     // Save to session
-    //     
-    //     session()->put('course_id', $courseId);
-    //     session()->put('nsin_registration_period_id', $nsinRegistrationPeriodId);
-    // }
-
-
     /**
      * Fetch data to be displayed on the screen.
      *
@@ -82,7 +63,10 @@ class NewNsinApplicationsScreen extends Screen
             's.nsin'
             ])
         ->from('students as s')
-        ->leftJoin('nsin_student_registrations as nsr', 's.id','=','nsr.student_id')
+        ->leftJoin('nsin_student_registrations as nsr', function ($join) use ($currentPeriod) {
+            $join->on('s.id', '=', 'nsr.student_id')
+                ->where('nsr.nsin_registration_id', '=', $currentPeriod->id);
+        })
         ->whereNull('nsr.student_id')
         ->where('s.institution_id', session('institution_id'))
         ->orderBy('s.surname', 'asc');
@@ -237,6 +221,8 @@ class NewNsinApplicationsScreen extends Screen
             }
 
             foreach ($sortedStudentIds as $key => $studentId) {
+
+                $student = Student::where('id', $studentId)->update(['nsin' => null]);
 
                 $fees = $nsinRegistrationFee + $logbookFee->course_fee;
     
