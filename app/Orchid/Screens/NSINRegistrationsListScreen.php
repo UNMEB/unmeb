@@ -184,7 +184,7 @@ class NSINRegistrationsListScreen extends Screen
                 TD::make('invalid', 'Invalid NSINS')->render(function ($data) {
                     return NsinStudentRegistration::where('nsin_registration_id', $data->r_id)
                         ->whereIn('verify', [1, 2])
-                        ->where('nsin', 'NOT REGEXP', '^[A-Z]{3}[0-9]{2}/[A-Z0-9]{4}/[A-Z]{2}/[0-9]{3}$') // Use REGEXP in the where clause directly
+                        ->where('nsin', 'REGEXP', '/^[A-Z]{3}[0-9]{2}\/[A-Z0-9]{3}\/[A-Z]{3}\/[0-9]{3}$/') // Use REGEXP in the where clause directly
                         ->count('id');
                 }),
                 TD::make('actions', 'Actions')
