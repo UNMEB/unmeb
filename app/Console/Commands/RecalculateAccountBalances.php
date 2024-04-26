@@ -14,7 +14,7 @@ class RecalculateAccountBalances extends Command
      *
      * @var string
      */
-    protected $signature = 'accounts:recalculate-balances {institution_id : The ID of the institution}';
+    protected $signature = 'accounts:recalculate-balances';
 
     /**
      * The console command description.
@@ -28,38 +28,29 @@ class RecalculateAccountBalances extends Command
      */
     public function handle()
     {
-        $institutionId = $this->argument('institution_id');
-        
-        if (!$institutionId) {
-            $this->error('Institution ID is required!');
-            return;
-        }
+        $institutions = Institution::all();
 
-        $institution = Institution::find($institutionId);
+        foreach ($institutions as $institution) {
+            $accounts = Account::withoutGlobalScopes()->where('institution_id', $institution->id)->get();
 
-        if (!$institution) {
-            $this->error('Institution not found!');
-            return;
-        }
+            foreach ($accounts as $account) {
+                $transactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)->get();
+                $balance = 0;
 
-        $accounts = Account::withoutGlobalScopes()->where('institution_id', $institutionId)->get();
-
-        foreach ($accounts as $account) {
-            $transactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)->get();
-            $balance = 0;
-
-            foreach ($transactions as $transaction) {
-                if ($transaction->type == 'credit') {
-                    $balance += $transaction->amount;
-                } elseif ($transaction->type == 'debit') {
-                    $balance -= $transaction->amount;
+                foreach ($transactions as $transaction) {
+                    if ($transaction->type == 'credit') {
+                        $balance += $transaction->amount;
+                    } elseif ($transaction->type == 'debit') {
+                        $balance -= $transaction->amount;
+                    }
                 }
+
+                $account->balance = $balance;
+                $account->save();
             }
 
-            $account->balance = $balance;
-            $account->save();
+            $this->info('Account balances recalculated successfully for institution: ' . $institution->institution_name);
         }
-
-        $this->info('Account balances recalculated successfully for institution: ' . $institution->institution_name);
     }
 }
+
