@@ -23,13 +23,8 @@ class ExamApplicationDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-        $this->filters = $request->get("filter");
-        $institutionId = $request->get('institution_id');
-        $courseId = $request->get('course_id');
-        $this->nsinRegistrationId = $request->get('nsin_registration_id');
-
-        $query = Student::withoutGlobalScopes();
-        $query->select([
+        $query = Student::withoutGlobalScopes()
+        ->select([
             's.id as id',
             's.surname',
             's.firstname',
@@ -45,18 +40,13 @@ class ExamApplicationDetailScreen extends Screen
             's.refugee_number',
             's.lin',
             's.nsin as nsin'
-        ]);
-
-        $query->from('students As s');
-        $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');
-        $query->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id');
-        $query->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id');
-        $query->whereNotNull('sr.id');
-
-        $query->where('s.institution_id', $institutionId);
-        $query->where('nr.course_id', $courseId);
-        $query->orderBy('nsr.id', 'desc');
+        ])
+        ->from('students As s')
+        ->join('student_registrations as sr', 's.id', '=','sr.id')
+        ->join('registrations as r','sr.registration_id','=','r.id');
         
+        $query->orderBy('nsin', 'asc');
+
         return [
             'applications' => $query->paginate(),
         ];

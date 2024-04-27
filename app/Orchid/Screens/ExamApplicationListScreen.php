@@ -172,6 +172,7 @@ class ExamApplicationListScreen extends Screen
                     fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
                         ->route('platform.registration.exam.applications.details', [
+                            'registration_id' => $data->registration_id,
                             'institution_id' => $data->institution_id,
                             'course_id' => $data->course_id,
 

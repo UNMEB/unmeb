@@ -34,7 +34,10 @@ class RecalculateAccountBalances extends Command
             $accounts = Account::withoutGlobalScopes()->where('institution_id', $institution->id)->get();
 
             foreach ($accounts as $account) {
-                $transactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)->get();
+                $transactions = Transaction::withoutGlobalScopes()
+                    ->where('account_id', $account->id)
+                    ->where('status', 'approved')
+                    ->get();
                 $balance = 0;
 
                 foreach ($transactions as $transaction) {
