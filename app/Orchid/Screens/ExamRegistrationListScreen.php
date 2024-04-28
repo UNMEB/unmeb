@@ -61,6 +61,8 @@ class ExamRegistrationListScreen extends Screen
             $query->orderBy('institution_name', 'asc');
             $query->orderBy('course_name', 'desc');
             $query->orderBy('semester', 'asc');
+
+            // dd($query->toRawSql());
         
         return [
             'registrations' => $query->paginate(10),

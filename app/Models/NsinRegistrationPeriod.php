@@ -38,4 +38,9 @@ class NsinRegistrationPeriod extends Model
         return $this->hasMany(NsinRegistration::class, 'month', 'month')
                     ->where('year_id', $this->year_id);
     }
+
+    public function getPeriodAttribute()
+    {
+        return $this->month . ' / ' . $this->year->year;
+    }
 }

@@ -84,6 +84,7 @@ class ExamApplicationListScreen extends Screen
         if(!is_null($this->activePeriod)) {
             $period = RegistrationPeriod::select('*')
                     ->where('id', $this->activePeriod)
+                    ->where('flag', 1)
                     ->first();
 
             return 'Exam Applications for ' . $period->reg_start_date->format('Y-m-d') . ' / '. $period->reg_end_date->format('Y-m-d');
@@ -106,6 +107,7 @@ class ExamApplicationListScreen extends Screen
     {
         // Get all NSIN Registration Periods
         $periods = RegistrationPeriod::select('*')
+                    ->where('flag', 1)
                     ->orderBy('reg_start_date', 'desc')
                     ->get();
 

@@ -199,7 +199,8 @@ class NSINRegistrationsListScreen extends Screen
         ];
     }
 
-    public function details(Request $request)
+    public function filter(Request $request)
     {
+        dd($request->all());
     }
 }

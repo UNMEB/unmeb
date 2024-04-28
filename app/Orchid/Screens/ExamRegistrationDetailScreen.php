@@ -60,6 +60,10 @@ class ExamRegistrationDetailScreen extends Screen
         ->where('r.institution_id', $institution_id)
         ->where('r.course_id', $course_id);
 
+        if(auth()->user()->inRole('institution')) {
+            $query->where('r.institution_id',  auth()->user()->institution_id);
+        }
+
         return [
             'students' => $query->paginate()
         ];
