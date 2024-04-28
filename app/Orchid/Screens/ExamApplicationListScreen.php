@@ -64,6 +64,10 @@ class ExamApplicationListScreen extends Screen
             $query->orderBy('institution_name', 'asc');
             $query->orderBy('course_name', 'desc');
             $query->orderBy('semester', 'asc');
+
+            if(auth()->user()->inRole('institution')) {
+                $query->where('r.institution_id',  auth()->user()->institution_id);
+            }
         
         return [
             'applications' => $query->paginate(10),

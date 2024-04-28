@@ -63,7 +63,7 @@ class NSINApplicationListDetails extends Screen
         $query->where('nr.course_id', $courseId);
         $query->where('nr.id', $this->nsinRegistrationId);
         $query->where('nsr.verify', 0);
-        $query->orderBy('nsr.updated_at', 'desc');
+        $query->orderBy('s.nsin', 'asc');
 
         if (!empty($this->filters)) {
             
