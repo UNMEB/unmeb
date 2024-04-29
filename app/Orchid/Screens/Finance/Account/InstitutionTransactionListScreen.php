@@ -10,8 +10,6 @@ class InstitutionTransactionListScreen extends Screen
 {
     public $account;
 
-    public 
-
     /**
      * Fetch data to be displayed on the screen.
      *
