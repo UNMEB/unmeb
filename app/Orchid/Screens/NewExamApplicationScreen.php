@@ -55,8 +55,8 @@ class NewExamApplicationScreen extends Screen
         ])->from('students AS s')
             ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->where('nr.institution_id', '=', 11)
-            ->where('nr.course_id', '=', 4)
+            ->where('nr.institution_id', '=', session('institution_id'))
+            ->where('nr.course_id', '=', session('course_id'))
             ->whereNotIn('s.id', function($query) {
                 $query->select('student_id')
                     ->distinct()
