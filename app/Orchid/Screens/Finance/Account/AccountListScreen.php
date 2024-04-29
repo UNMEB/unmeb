@@ -35,7 +35,7 @@ class AccountListScreen extends Screen
     public function query(): iterable
     {
         $accounts = Account::filters()
-            ->orderBy('balance', 'asc')
+            ->orderBy('balance', 'desc')
             ->orderBy('updated_at', 'DESC');
 
         return [
