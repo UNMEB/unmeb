@@ -25,7 +25,7 @@ class ExamApplicationDetailScreen extends Screen
     {
         session()->put("institution_id", $request->get('institution_id'));
         session()->put("course_id", $request->get('course_id'));
-        
+
         $query = Student::withoutGlobalScopes()
         ->select([
             's.id as id',
@@ -50,8 +50,12 @@ class ExamApplicationDetailScreen extends Screen
         ->from('students As s')
             ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->join('student_registrations as sr', 'sr.student_id', '=','s.id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
             ->where('nr.institution_id', '=', session('institution_id'))
             ->where('nr.course_id', '=', session('course_id'))
+            ->where('rp.flag', 1)
             ->whereNotIn('s.id', function($query) {
                 $query->select('student_id')
                     ->distinct()
