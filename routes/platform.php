@@ -533,6 +533,13 @@ Route::screen('biometric/enrollment', StudentEnrollmentListScreen::class)
 Route::screen('biometric/access', StudentAccessLogListScreen::class)
     ->name('platform.biometric.access');
 
+// Platform > System > Finance > Accounts
+Route::screen('accounts/{institution}/transactions', InstitutionTransactionListScreen::class)
+    ->name('platform.systems.finance.institution.transactions')
+    ->breadcrumbs(fn (Trail $trail, $institution) => $trail
+        ->parent('platform.systems.finance.accounts')
+        ->push($institution->institution_name, route('platform.systems.finance.institution.transactions', $institution)));
+
 Route::screen('finance/accounts', AccountListScreen::class)
     ->name('platform.systems.finance.accounts')
     ->breadcrumbs(fn (Trail $trail) => $trail
@@ -550,14 +557,6 @@ Route::screen('finance/transactions', TransactionListScreen::class)
     ->breadcrumbs(fn (Trail $trail) => $trail
         ->parent('platform.index')
         ->push(__('Institution Transactions'), route('platform.systems.finance.complete')));
-
-
-// Platform > System > Finance > Accounts
-Route::screen('accounts/{institution}/transactions', InstitutionTransactionListScreen::class)
-    ->name('platform.systems.finance.institution.transactions')
-    ->breadcrumbs(fn (Trail $trail, $institution) => $trail
-        ->parent('platform.systems.finance.accounts')
-        ->push($institution->institution_name, route('platform.systems.finance.institution.transactions', $institution)));
 
 // Platform  > Reports > Packing List
 Route::screen('reports/packing_list', PackingListReportScreen::class)
