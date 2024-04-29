@@ -39,7 +39,7 @@ class AccountTransactionListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
