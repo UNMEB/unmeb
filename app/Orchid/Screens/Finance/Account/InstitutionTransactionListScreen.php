@@ -4,10 +4,15 @@ namespace App\Orchid\Screens\Finance\Account;
 
 use App\Models\Account;
 use App\Models\Institution;
+use App\Models\Transaction;
 use Orchid\Screen\Screen;
 
 class InstitutionTransactionListScreen extends Screen
 {
+
+    /**
+     * @var Account
+     */
     public $account;
 
     /**
@@ -17,7 +22,11 @@ class InstitutionTransactionListScreen extends Screen
      */
     public function query(Account $account): iterable
     {
-        return [];
+        $account->load(['transactions']);
+        return [
+            'account' => $account,
+            'transactions' => Transaction::where('account_id', $account->id)->paginate()
+        ];
     }
 
     /**

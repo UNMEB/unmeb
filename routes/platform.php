@@ -536,9 +536,9 @@ Route::screen('biometric/access', StudentAccessLogListScreen::class)
 // Platform > System > Finance > Accounts
 Route::screen('accounts/{institution}/transactions', InstitutionTransactionListScreen::class)
     ->name('platform.systems.finance.institution.transactions')
-    ->breadcrumbs(fn (Trail $trail, $account) => $trail
+    ->breadcrumbs(fn (Trail $trail, Account $account) => $trail
         ->parent('platform.systems.finance.accounts')
-        ->push($account->institution->institution_name, route('platform.systems.finance.institution.transactions', $account)));
+        ->push(optional($account->institution)->institution_name, route('platform.systems.finance.institution.transactions', $account)));
 
 Route::screen('finance/accounts', AccountListScreen::class)
     ->name('platform.systems.finance.accounts')
@@ -569,13 +569,6 @@ Route::screen('reports/nsin_registration', NSINRegistrationReportScreen::class)
 // Platform  > Reports > Registration > Exam
 Route::screen('reports/exam_registration', ExamRegistrationReportScreen::class)
     ->name('platform.reports.exam_registration');
-
-// Platform > Assessment > Institution
-// Route::screen('assessment/{institution}/list', InstitutionAssessmentListScreen::class)
-//     ->name('platform.assessment.institution.list')
-//     ->breadcrumbs(fn (Trail $trail, Institution $institution) => $trail
-//         ->parent('platform.assessment.list')
-//         ->push($institution->short_name, route('platform.assessment.institution.list', $institution)));
 
 // Platform > Assessment > Marks
 Route::screen('assessment/marks', AddStudentAssessmentFormScreen::class)
