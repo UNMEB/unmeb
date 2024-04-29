@@ -67,7 +67,7 @@ class InstitutionTransactionListScreen extends Screen
                 TD::make('id', 'Transaction ID'),
                 TD::make('account_id', 'Institution')->render(function (Transaction $data) {
                     return $data->institution->institution_name;
-                })->canSee($this->currentUser()->inRole('administrator')),
+                })->canSee(auth()->user()->inRole('administrator')),
                 TD::make('type', 'Transaction Type')->render(function ($data) {
                     return $data->type == 'credit' ? 'Account Credit' : 'Account Debit';
                 }),
