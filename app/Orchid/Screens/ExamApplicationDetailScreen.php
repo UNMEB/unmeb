@@ -51,6 +51,8 @@ class ExamApplicationDetailScreen extends Screen
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
+        $query->where('sr.flag', 0);
+
         return [
             'applications' => $query->paginate(),
         ];
