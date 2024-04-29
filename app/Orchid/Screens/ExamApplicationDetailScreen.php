@@ -112,7 +112,7 @@ class ExamApplicationDetailScreen extends Screen
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
                 TD::make('trial', 'Trial'),
-                TD::make('course_codes', 'Course Codes');
+                TD::make('course_codes', 'Course Codes'),
                 TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
             ])
         ];
