@@ -5,6 +5,7 @@ namespace App\Orchid\Screens\Reports;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Registration;
+use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Orchid\Screen\Actions\Button;
@@ -26,27 +27,30 @@ class ExamRegistrationReportScreen extends Screen
     {
         $query = Registration::filters()
             ->select(
-                'registration_periods.id AS registration_period_id',
-                'institutions.institution_name',
-                'registrations.year_of_study',
-                'registrations.completed',
-                'registrations.verify',
-                'registrations.approved',
-                'student_registrations.trial',
-                'registration_periods.reg_start_date',
-                'registration_periods.reg_end_date',
-                'courses.course_name',
+                'rp.id AS rp_id',
+                'r.id AS r_id',
+                'i.institution_name',
+                'r.year_of_study',
+                'r.completed',
+                'r.verify',
+                'r.approved',
+                'sr.trial',
+                'rp.reg_start_date',
+                'rp.reg_end_date',
+                'c.course_name',
             )
-            ->selectRaw('COUNT(student_registrations.id) as registered_students')
-            ->join('institutions', 'institutions.id', '=', 'registrations.institution_id')
-            ->join('student_registrations', 'student_registrations.registration_id', '=', 'registrations.id')
-            ->join('registration_periods', 'registration_periods.id', '=', 'registrations.registration_period_id')
-            ->join('courses', 'courses.id', '=', 'registrations.course_id')
-            ->groupBy('registrations.id', 'institutions.institution_name', 'courses.course_name', 'registration_periods.id', 'registration_periods.reg_start_date', 'registration_periods.reg_end_date', 'registrations.completed', 'registrations.verify', 'registrations.approved', 'trial')
-            ->paginate();
+            ->from('registrations as r')
+            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
+            ->join('student_registrations as sr', 'sr.registration_id', '=', 'r.id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->join('courses as c', 'c.id', '=', 'r.course_id')
+            ->groupBy('r.id', 'i.institution_name', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved', 'trial');
+            
+            $query->orderBy('rp.id', 'desc');
+            $query->orderBy('i.institution_name', 'asc');
 
         return [
-            'report' => $query
+            'report' => $query->paginate()
         ];
     }
 
@@ -119,7 +123,24 @@ class ExamRegistrationReportScreen extends Screen
                 TD::make('year_of_study', 'Year Of Study'),
                 TD::make('reg_start_date', 'Registration Start Date'),
                 TD::make('reg_end_date', 'Registration Start Date'),
-                TD::make('registered_students', 'Students Registered'),
+                TD::make('pending', 'Pending')->render(function ($data) {
+                    return StudentRegistration::where([
+                        'registration_id' => $data->r_id,
+                        'sr_flag' => 0
+                    ])->count('id');
+                }),
+                TD::make('approved', 'Approved')->render(function ($data) {
+                    return StudentRegistration::where([
+                        'registration_id' => $data->r_id,
+                        'sr_flag' => 1
+                    ])->count('id');
+                }),
+                TD::make('rejected', 'Rejected')->render(function ($data) {
+                    return StudentRegistration::where([
+                        'registration_id' => $data->r_id,
+                        'sr_flag' => 2
+                    ])->count('id');
+                }),
             ])
         ];
     }
