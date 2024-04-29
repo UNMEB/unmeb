@@ -47,29 +47,23 @@ class NewExamApplicationScreen extends Screen
 
         $query = Student::withoutGlobalScopes();
         $query->select([
-                's.id as id',
-                's.surname',
-                's.firstname',
-                's.othername',
-                's.gender',
-                's.dob',
-                's.district_id',
-                's.country_id',
-                's.nsin as nsin',
-                's.telephone',
-                's.passport',
-                's.passport_number',
-                's.lin',
-                's.email'
-            ])->from('students AS s')
+            's.id AS student_id',
+            's.surname',
+            's.firstname',
+            's.othername',
+            's.nsin'
+        ])->from('students AS s')
             ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->where('nr.institution_id', '=', session('institution_id'))
-            ->where('nr.course_id', '=', session('course_id'))
+            ->where('nr.institution_id', '=', 11)
+            ->where('nr.course_id', '=', 4)
             ->whereNotIn('s.id', function($query) {
                 $query->select('student_id')
                     ->distinct()
-                    ->from('student_registrations');
+                    ->from('student_registrations as sr')
+                    ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+                    ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+                    ->where('rp.flag', '=', 1);
             })
             ->orderBy('s.nsin', 'ASC');
 
