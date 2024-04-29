@@ -23,6 +23,7 @@ class ExamApplicationDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->put("registration_id", $request->get('registration_id'));
         session()->put("institution_id", $request->get('institution_id'));
         session()->put("course_id", $request->get('course_id'));
 
@@ -36,35 +37,19 @@ class ExamApplicationDetailScreen extends Screen
             's.dob',
             's.district_id',
             's.country_id',
-            's.location',
-            's.passport_number',
-            's.nin',
-            's.telephone',
-            's.refugee_number',
-            's.lin',
             's.nsin as nsin',
-            'sr.trial',
-            'no_of_papers',
-            'course_codes'
+            's.telephone',
+            's.passport',
+            's.passport_number',
+            's.lin',
+            's.email'
         ])
-        ->from('students As s')
-            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->join('student_registrations as sr', 'sr.student_id', '=','s.id')
-            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->where('nr.institution_id', '=', session('institution_id'))
-            ->where('nr.course_id', '=', session('course_id'))
-            ->where('rp.flag', 1)
-            ->whereNotIn('s.id', function($query) {
-                $query->select('student_id')
-                    ->distinct()
-                    ->from('student_registrations as sr')
-                    ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-                    ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-                    ->where('rp.flag', '=', 1);
-            })
-            ->orderBy('s.nsin', 'ASC');
+        ->from('students as s')
+        ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+        ->join('registrations as r', 'sr.registration_id', '=','r.id')
+        ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+        ->where('rp.flag', 1)
+        ->where('r.id', session('registration_id'));
         
        
 
