@@ -159,7 +159,7 @@ class ExamApplicationListScreen extends Screen
                 TD::make('pending', 'Pending')->render(function ($data) {
                     return StudentRegistration::where([
                         'registration_id' => $data->registration_id,
-                        'sr_flag' => 0
+                        'sr_flag' => 0,
                     ])->count('id');
                 }),
                 TD::make('approved', 'Approved')->render(function ($data) {

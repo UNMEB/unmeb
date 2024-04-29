@@ -77,7 +77,7 @@ class NewNsinApplicationsScreen extends Screen
                   ->where('i.id', session('institution_id'))
                   ->where('nrp.flag', 1);
         })
-        ->orderBy('s.surname', 'asc');
+        ->orderBy('s.nsin', 'asc');
 
         
 
