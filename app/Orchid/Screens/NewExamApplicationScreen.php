@@ -47,11 +47,20 @@ class NewExamApplicationScreen extends Screen
 
         $query = Student::withoutGlobalScopes();
         $query->select([
-            's.id AS student_id',
+            's.id as id',
             's.surname',
             's.firstname',
             's.othername',
-            's.nsin'
+            's.gender',
+            's.dob',
+            's.district_id',
+            's.country_id',
+            's.nsin as nsin',
+            's.telephone',
+            's.passport',
+            's.passport_number',
+            's.lin',
+            's.email'
         ])->from('students AS s')
             ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
