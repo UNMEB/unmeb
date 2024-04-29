@@ -46,7 +46,9 @@ class ExamApplicationDetailScreen extends Screen
         ])
         ->from('students As s')
         ->join('student_registrations as sr', 's.id', '=','sr.id')
-        ->join('registrations as r','sr.registration_id','=','r.id');
+        ->join('registrations as r','sr.registration_id','=','r.id')
+        ->join('registration_periods as rp', 'rp.id','=','r.registration_period_id')
+        ->where('rp.flag', 1);
         
         $query->orderBy('s.nsin', 'asc');
 
