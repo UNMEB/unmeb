@@ -47,6 +47,10 @@ class ExamApplicationDetailScreen extends Screen
         
         $query->orderBy('nsin', 'asc');
 
+        if(auth()->user()->inRole('institution')) {
+            $query->where('r.institution_id', auth()->user()->institution_id);
+        }
+
         return [
             'applications' => $query->paginate(),
         ];
