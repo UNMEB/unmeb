@@ -23,6 +23,9 @@ class ExamApplicationDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->put("institution_id", $request->get('institution_id'));
+        session()->put("course_id", $request->get('course_id'));
+        
         $query = Student::withoutGlobalScopes()
         ->select([
             's.id as id',
