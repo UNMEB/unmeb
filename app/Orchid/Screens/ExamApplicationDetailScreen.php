@@ -45,16 +45,21 @@ class ExamApplicationDetailScreen extends Screen
             'course_codes'
         ])
         ->from('students As s')
-        ->join('student_registrations as sr', 's.id', '=','sr.id')
-        ->join('registrations as r','sr.registration_id','=','r.id')
-        ->join('registration_periods as rp', 'rp.id','=','r.registration_period_id')
-        ->where('rp.flag', 1);
+            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->where('nr.institution_id', '=', session('institution_id'))
+            ->where('nr.course_id', '=', session('course_id'))
+            ->whereNotIn('s.id', function($query) {
+                $query->select('student_id')
+                    ->distinct()
+                    ->from('student_registrations as sr')
+                    ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+                    ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+                    ->where('rp.flag', '=', 1);
+            })
+            ->orderBy('s.nsin', 'ASC');
         
-        $query->orderBy('s.nsin', 'asc');
-
-        if(auth()->user()->inRole('institution')) {
-            $query->where('r.institution_id', auth()->user()->institution_id);
-        }
+       
 
         // $query->where('sr.sr_flag', 0);
 
