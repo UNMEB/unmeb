@@ -533,13 +533,6 @@ Route::screen('biometric/enrollment', StudentEnrollmentListScreen::class)
 Route::screen('biometric/access', StudentAccessLogListScreen::class)
     ->name('platform.biometric.access');
 
-Route::screen('finance/accounts/{account}/details', UserEditScreen::class)
-    ->name('platform.systems.finance.accounts.details')
-    ->breadcrumbs(fn (Trail $trail, $account) => $trail
-    ->parent('platform.systems.finance.accounts')
-    ->push(optional($account->institution)->institution_name, route('platform.systems.finance.accounts.details', $account)));
-
-
 Route::screen('finance/accounts', AccountListScreen::class)
     ->name('platform.systems.finance.accounts')
     ->breadcrumbs(fn (Trail $trail) => $trail
