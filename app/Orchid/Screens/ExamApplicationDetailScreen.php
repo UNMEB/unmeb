@@ -39,19 +39,22 @@ class ExamApplicationDetailScreen extends Screen
             's.telephone',
             's.refugee_number',
             's.lin',
-            's.nsin as nsin'
+            's.nsin as nsin',
+            'sr.trial',
+            'no_of_papers',
+            'course_codes'
         ])
         ->from('students As s')
         ->join('student_registrations as sr', 's.id', '=','sr.id')
         ->join('registrations as r','sr.registration_id','=','r.id');
         
-        $query->orderBy('nsin', 'asc');
+        $query->orderBy('s.nsin', 'asc');
 
         if(auth()->user()->inRole('institution')) {
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
-        $query->where('sr.sr_flag', 0);
+        // $query->where('sr.sr_flag', 0);
 
         return [
             'applications' => $query->paginate(),
@@ -108,6 +111,8 @@ class ExamApplicationDetailScreen extends Screen
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
+                TD::make('trial', 'Trial'),
+                TD::make('course_codes', 'Course Codes');
                 TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
             ])
         ];
