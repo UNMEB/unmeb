@@ -6,6 +6,7 @@ use Orchid\Screen\Screen;
 
 class InstitutionTransactionListScreen extends Screen
 {
+    public $institution;
 
     public 
 
@@ -34,7 +35,7 @@ class InstitutionTransactionListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [];
     }
