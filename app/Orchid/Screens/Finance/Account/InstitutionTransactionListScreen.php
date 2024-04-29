@@ -2,12 +2,13 @@
 
 namespace App\Orchid\Screens\Finance\Account;
 
+use App\Models\Account;
 use App\Models\Institution;
 use Orchid\Screen\Screen;
 
 class InstitutionTransactionListScreen extends Screen
 {
-    public $institution;
+    public $account;
 
     public 
 
@@ -16,7 +17,7 @@ class InstitutionTransactionListScreen extends Screen
      *
      * @return array
      */
-    public function query(Institution $institution): iterable
+    public function query(Account $account): iterable
     {
         return [];
     }

@@ -161,7 +161,7 @@ class AccountListScreen extends Screen
                     ->icon('bs.three-dots-vertical')
                     ->list([
                         Link::make(__('View Transactions'))
-                            ->route('platform.systems.finance.institution.transactions', $account->institution->id)
+                            ->route('platform.systems.finance.institution.transactions', $account->id)
                             ->icon('bs.pencil'),
                     ]);
                 })

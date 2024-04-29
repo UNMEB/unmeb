@@ -536,9 +536,9 @@ Route::screen('biometric/access', StudentAccessLogListScreen::class)
 // Platform > System > Finance > Accounts
 Route::screen('accounts/{institution}/transactions', InstitutionTransactionListScreen::class)
     ->name('platform.systems.finance.institution.transactions')
-    ->breadcrumbs(fn (Trail $trail, $institution) => $trail
+    ->breadcrumbs(fn (Trail $trail, $account) => $trail
         ->parent('platform.systems.finance.accounts')
-        ->push($institution->institution_name, route('platform.systems.finance.institution.transactions', $institution)));
+        ->push($account->institution->institution_name, route('platform.systems.finance.institution.transactions', $account)));
 
 Route::screen('finance/accounts', AccountListScreen::class)
     ->name('platform.systems.finance.accounts')
