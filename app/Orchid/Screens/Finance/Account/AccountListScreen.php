@@ -10,6 +10,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
+use Orchid\Screen\Actions\DropDown;
+use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Components\Cells\Currency;
 use Orchid\Screen\Components\Cells\DateTimeSplit;
@@ -152,6 +154,17 @@ class AccountListScreen extends Screen
                     ->usingComponent(DateTimeSplit::class)
                     ->align(TD::ALIGN_RIGHT)
                     ->sort(),
+
+                TD::make('actions', __('Actions'))
+                ->render(function (Account $account) {
+                    return DropDown::make()
+                    ->icon('bs.three-dots-vertical')
+                    ->list([
+                        Link::make(__('View Transactions'))
+                            ->route('platform.systems.finance.accounts.details', $account->id)
+                            ->icon('bs.pencil'),
+                    ]);
+                })
 
 
             ])

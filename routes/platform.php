@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Models\Account;
 use App\Models\Institution;
 use App\Models\NsinRegistration;
 use App\Models\Student;
 use App\Models\Ticket;
+use App\Orchid\Screens\AccountTransactionListScreen;
 use App\Orchid\Screens\ActivityLogListScreen;
 use App\Orchid\Screens\Administration\Course\CourseAssignPapersListScreen;
 use App\Orchid\Screens\Administration\Course\CourseListScreen;
@@ -531,7 +533,12 @@ Route::screen('biometric/enrollment', StudentEnrollmentListScreen::class)
 Route::screen('biometric/access', StudentAccessLogListScreen::class)
     ->name('platform.biometric.access');
 
-// Platform > System > Finance > Accounts
+Route::screen('finance/accounts/details', AccountTransactionListScreen::class)
+    ->name('platform.systems.finance.accounts.details')
+    ->breadcrumbs(fn (Trail $trail, Account $account) => $trail
+    ->parent('platform.index')
+            ->push(optional($account->institution)->institution_name, route('platform.systems.finance.accounts', $account)));
+
 Route::screen('finance/accounts', AccountListScreen::class)
     ->name('platform.systems.finance.accounts')
     ->breadcrumbs(fn (Trail $trail) => $trail
