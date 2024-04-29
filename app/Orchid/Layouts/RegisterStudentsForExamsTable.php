@@ -34,8 +34,8 @@ class RegisterStudentsForExamsTable extends FormTable
             TD::make('fullName', 'Name'),
             TD::make('gender', 'Gender'),
             TD::make('dob', 'Date of Birth'),
-            TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
             TD::make('telephone', 'Phone Number'),
+            TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
             TDCheckbox::make('students', 'Students'),
         ];
     }
