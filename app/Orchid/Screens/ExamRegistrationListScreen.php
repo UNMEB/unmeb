@@ -65,7 +65,7 @@ class ExamRegistrationListScreen extends Screen
             // dd($query->toRawSql());
 
         if(auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
+            $query->where('r.institution_id', auth()->user()->institution_id);
         }
         
         return [
