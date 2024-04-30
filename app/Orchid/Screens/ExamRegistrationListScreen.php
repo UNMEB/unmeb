@@ -54,7 +54,7 @@ class ExamRegistrationListScreen extends Screen
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
             ->join('institutions AS i', 'i.id', '=', 'r.institution_id')
             ->join('courses AS c', 'c.id', '=', 'r.course_id')
-            ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id');
+            ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
 
             $query->where('rp.id', $this->activePeriod);
 

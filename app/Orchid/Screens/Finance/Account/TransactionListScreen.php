@@ -422,7 +422,7 @@ class TransactionListScreen extends Screen
 
             \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', 'Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
 
-            return back();
+            // return back();
         } catch (\Throwable $th) {
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to deposit funds for this institution. No institution access provided');
         }

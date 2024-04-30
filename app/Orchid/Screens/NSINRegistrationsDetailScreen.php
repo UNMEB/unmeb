@@ -172,7 +172,7 @@ class NSINRegistrationsDetailScreen extends Screen
 
             // Find student record and replace NSIN with null
             Student::where('id', $studentId)->update([
-                'nsin' => null
+                'nsin' => 'NSIN RECALLED'
             ]);
         }
 
