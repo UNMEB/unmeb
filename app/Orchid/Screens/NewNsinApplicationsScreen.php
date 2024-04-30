@@ -79,8 +79,6 @@ class NewNsinApplicationsScreen extends Screen
         })
         ->orderBy('s.nsin', 'asc');
 
-        
-
         return [
             'students' => $query->paginate(10)
         ];
