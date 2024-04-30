@@ -63,6 +63,10 @@ class ExamRegistrationListScreen extends Screen
             $query->orderBy('semester', 'asc');
 
             // dd($query->toRawSql());
+
+        if(auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
         
         return [
             'registrations' => $query->paginate(10),
