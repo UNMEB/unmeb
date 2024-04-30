@@ -16,7 +16,7 @@ return new class extends Migration
         ]);
 
         Schema::table('students', function (Blueprint $table) {
-            $table->string('nsin')->nullable()->unique()->change();
+            $table->string('nsin')->nullable()->change();
         });
     }
 

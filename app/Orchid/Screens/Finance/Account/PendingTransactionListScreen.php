@@ -73,7 +73,6 @@ class PendingTransactionListScreen extends Screen
     public function layout(): iterable
     {
         return [
-
             Layout::rows([
                 Group::make([
                     Relation::make('institution_id')
@@ -124,7 +123,6 @@ class PendingTransactionListScreen extends Screen
                 ])->autoWidth()
                     ->alignEnd(),
             ])->title('Filter Institutions'),
-
 
             Layout::table('transactions', [
                 TD::make('id', 'ID'),

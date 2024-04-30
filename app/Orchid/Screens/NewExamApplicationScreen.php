@@ -66,6 +66,7 @@ class NewExamApplicationScreen extends Screen
             ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
             ->where('nr.institution_id', '=', session('institution_id'))
             ->where('nr.course_id', '=', session('course_id'))
+            ->whereNotNull('s.nsin')
             ->whereNotIn('s.id', function($query) {
                 $query->select('student_id')
                     ->distinct()
@@ -233,7 +234,10 @@ class NewExamApplicationScreen extends Screen
 
             \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>Exam Registration</th><td>$examTotal</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
         } catch (\Throwable $th) {
-            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
+
+            throw $th;
+
+            // \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
         }  
     }
 
