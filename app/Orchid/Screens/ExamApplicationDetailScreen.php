@@ -2,8 +2,10 @@
 
 namespace App\Orchid\Screens;
 
+use App\Exports\ExamApplicationExport;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
@@ -45,7 +47,7 @@ class ExamApplicationDetailScreen extends Screen
             's.email',
             'sr.trial',
             'sr.course_codes',
-            'sr.number_of_papers'
+            'sr.no_of_papers'
         ])
         ->from('students as s')
         ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
@@ -114,7 +116,10 @@ class ExamApplicationDetailScreen extends Screen
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
                 TD::make('trial', 'Trial'),
-                TD::make('course_codes', 'Course Codes'),
+                TD::make('course_codes', 'Course Codes')->render(function ($data) {
+                    return implode(', ', json_decode($data->course_codes));
+                }),
+                TD::make('no_of_papers', 'Number of Papers'),
                 TD::make('nsin', 'NSIN')->render(fn(Student $student) => $student->nsin),
             ])
         ];
@@ -122,6 +127,38 @@ class ExamApplicationDetailScreen extends Screen
 
     public function export(Request $request)
     {
+        $institutionId = session('institution_id');
+        $courseId = session('course_id');
+        $registrationId = session('registration_id');
+
+        $students = Student::withoutGlobalScopes()
+        ->select([
+            's.id as id',
+            's.surname',
+            's.firstname',
+            's.othername',
+            's.gender',
+            's.dob',
+            'd.district_name as district',
+            'c.nicename as country',
+            's.nsin as nsin',
+            's.telephone',
+            'sr.trial',
+            'sr.course_codes',
+            'sr.no_of_papers'  
+        ])
+        ->from('students as s')
+        ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+        ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
+        ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+        ->leftJoin('countries AS c', 'c.id','=','s.country_id')
+        ->leftJoin('districts as d', 'd.id','=','s.district_id')
+        ->where('r.institution_id', $institutionId)
+        ->where('r.course_id', $courseId)
+        ->where('r.id', $registrationId)
+        ->get();
+
+        return Excel::download(new ExamApplicationExport($students), 'exam_applications.xlsx');
         
     }
 }

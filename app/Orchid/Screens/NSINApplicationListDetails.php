@@ -63,7 +63,7 @@ class NSINApplicationListDetails extends Screen
         $query->from('students As s');
         $query->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id');
         $query->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id');
-        $query->join('courses AS c', 'c.id', '=', 'nr.course_id');
+        // $query->join('courses AS c', 'c.id', '=', 'nr.course_id');
         $query->join('years as y', 'nr.year_id', '=', 'y.id');
         $query->where('nr.institution_id', $institutionId);
         $query->where('nr.course_id', $courseId);
@@ -270,8 +270,8 @@ class NSINApplicationListDetails extends Screen
         ->from('students as s')
         ->join('nsin_student_registrations as nsr', 's.id', '=','nsr.student_id')
         ->join('nsin_registrations as nr','nsr.nsin_registration_id','=','nr.id')
-        ->join('countries AS c', 'c.id','=','s.country_id')
-        ->join('districts as d', 'd.id','=','s.district_id')
+        ->leftJoin('countries AS c', 'c.id','=','s.country_id')
+        ->leftJoin('districts as d', 'd.id','=','s.district_id')
         ->where('nr.institution_id', $institutionId)
         ->where('nr.course_id', $courseId)
         ->where('nr.id', $nsin_registration_id)
