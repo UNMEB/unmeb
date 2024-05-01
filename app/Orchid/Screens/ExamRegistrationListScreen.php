@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\StudentRegistration;
 use DB;
 use Illuminate\Http\Request;
+use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
@@ -67,7 +68,7 @@ class ExamRegistrationListScreen extends Screen
                 $query->where('r.institution_id',  auth()->user()->institution_id);
             }
 
-            // dd($query->toRawSql());
+            $query->where('rp.id', $this->activePeriod);
         
         return [
             'registrations' => $query->paginate(10),
@@ -105,7 +106,23 @@ class ExamRegistrationListScreen extends Screen
      */
     public function commandBar(): array
     {
-        return [];
+        // Get all NSIN Registration Periods
+        $periods = RegistrationPeriod::select('id', 'reg_start_date', 'reg_end_date')
+                    ->orderBy('id', 'desc')
+                    ->get();
+
+        $layouts = $periods->map(function ($period) {
+            return Link::make("#$period->id " . $period->reg_start_date->format('Y-m-d') . ' / '. $period->reg_end_date->format('Y-m-d'))
+            ->route('platform.registration.exam.registrations.list', [
+                'period' => $period->id,
+            ]);
+        });
+
+        return [
+            DropDown::make('Change Period')
+                ->icon('bs.arrow-down')
+                ->list($layouts->toArray())
+        ];
     }
 
     /**
