@@ -38,28 +38,36 @@ class ExamRegistrationListScreen extends Screen
             $this->activePeriod = $queryPeriod;
         }
 
-        $query = Registration::from('registrations AS r')
-        ->join('student_registrations AS sr', 'sr.registration_id', '=', 'r.id')
-        ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
-        ->join('courses AS c', 'r.course_id', '=', 'c.id')
-        ->join('registration_periods AS rp', 'r.registration_period_id', '=', 'rp.id')
-        ->select(
-            'rp.reg_start_date AS start_date',
-            'rp.reg_end_date AS end_date',
-            'i.institution_name',
-            'c.course_name',
-            'rp.academic_year',
-            DB::raw('COUNT(CASE WHEN sr.sr_flag = 1 THEN 1 ELSE NULL END) AS approved_count'),
-            DB::raw('COUNT(CASE WHEN sr.sr_flag = 2 THEN 1 ELSE NULL END) AS rejected_count'),
-            DB::raw('COUNT(CASE WHEN sr.sr_flag = 0 THEN 1 ELSE NULL END) AS pending_count'),
-            DB::raw('COUNT(*) AS total_registered')
-        )
-        ->where('rp.id', $this->activePeriod) // Add condition to filter by activePeriod
-        ->groupBy('i.institution_name', 'c.course_name', 'rp.reg_start_date', 'rp.reg_end_date', 'rp.academic_year');
-        
-        if (auth()->user()->inRole('institution')) {
-            $query->where('r.institution_id', auth()->user()->institution_id);
-        }
+        $query = Student::withoutGlobalScopes()
+            ->select(
+                'r.id as registration_id',
+                'i.id as institution_id',
+                'i.institution_name',
+                'c.id as course_id',
+                'c.course_name',
+                'year_of_study as semester',
+                'reg_start_date as start_date',
+                'reg_end_date as end_date'
+            )
+            ->from('students AS s')
+            ->join('student_registrations As sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
+            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->join('institutions AS i', 'i.id', '=', 'r.institution_id')
+            ->join('courses AS c', 'c.id', '=', 'r.course_id')
+            ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
+
+            $query->where('rp.id', $this->activePeriod);
+
+            $query->orderBy('institution_name', 'asc');
+            $query->orderBy('course_name', 'desc');
+            $query->orderBy('semester', 'asc');
+
+            if(auth()->user()->inRole('institution')) {
+                $query->where('r.institution_id',  auth()->user()->institution_id);
+            }
+
+            // dd($query->toRawSql());
         
         return [
             'registrations' => $query->paginate(10),
@@ -109,7 +117,7 @@ class ExamRegistrationListScreen extends Screen
     {
         return [
             Layout::table('registrations', [
-                TD::make()->render(fn (Registration $model, object $loop) => $loop->index + 1),
+                TD::make('#')->render(fn ($model, object $loop) => $loop->index + 1),
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
                 TD::make('semester', 'Semester'),
@@ -137,11 +145,9 @@ class ExamRegistrationListScreen extends Screen
                     fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
                         ->route('platform.registration.exam.registrations.details', [
-                            'registration_period_id' => $data->registration_period_id,
                             'registration_id' => $data->registration_id,
                             'institution_id' => $data->institution_id,
                             'course_id' => $data->course_id,
-
                         ])
                 )
             ])  
