@@ -24,6 +24,7 @@ class ExamRegistrationDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+        $registration_period_id = $request->get('registration_period_id');
         $registration_id = $request->get('registration_id');
         $institution_id = $request->get('institution_id');
         $course_id = $request->get('course_id');
@@ -55,7 +56,7 @@ class ExamRegistrationDetailScreen extends Screen
             ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->where('rp.flag', 1)
+            ->where('rp.id', $registration_period_id)
             ->where('r.id', session('registration_id'));
 
         if (auth()->user()->inRole('institution')) {
