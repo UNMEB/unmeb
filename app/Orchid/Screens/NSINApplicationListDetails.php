@@ -2,10 +2,12 @@
 
 namespace App\Orchid\Screens;
 
+use App\Exports\NSINApplicationExport;
 use App\Models\District;
 use App\Models\NsinRegistration;
 use App\Models\Student;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
@@ -34,6 +36,10 @@ class NSINApplicationListDetails extends Screen
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
         $this->nsinRegistrationId = $request->get('nsin_registration_id');
+
+        session()->put('course_id', $courseId);
+        session()->put('institution_id', $institutionId);
+        session()->put('nsin_registration_id', $request->get('nsin_registration_id'));
         
         $query = Student::withoutGlobalScopes();
         $query->select([
@@ -140,6 +146,8 @@ class NSINApplicationListDetails extends Screen
             Button::make('Export Applications')
             ->icon('bs.receipt')
             ->class('btn btn-success')
+            ->method('export')
+            ->rawClick(),
         ];
     }
 
@@ -234,5 +242,43 @@ class NSINApplicationListDetails extends Screen
     public function reset(Request $request)
     {
         return redirect()->route('platform.registration.nsin.applications.details');
+    }
+
+    public function export(Request $request)
+    {
+        $nsin_registration_id = session()->get('nsin_registration_id');
+        $institutionId = session()->get('institution_id');
+        $courseId = session()->get('course_id');
+
+        $students = Student::withoutGlobalScopes()
+        ->select([
+            's.id as id',
+            's.surname',
+            's.firstname',
+            's.othername',
+            's.gender',
+            's.dob',
+            'd.district_name as district',
+            'c.nicename as country',
+            's.nsin as nsin',
+            's.telephone',
+            's.passport',
+            's.passport_number',
+            's.lin',
+            's.email'
+        ])
+        ->from('students as s')
+        ->join('nsin_student_registrations as nsr', 's.id', '=','nsr.student_id')
+        ->join('nsin_registrations as nr','nsr.nsin_registration_id','=','nr.id')
+        ->join('countries AS c', 'c.id','=','s.country_id')
+        ->join('districts as d', 'd.id','=','s.district_id')
+        ->where('nr.institution_id', $institutionId)
+        ->where('nr.course_id', $courseId)
+        ->where('nr.id', $nsin_registration_id)
+        ->get();
+
+        return Excel::download(new NSINApplicationExport($students), 'nsin_applications.xlsx');
+
+        
     }
 }

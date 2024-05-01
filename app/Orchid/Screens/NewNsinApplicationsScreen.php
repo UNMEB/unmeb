@@ -267,8 +267,7 @@ class NewNsinApplicationsScreen extends Screen
                 // Check if the student is already registered for the same period, institution, and course
                 $existingRegistration = NsinStudentRegistration::where([
                     'nsin_registration_id' => $nsinRegistration->id,
-                    'student_id' => $studentId,
-                    'verify' => 0
+                    'student_id' => $studentId
                 ])->first();
     
                 if (!$existingRegistration) {
