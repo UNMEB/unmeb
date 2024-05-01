@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Models\Transaction;
 use App\Orchid\Layouts\ExamRegistrationTable;
+use DB;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
@@ -117,25 +118,28 @@ class ExamRegistrationDetailScreen extends Screen
 
     public function rollback(Request $request)
     {
+        DB::beginTransaction();
+        
         try {
-            $validatedData = $request->validate([
+
+            $request->validate([
                 'students' => 'required|array',
                 'students.*' => 'integer|exists:students,id', // Assuming students are stored in a table named 'students' with 'id' column.
             ]);
 
-            $studentIds = $validatedData['students'];
+            $studentIds = $request->get('students');
 
             $registration_id = session()->get('registration_id');
             $institution_id = session()->get('institution_id');
             $course_id = session()->get('course_id');
 
-            foreach ($studentIds as $key => $studentId) {
+            foreach ($studentIds as $studentId) {
 
                 // Get the student
-                $student = Student::findOrFail($studentId);
+                $student = Student::withoutGlobalScopes()->findOrFail($studentId);
 
                 // Find the NSIN transactions and reverse it
-                $examTransaction = Transaction::where('comment', '=', 'Exam Registration Fee for Student ID: ' . $studentId)->first();
+                $examTransaction = Transaction::withoutGlobalScopes()->where('comment', '=', "Exam Registration for student ID: $studentId")->first();
 
                 // Find the registration table and rollback amount
                 $registration = Registration::where([
@@ -145,8 +149,10 @@ class ExamRegistrationDetailScreen extends Screen
                 ])->first();
 
                 // Revert the balance less this transaction for exam
+                 $reversalAmount = $examTransaction->amount;
+
                 if ($registration) {
-                    $registration->amount -= $examTransaction->amount;
+                    $registration->amount -= $reversalAmount;
                     $registration->save();
                 }
 
@@ -156,7 +162,7 @@ class ExamRegistrationDetailScreen extends Screen
                     'registration_id' => $registration_id,
                 ])->first();
 
-                if (!$studentRegistration) {
+                if ($studentRegistration) {
                     // Delete the student registration
                     $studentRegistration->delete();
                 }
@@ -187,10 +193,15 @@ class ExamRegistrationDetailScreen extends Screen
                 }
             }
 
+            DB::commit();
+
             Alert::success('Action Complete', count($studentIds) . ' Exam registration successfully recalled and transactions reversed.')->persistent(true);
 
         } catch (\Throwable $th) {
-            Alert::error('Action Failed', 'Please select students from Exam Registration List');
+
+            DB::rollBack();
+
+            Alert::error('Action Failed', $th->getMessage(). ' '. $th->getTraceAsString())->persistent(true);
         }
     }
 

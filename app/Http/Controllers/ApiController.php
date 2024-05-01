@@ -91,7 +91,7 @@ class ApiController extends Controller
         // Institution Id
         $institutionId = auth()->user()->institution_id;
 
-        $query = Student::query()
+        $query = Student::withoutGlobalScopes()
             ->select('surname', 'firstname', 'nsin')
             ->join('student_registrations', 'students.id', '=', 'student_registrations.student_id')
             ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')

@@ -424,7 +424,7 @@ class TransactionListScreen extends Screen
 
             // return back();
         } catch (\Throwable $th) {
-            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to deposit funds for this institution. No institution access provided');
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage());
         }
     }
 

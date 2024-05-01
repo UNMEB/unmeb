@@ -19,6 +19,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
+
+            // $table->index('transaction_id');
         });
     }
 
