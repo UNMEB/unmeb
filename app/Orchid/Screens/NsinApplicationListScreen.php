@@ -140,12 +140,6 @@ class NsinApplicationListScreen extends Screen
                 ->method('applyForNSINs')
                 ->rawClick(false),
 
-            ModalToggle::make('Export NSIN Applications')
-            ->class('btn btn-primary')
-            ->modal('exportNSINApplications')
-            ->modalTitle('Export NSIN Applications')
-            ->method('exportNSINApplications'),
-
             DropDown::make('Change Period')
                 ->icon('bs.arrow-down')
                 ->list($layouts->toArray())
