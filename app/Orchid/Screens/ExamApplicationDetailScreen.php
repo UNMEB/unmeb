@@ -42,7 +42,10 @@ class ExamApplicationDetailScreen extends Screen
             's.passport',
             's.passport_number',
             's.lin',
-            's.email'
+            's.email',
+            'sr.trial',
+            'sr.course_codes',
+            'sr.number_of_papers'
         ])
         ->from('students as s')
         ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')

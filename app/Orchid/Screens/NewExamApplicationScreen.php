@@ -125,6 +125,8 @@ class NewExamApplicationScreen extends Screen
     public function submit(Request $request)
     {
         try {
+            DB::beginTransaction();
+
             // Retrieve necessary data from session
             $examRegistrationPeriodId = session('exam_registration_period_id');
             $institutionId = session('institution_id');
@@ -185,16 +187,29 @@ class NewExamApplicationScreen extends Screen
                 throw new Exception("Insufficient account balance. Please top up your account before proceeding.");
             }
 
-            $registration = Registration::firstOrCreate([
-                'registration_period_id' => $examRegistrationPeriodId,
-                'institution_id' => $institution->id,
-                'course_id' => $course->id,
-                'year_of_study' => $yearOfStudy,
-            ], [
-                'amount' => 0,
-                'surcharge_id' => $normalCharge->id,
-                'date_time' => now(),
-            ]);
+            $registration = Registration::where(
+                [
+                    'institution_id' => $institution->id,
+                    'course_id' => $course->id,
+                    'registration_period_id' => (int) $examRegistrationPeriodId,
+                    'year_of_study' => $yearOfStudy,
+                ]
+            )->first();
+
+            if(!$registration) {
+                $registration = new Registration();
+                $registration->institution_id = $institution->id;
+                $registration->course_id = $course->id;
+                $registration->year_of_study = $yearOfStudy;
+                $registration->amount = $totalTransactionAmount;
+                $registration->registration_period_id = (int) $examRegistrationPeriodId;
+                $registration->completed = 0;
+                $registration->verify = 0;
+                $registration->approved = 0;
+                $registration->surcharge_id = $normalCharge->surcharge_id;
+                $registration->date_time = now();
+                $registration->save();
+            }
 
             foreach ($studentIds as $studentId) {
                 $student = Student::withoutGlobalScopes()->whereId($studentId)->first();
@@ -238,7 +253,6 @@ class NewExamApplicationScreen extends Screen
                     ]);
                     $transaction->save();
 
-
                     // Deduct transaction amount from account balance
                     $accountBalance -= $transactionAmount;
                 }
@@ -272,14 +286,14 @@ class NewExamApplicationScreen extends Screen
             $totalDeductionFormatted = 'Ush ' . number_format($totalDeduction);
             $remainingBalanceFormatted = 'Ush ' . number_format($remainingBalance);
 
+            DB::commit();
+
             // Display success message
             \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>Exam Registration</th><td>$examTotal</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
-
-            dd($registration->toRawSql());
         } catch (\Throwable $th) {
+            DB::rollBack();
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
         }
-
     }
 
 }
