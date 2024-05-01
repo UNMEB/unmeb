@@ -104,7 +104,7 @@ class RegisterStudentsForExamForm extends Listener
                     ->options([
                         'First' => 'First Attempt',
                         'Second' => 'Second Attempt',
-                        'Third Attempt' => 'Third Attempt'
+                        'Third' => 'Third Attempt'
                     ]),
 
                 // Select Students

@@ -104,7 +104,7 @@ class ApplyForExamsForm extends Listener
                     ->options([
                         'First' => 'First Attempt',
                         'Second' => 'Second Attempt',
-                        'Third Attempt' => 'Third Attempt'
+                        'Third' => 'Third Attempt'
                     ])
                     ->empty('None Selected')
                     ->required(),
