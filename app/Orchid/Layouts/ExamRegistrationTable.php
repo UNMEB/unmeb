@@ -3,6 +3,7 @@
 namespace App\Orchid\Layouts;
 
 use App\Orchid\Screens\TDCheckbox;
+use Orchid\Screen\Components\Cells\DateTimeSplit;
 use Orchid\Screen\Layouts\Table;
 use Orchid\Screen\TD;
 
@@ -37,6 +38,10 @@ class ExamRegistrationTable extends Table
             TD::make('dob', 'Birth Date'),
             TD::make('telephone', 'Phone Number'),
             TD::make('nsin', 'NSIN'),
+            TD::make('created_at', 'Created At')
+                ->usingComponent(DateTimeSplit::class),
+            TD::make('updated_at', 'Updated At')
+                ->usingComponent(DateTimeSplit::class),
             TDCheckbox::make('students')  
         ];
     }

@@ -50,7 +50,9 @@ class ExamRegistrationDetailScreen extends Screen
             's.email',
             'sr.trial',
             'sr.course_codes',
-            'sr.no_of_papers'
+            'sr.no_of_papers',
+            'sr.created_at',
+            'sr.updated_at'
         )
             ->from('students as s')
             ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
