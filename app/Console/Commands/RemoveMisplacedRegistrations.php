@@ -39,17 +39,14 @@ class RemoveMisplacedRegistrations extends Command
             ->where('rp.flag', '!=', 1)
             ->get();
 
-        $registrationIds = $registrations->pluck('id')->toArray();
-        $studentIds = $registrations->pluck('student_id')->toArray();
+        foreach ($registrations as $registration) {
+            $deleted = StudentRegistration::where([
+                'registration_id' => $registration->id,
+                'student_id' => $registration->student_id
+            ])->delete();
 
-        $query = StudentRegistration::whereIn('registration_id', $registrationIds)
-            ->whereIn('student_id', $studentIds);
-
-        $sql = $query->toSql(); // Get SQL query
-
-        // $deleted = $query->delete();
-
-        $this->info($sql);
-        // $this->info($deleted . ' misplaced registrations and corresponding transactions removed successfully.');
+            $this->info($deleted ? 'Record for ' . $registration->student_id .' deleted ':'Record for ' . $registration->student_id .' not deleted ');
+        }
+        $this->info($registrations->count() . ' misplaced registrations and corresponding transactions removed successfully.');
     }
 }
