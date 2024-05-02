@@ -40,4 +40,9 @@ class RegistrationPeriod extends Model
     {
         return LogOptions::defaults();
     }
+
+    public function registrations()
+    {
+        return $this->hasMany(Registration::class);
+    }
 }

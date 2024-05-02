@@ -74,6 +74,7 @@ class NewExamApplicationScreen extends Screen
                     ->from('student_registrations as sr')
                     ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
                     ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+                    ->where('sr.trial','=', session('trial'))
                     ->where('rp.flag', '=', 1);
             })
             ->orderBy('s.nsin', 'ASC');

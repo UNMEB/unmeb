@@ -3,6 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Account;
+use App\Models\Registration;
+use App\Models\RegistrationPeriod;
+use App\Models\StudentRegistration;
 use App\Models\Transaction;
 use App\Models\Institution;
 use Illuminate\Console\Command;
@@ -71,6 +74,29 @@ class RecalculateAccountBalances extends Command
             if (Str::startsWith($transaction->comment, 'Exam Registration for student ID')) {
                 $account->balance -= $transaction->amount;
                 $this->info('Deducted exam funds: ' . $transaction->amount);
+
+                // Get the student id
+                $studentId = Str::of($transaction->comment)->after('student ID:')->trim();
+
+                // Check for this student registration
+                $studentRegistration = StudentRegistration::where('student_id', $studentId)
+                ->latest()
+                ->first();
+
+                // Get the registration and check its registrati
+                if ($studentRegistration) {
+                    $registrationId = $studentRegistration->registration_id;
+
+                    $registration = Registration::find($registrationId);
+
+                    // Check if this $registration's period is the active 1;
+                    if($registration->registration_period_id == RegistrationPeriod::whereFlag(1, true)->first()->id) {
+                        // If its a match we skip
+                    } else {
+                        
+                    }
+                }
+
             } elseif (Str::startsWith($transaction->comment, 'NSIN Registration Fee for Student ID')) {
                 $account->balance -= $transaction->amount;
                 $this->info('Deducted NSIN registration fee: ' . $transaction->amount);
