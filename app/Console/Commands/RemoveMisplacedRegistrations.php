@@ -41,12 +41,12 @@ class RemoveMisplacedRegistrations extends Command
         $misplacedCount = 0;
 
         foreach ($registrations as $registration) {
-            $student = Student::find($registration->student_id);
+            $student = Student::withoutGlobalScopes()->find($registration->student_id);
             $this->info('Found registration for student ' . $student->full_name .' in period: ' . $registration->reg_start_date . ' to ' . $registration->reg_end_date);
             $misplacedCount++;
 
             // Get the associated transaction e.g with comment = 'Exam Registration for student ID: {student_id}'
-            $transaction = Transaction::where('comment', 'LIKE', 'Exam Registration for student ID: ' . $registration->student_id . '%')->first();
+            $transaction = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Exam Registration for student ID: ' . $registration->student_id . '%')->first();
             
             $this->info('Found transaction with comment ' . $transaction->comment);
 
