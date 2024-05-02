@@ -31,7 +31,7 @@ class RemoveMisplacedRegistrations extends Command
      */
     public function handle()
     {
-        $registrations = StudentRegistration::select('sr.student_id')
+        $registrations = StudentRegistration::select('sr.student_id', 'r.id')
             ->from('student_registrations as sr')
             ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
@@ -40,7 +40,10 @@ class RemoveMisplacedRegistrations extends Command
             ->get();
 
         foreach ($registrations as $registration) {
-            $deleted = StudentRegistration::where('student_id', $registration->student_id)->delete();
+            $deleted = StudentRegistration::where([
+                'registration_id' => $registration->id,
+                'student_id' => $registration->student_id,
+            ])->delete();
 
             $this->info($deleted ? 'Record for ' . $registration->student_id .' deleted ':'Record for ' . $registration->student_id .' not deleted ');
         }
