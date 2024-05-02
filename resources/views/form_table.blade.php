@@ -71,11 +71,11 @@
             </div>
         </div>
     @else
-        @include('platform::layouts.pagination', [
+        <!-- @include('platform::layouts.pagination', [
             'paginator' => $rows,
             'columns' => $columns,
             'onEachSide' => $onEachSide,
-        ])
+        ]) -->
 
         @include('pagination', [
             'paginator' => $rows,

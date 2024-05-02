@@ -182,6 +182,10 @@ class PlatformProvider extends OrchidServiceProvider
                             return null;
                         }, Color::DANGER),
 
+                    Menu::make('Rollback Transactions')
+                        ->route('platform.systems.finance.rollback')
+                        ->permission('platform.systems.finance.rollback'),
+
                 ])
                 ->permission('platform.finance.list'),
 
@@ -349,7 +353,8 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.finance.approve', 'Approve Deposits')
                 ->addPermission('platform.finance.transactions.reverse', 'Reverse Transactions')
                 ->addPermission('platform.finance.transactions.flag', 'Flag Transaction')
-                ->addPermission('platform.finance.accounts.list', 'View Institution Accounts'),
+                ->addPermission('platform.finance.accounts.list', 'View Institution Accounts')
+                ->addPermission('platform.systems.finance.rollback', 'Rollback Transaction Activity'),
 
             // Manage Report
             ItemPermission::group('Manage Reports')
@@ -375,14 +380,14 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.surcharges.fees.export', 'Export Surcharge Fees'),
 
 
-                // Manage Logbbok Fees
+            // Manage Logbbok Fees
             ItemPermission::group('Manage Logbook Fees')
-            ->addPermission('platform.logbook_fees.module', 'Manage Logbook Fees')
-            ->addPermission('platform.logbook_fees.list', 'View Logbook Fees')
-            ->addPermission('platform.logbook_fees.create', 'Create Logbook Fee')
-            ->addPermission('platform.logbook_fees.update', 'Update Logbook Fee')
-            ->addPermission('platform.logbook_fees.delete', 'Delete Logbook Fee')
-            ->addPermission('platform.logbook_fees.export', 'Export Logbook Fees'),
+                ->addPermission('platform.logbook_fees.module', 'Manage Logbook Fees')
+                ->addPermission('platform.logbook_fees.list', 'View Logbook Fees')
+                ->addPermission('platform.logbook_fees.create', 'Create Logbook Fee')
+                ->addPermission('platform.logbook_fees.update', 'Update Logbook Fee')
+                ->addPermission('platform.logbook_fees.delete', 'Delete Logbook Fee')
+                ->addPermission('platform.logbook_fees.export', 'Export Logbook Fees'),
 
             ItemPermission::group(__('System'))
                 ->addPermission('platform.systems.roles', __('Roles'))

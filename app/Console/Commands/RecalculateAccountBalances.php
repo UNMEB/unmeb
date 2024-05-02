@@ -6,6 +6,7 @@ use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\Institution;
 use Illuminate\Console\Command;
+use Illuminate\Support\Str;
 
 class RecalculateAccountBalances extends Command
 {
@@ -14,7 +15,7 @@ class RecalculateAccountBalances extends Command
      *
      * @var string
      */
-    protected $signature = 'accounts:recalculate-balances';
+    protected $signature = 'accounts:recalculate-balances {institution_id}';
 
     /**
      * The console command description.
@@ -28,32 +29,49 @@ class RecalculateAccountBalances extends Command
      */
     public function handle()
     {
-        $institutions = Institution::all();
+        $institutionId = $this->argument('institution_id');
+        $institution = Institution::findOrFail($institutionId);
 
-        foreach ($institutions as $institution) {
-            $accounts = Account::withoutGlobalScopes()->where('institution_id', $institution->id)->get();
+        $account = Account::withoutGlobalScopes()->where('institution_id', $institution->id)->first();
 
-            foreach ($accounts as $account) {
-                $transactions = Transaction::withoutGlobalScopes()
-                    ->where('account_id', $account->id)
-                    ->where('status', 'approved')
-                    ->get();
-                $balance = 0;
-
-                foreach ($transactions as $transaction) {
-                    if ($transaction->type == 'credit') {
-                        $balance += $transaction->amount;
-                    } elseif ($transaction->type == 'debit') {
-                        $balance -= $transaction->amount;
-                    }
-                }
-
-                $account->balance = $balance;
-                $account->save();
-            }
-
-            $this->info('Account balances recalculated successfully for institution: ' . $institution->institution_name);
+        if (!$account) {
+            $this->info('No account found for the given institution.');
+            return;
         }
+
+        // Set the initial account balance to zero
+        $account->balance = 0;
+
+        // Top up account balance with funds approved by Semei
+        $approvedFunds = Transaction::withoutGlobalScopes()
+            ->where('account_id', $account->id)
+            ->where('status', 'approved')
+            ->where('approved_by', 273)
+            ->where('type', 'credit')
+            ->get();
+
+        // Get the total approved funds and add them to the account
+        $totalApprovedFunds = $approvedFunds->sum('amount');
+        $account->balance += $totalApprovedFunds;
+
+        // Get all exam transactions using comment starting with Exam Registration for student ID
+        $examTransactions = Transaction::where('account_id', $account->id)
+            ->where('comment', 'like', 'Exam Registration for student ID%')
+            ->get();
+
+        // Check for duplicates these will have the same comment e.g. Exam Registration for student ID: 137542
+        $uniqueTransactions = $examTransactions->unique('comment');
+
+        // If you need to delete the duplicates from the database:
+        $duplicateComments = $examTransactions->pluck('comment')->duplicates()->all();
+        Transaction::whereIn('comment', $duplicateComments)->delete();
+
+        // After deleting the duplicates, deduct these funds from the account balance
+        $totalExamFunds = $examTransactions->sum('amount');
+        $account->balance -= $totalExamFunds;
+
+        $account->save();
+
+        $this->info('Account balance recalculated successfully for institution: ' . $institution->institution_name);
     }
 }
-
