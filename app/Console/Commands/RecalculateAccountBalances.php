@@ -32,12 +32,16 @@ class RecalculateAccountBalances extends Command
         $institutionId = $this->argument('institution_id');
         $institution = Institution::findOrFail($institutionId);
 
+        $this->info('Recalculating account balances for institution: ' . $institution->institution_name);
+
         $account = Account::withoutGlobalScopes()->where('institution_id', $institution->id)->first();
 
         if (!$account) {
-            $this->info('No account found for the given institution.');
+            $this->info('No account found for the given institution: ' . $institution->institution_name);
             return;
         }
+
+        $this->info('Account found for institution: ' . $institution->institution_name);
 
         // Set the initial account balance to zero
         $account->balance = 0;
@@ -54,21 +58,29 @@ class RecalculateAccountBalances extends Command
         $totalApprovedFunds = $approvedFunds->sum('amount');
         $account->balance += $totalApprovedFunds;
 
+        $this->info('Total approved funds added: ' . $totalApprovedFunds);
+
         // Get all exam transactions using comment starting with Exam Registration for student ID
         $examTransactions = Transaction::where('account_id', $account->id)
             ->where('comment', 'like', 'Exam Registration for student ID%')
             ->get();
 
-        // Check for duplicates these will have the same comment e.g. Exam Registration for student ID: 137542
+        $this->info('Found ' . $examTransactions->count() . ' exam transactions for institution: ' . $institution->institution_name);
+
+        // Check for duplicates; these will have the same comment e.g. Exam Registration for student ID: 137542
         $uniqueTransactions = $examTransactions->unique('comment');
 
         // If you need to delete the duplicates from the database:
         $duplicateComments = $examTransactions->pluck('comment')->duplicates()->all();
         Transaction::whereIn('comment', $duplicateComments)->delete();
 
+        $this->info('Deleted ' . count($duplicateComments) . ' duplicate exam transactions');
+
         // After deleting the duplicates, deduct these funds from the account balance
         $totalExamFunds = $examTransactions->sum('amount');
         $account->balance -= $totalExamFunds;
+
+        $this->info('Total exam funds deducted: ' . $totalExamFunds);
 
         $account->save();
 
