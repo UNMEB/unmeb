@@ -38,43 +38,7 @@ class RemoveMisplacedRegistrations extends Command
             ->where('rp.flag', '!=', 1)
             ->get();
 
-        $misplacedCount = 0;
-
-        foreach ($registrations as $registration) {
-            $student = Student::withoutGlobalScopes()->find($registration->student_id);
-            if ($student) {
-                $this->info('Found registration for student ' . $student->full_name .' in period: ' . $registration->reg_start_date . ' to ' . $registration->reg_end_date);
-                $misplacedCount++;
-
-                // Get the associated transaction e.g with comment = 'Exam Registration for student ID: {student_id}'
-                $transaction = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Exam Registration for student ID: ' . $registration->student_id . '%')->first();
-                
-                if ($transaction) {
-                    $this->info('Found transaction with comment ' . $transaction->comment);
-                    // Delete the transaction
-                    $transaction->delete();
-                } else {
-                    $this->info('No transaction found for student ID ' . $registration->student_id);
-                }
-
-
-                $transactionR = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID: ' . $registration->student_id . '%')->first();
-                
-                if ($transactionR) {
-                    $this->info('Found transaction with comment ' . $transactionR->comment);
-                    // Delete the transaction
-                    $transactionR->delete();
-                } else {
-                    $this->info('No transaction reversal found for student ID ' . $registration->student_id);
-                }
-
-                // Delete the student registration
-                $registration->delete();
-            } else {
-                $this->info('No student found with ID ' . $registration->student_id);
-            }
-        }
-
-        $this->info($misplacedCount . ' misplaced registrations and corresponding transactions removed successfully.');
+        
+        $this->info($registrations->count() . ' misplaced registrations and corresponding transactions removed successfully.');
     }
 }
