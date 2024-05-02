@@ -60,30 +60,72 @@ class RecalculateAccountBalances extends Command
 
         $this->info('Total approved funds added: ' . $totalApprovedFunds);
 
-        // Get all exam transactions using comment starting with Exam Registration for student ID
-        $examTransactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)
-            ->where('comment', 'like', 'Exam Registration for student ID%')
+        // Get all transactions for different purposes
+        $transactions = Transaction::withoutGlobalScopes()
+            ->where('status', 'approved')
+            ->where('account_id', $account->id)
             ->get();
 
-        $this->info('Found ' . $examTransactions->count() . ' exam transactions for institution: ' . $institution->institution_name);
+        // Process each transaction
+        foreach ($transactions as $transaction) {
+            if (Str::startsWith($transaction->comment, 'Exam Registration for student ID')) {
+                $account->balance -= $transaction->amount;
+                $this->info('Deducted exam funds: ' . $transaction->amount);
+            } elseif (Str::startsWith($transaction->comment, 'NSIN Registration Fee for Student ID')) {
+                $account->balance -= $transaction->amount;
+                $this->info('Deducted NSIN registration fee: ' . $transaction->amount);
+            } elseif (Str::startsWith($transaction->comment, 'Logbook Fee for Student ID')) {
+                $account->balance -= $transaction->amount;
+                $this->info('Deducted logbook fee: ' . $transaction->amount);
+            } elseif (Str::startsWith($transaction->comment, 'Research Guideline Fee for Student ID')) {
+                $account->balance -= $transaction->amount;
+                $this->info('Deducted research guideline fee: ' . $transaction->amount);
+            }
+        }
 
-        // Check for duplicates; these will have the same comment e.g. Exam Registration for student ID: 137542
-        $uniqueTransactions = $examTransactions->unique('comment');
-
-        // If you need to delete the duplicates from the database:
-        $duplicateComments = $examTransactions->pluck('comment')->duplicates()->all();
-        Transaction::withoutGlobalScopes()->whereIn('comment', $duplicateComments)->delete();
-
-        $this->info('Deleted ' . count($duplicateComments) . ' duplicate exam transactions');
-
-        // After deleting the duplicates, deduct these funds from the account balance
-        $totalExamFunds = $examTransactions->sum('amount');
-        $account->balance -= $totalExamFunds;
-
-        $this->info('Total exam funds deducted: ' . $totalExamFunds);
+        // Delete duplicate transactions
+        $this->deleteDuplicateTransactions($account);
 
         $account->save();
 
         $this->info('Account balance recalculated successfully for institution: ' . $institution->institution_name);
+    }
+
+    /**
+     * Delete duplicate transactions for the account.
+     *
+     * @param \App\Models\Account $account
+     * @return void
+     */
+    private function deleteDuplicateTransactions(Account $account)
+    {
+        $transactionComments = Transaction::withoutGlobalScopes()
+            ->where('status', 'approved')
+            ->where('account_id', $account->id)
+            ->pluck('comment');
+
+        // Get duplicate comments
+        $duplicateComments = $transactionComments->duplicates()->all();
+
+        foreach ($duplicateComments as $comment) {
+            $duplicateTransactions = Transaction::withoutGlobalScopes()
+                ->where('status', 'approved')
+                ->where('account_id', $account->id)
+                ->where('comment', $comment)
+                ->get();
+
+            foreach ($duplicateTransactions as $transaction) {
+                $this->info('Found duplicate transaction: ' . $transaction->comment . ', amount: ' . $transaction->amount);
+            }
+        }
+
+        // Delete duplicate transactions
+        Transaction::withoutGlobalScopes()
+            ->where('status', 'approved')
+            ->where('account_id', $account->id)
+            ->whereIn('comment', $duplicateComments)
+            ->delete();
+
+        $this->info('Deleted ' . count($duplicateComments) . ' duplicate transactions');
     }
 }
