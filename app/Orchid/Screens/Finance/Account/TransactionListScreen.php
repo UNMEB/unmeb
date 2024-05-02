@@ -392,17 +392,6 @@ class TransactionListScreen extends Screen
     public function deposit(Request $request)
     {
         try {
-            // $institution = null;
-
-            // if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
-            //     $institution = Institution::find($request->input('institution_id'));
-            // } else {
-            //     $institution = $this->currentUser()->institution;
-            // }
-
-
-
-            // $accountId = $institution->account->id;
 
             $institution = null;
 
@@ -418,9 +407,9 @@ class TransactionListScreen extends Screen
                 // Create a new account
                 $account = new Account();
                 $account->balance = 0;
+                $account->institution_id = $institution->id;
                 $account->save();
-                $institution->account()->associate($account);
-                $institution->save();
+
                 $accountId = $account->id;
             }
 
