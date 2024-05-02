@@ -49,6 +49,10 @@ class RemoveMisplacedRegistrations extends Command
             $transaction = Transaction::where('comment', 'LIKE', 'Exam Registration for student ID: ' . $registration->student_id . '%')->first();
             
             $this->info('Found transaction with comment ' . $transaction->comment);
+
+            // Delete the student registration
+
+            // Delete the transaction
         }
 
         $this->info($misplacedCount . ' misplaced registrations and corresponding transactions removed successfully.');
