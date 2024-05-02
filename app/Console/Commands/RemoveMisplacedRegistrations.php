@@ -40,7 +40,7 @@ class RemoveMisplacedRegistrations extends Command
 
         foreach ($registrations as $registration) {
             $student = Student::find($registration->student_id);
-            $this->info('Found registration for student ' . $student->full_name .'');
+            $this->info('Found registration for student ' . $student->full_name .' in period: ' . $registration->reg_start_date . ' to ' . $registration->reg_end_date);
         }
 
         $this->info('Misplaced registrations and corresponding transactions removed successfully.');
