@@ -38,11 +38,19 @@ class RemoveMisplacedRegistrations extends Command
             ->where('rp.flag', '!=', 1)
             ->get();
 
+        $misplacedCount = 0;
+
         foreach ($registrations as $registration) {
             $student = Student::find($registration->student_id);
             $this->info('Found registration for student ' . $student->full_name .' in period: ' . $registration->reg_start_date . ' to ' . $registration->reg_end_date);
+            $misplacedCount++;
+
+            // Get the associated transaction e.g with comment = 'Exam Registration for student ID: {student_id}'
+            $transaction = Transaction::where('comment', 'LIKE', 'Exam Registration for student ID: ' . $registration->student_id . '%')->first();
+            
+            $this->info('Found transaction with comment ' . $transaction->comment);
         }
 
-        $this->info('Misplaced registrations and corresponding transactions removed successfully.');
+        $this->info($misplacedCount . ' misplaced registrations and corresponding transactions removed successfully.');
     }
 }
