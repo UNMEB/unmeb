@@ -3,9 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Models\Account;
-use App\Models\Registration;
-use App\Models\RegistrationPeriod;
-use App\Models\StudentRegistration;
 use App\Models\Transaction;
 use App\Models\Institution;
 use Illuminate\Console\Command;
@@ -63,95 +60,43 @@ class RecalculateAccountBalances extends Command
 
         $this->info('Total approved funds added: ' . $totalApprovedFunds);
 
-        // Get all transactions for different purposes
-        $transactions = Transaction::withoutGlobalScopes()
-            ->where('status', 'approved')
-            ->where('account_id', $account->id)
+        // Get all exam transactions using comment starting with Exam Registration for student ID
+        $examTransactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)
+            ->where('comment', 'like', 'Exam Registration for student ID%')
             ->get();
 
-        // Process each transaction
-        foreach ($transactions as $transaction) {
-            if (Str::startsWith($transaction->comment, 'Exam Registration for student ID')) {
-                $account->balance -= $transaction->amount;
-                $this->info('Deducted exam funds: ' . $transaction->amount);
+        $this->info('Found ' . $examTransactions->count() . ' exam transactions for institution: ' . $institution->institution_name);
 
-                // Get the student id
-                $studentId = Str::of($transaction->comment)->after('student ID:')->trim();
+        // Check for duplicates; these will have the same comment e.g. Exam Registration for student ID: 137542
+        $uniqueTransactions = $examTransactions->unique('comment');
 
-                // Check for this student registration
-                $studentRegistration = StudentRegistration::where('student_id', $studentId)
-                ->latest()
-                ->first();
+        // If you need to delete the duplicates from the database:
+        $duplicateComments = $examTransactions->pluck('comment')->duplicates()->all();
+        Transaction::withoutGlobalScopes()->whereIn('comment', $duplicateComments)->delete();
 
-                // Get the registration and check its registrati
-                if ($studentRegistration) {
-                    $registrationId = $studentRegistration->registration_id;
+        $this->info('Deleted ' . count($duplicateComments) . ' duplicate exam transactions');
 
-                    $registration = Registration::find($registrationId);
+        // After deleting the duplicates, deduct these funds from the account balance
+        $totalExamFunds = $examTransactions->sum('amount');
+        $account->balance -= $totalExamFunds;
 
-                    // Check if this $registration's period is the active 1;
-                    if($registration->registration_period_id == RegistrationPeriod::whereFlag(1, true)->first()->id) {
-                        // If its a match we skip
-                    } else {
-                        
-                    }
-                }
+        $this->info('Total exam funds deducted: ' . $totalExamFunds);
 
-            } elseif (Str::startsWith($transaction->comment, 'NSIN Registration Fee for Student ID')) {
-                $account->balance -= $transaction->amount;
-                $this->info('Deducted NSIN registration fee: ' . $transaction->amount);
-            } elseif (Str::startsWith($transaction->comment, 'Logbook Fee for Student ID')) {
-                $account->balance -= $transaction->amount;
-                $this->info('Deducted logbook fee: ' . $transaction->amount);
-            } elseif (Str::startsWith($transaction->comment, 'Research Guideline Fee for Student ID')) {
-                $account->balance -= $transaction->amount;
-                $this->info('Deducted research guideline fee: ' . $transaction->amount);
-            }
-        }
+        // Deduct remaining debits with different comments
+        $remainingDebits = Transaction::withoutGlobalScopes()
+            ->where('account_id', $account->id)
+            ->where('status', 'approved')
+            ->where('type', 'debit')
+            ->whereNotIn('comment', $uniqueTransactions->pluck('comment')->toArray())
+            ->get();
 
-        // Delete duplicate transactions
-        $this->deleteDuplicateTransactions($account);
+        $totalRemainingDebits = $remainingDebits->sum('amount');
+        $account->balance -= $totalRemainingDebits;
+
+        $this->info('Total remaining debit funds deducted: ' . $totalRemainingDebits);
 
         $account->save();
 
         $this->info('Account balance recalculated successfully for institution: ' . $institution->institution_name);
-    }
-
-    /**
-     * Delete duplicate transactions for the account.
-     *
-     * @param \App\Models\Account $account
-     * @return void
-     */
-    private function deleteDuplicateTransactions(Account $account)
-    {
-        $transactionComments = Transaction::withoutGlobalScopes()
-            ->where('status', 'approved')
-            ->where('account_id', $account->id)
-            ->pluck('comment');
-
-        // Get duplicate comments
-        $duplicateComments = $transactionComments->duplicates()->all();
-
-        foreach ($duplicateComments as $comment) {
-            $duplicateTransactions = Transaction::withoutGlobalScopes()
-                ->where('status', 'approved')
-                ->where('account_id', $account->id)
-                ->where('comment', $comment)
-                ->get();
-
-            foreach ($duplicateTransactions as $transaction) {
-                $this->info('Found duplicate transaction: ' . $transaction->comment . ', amount: ' . $transaction->amount);
-            }
-        }
-
-        // Delete duplicate transactions
-        Transaction::withoutGlobalScopes()
-            ->where('status', 'approved')
-            ->where('account_id', $account->id)
-            ->whereIn('comment', $duplicateComments)
-            ->delete();
-
-        $this->info('Deleted ' . count($duplicateComments) . ' duplicate transactions');
     }
 }
