@@ -39,7 +39,7 @@ class RemoveMisplacedRegistrations extends Command
             ->get();
 
         foreach ($registrations as $registration) {
-            StudentRegistration::where('id', $registration->student_id)->delete();
+            StudentRegistration::where('student_id', $registration->student_id)->delete();
         }
         $this->info($registrations->count() . ' misplaced registrations and corresponding transactions removed successfully.');
     }
