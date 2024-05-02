@@ -57,6 +57,17 @@ class RemoveMisplacedRegistrations extends Command
                     $this->info('No transaction found for student ID ' . $registration->student_id);
                 }
 
+
+                $transactionR = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID: ' . $registration->student_id . '%')->first();
+                
+                if ($transactionR) {
+                    $this->info('Found transaction with comment ' . $transactionR->comment);
+                    // Delete the transaction
+                    $transactionR->delete();
+                } else {
+                    $this->info('No transaction reversal found for student ID ' . $registration->student_id);
+                }
+
                 // Delete the student registration
                 $registration->delete();
             } else {
