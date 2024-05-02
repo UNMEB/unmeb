@@ -61,7 +61,7 @@ class RecalculateAccountBalances extends Command
         $this->info('Total approved funds added: ' . $totalApprovedFunds);
 
         // Get all exam transactions using comment starting with Exam Registration for student ID
-        $examTransactions = Transaction::where('account_id', $account->id)
+        $examTransactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)
             ->where('comment', 'like', 'Exam Registration for student ID%')
             ->get();
 
@@ -72,7 +72,7 @@ class RecalculateAccountBalances extends Command
 
         // If you need to delete the duplicates from the database:
         $duplicateComments = $examTransactions->pluck('comment')->duplicates()->all();
-        Transaction::whereIn('comment', $duplicateComments)->delete();
+        Transaction::withoutGlobalScopes()->whereIn('comment', $duplicateComments)->delete();
 
         $this->info('Deleted ' . count($duplicateComments) . ' duplicate exam transactions');
 
