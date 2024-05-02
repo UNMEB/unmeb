@@ -39,14 +39,30 @@ class RemoveMisplacedRegistrations extends Command
             ->where('rp.flag', '!=', 1)
             ->get();
 
+        $bar = $this->output->createProgressBar($registrations->count());
+
+        $bar->start();
+
         foreach ($registrations as $registration) {
-            $deleted = StudentRegistration::where([
+            $remainingRecords = StudentRegistration::where([
                 'registration_id' => $registration->id,
                 'student_id' => $registration->student_id,
-            ])->delete();
+            ])->count();
 
-            $this->info($deleted ? 'Record for ' . $registration->student_id .' deleted ':'Record for ' . $registration->student_id .' not deleted ');
+            if ($remainingRecords > 0) {
+                $deleted = StudentRegistration::where([
+                    'registration_id' => $registration->id,
+                    'student_id' => $registration->student_id,
+                ])->delete();
+
+                $this->info('Record for ' . $registration->student_id . ' ' . ($deleted ? 'deleted' : 'not deleted') . '. ' . $remainingRecords . ' records remaining.');
+            } else {
+                $this->info('No records found for ' . $registration->student_id);
+            }
+            $bar->advance();
         }
-        $this->info($registrations->count() . ' misplaced registrations and corresponding transactions removed successfully.');
+        $bar->finish();
+
+        $this->info(PHP_EOL . $registrations->count() . ' misplaced registrations and corresponding transactions removed successfully.');
     }
 }
