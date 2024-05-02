@@ -99,4 +99,5 @@ class RecalculateAccountBalances extends Command
 
         $this->info('Account balance recalculated successfully for institution: ' . $institution->institution_name);
     }
+
 }
