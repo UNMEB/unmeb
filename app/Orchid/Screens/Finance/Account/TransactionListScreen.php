@@ -38,10 +38,10 @@ class TransactionListScreen extends Screen
     public function query(): iterable
     {
         $query = Transaction::with('institution', 'account')
-        ->filters()
-        ->whereIn('status', ['approved', 'flagged']);
+            ->filters()
+            ->whereIn('status', ['approved', 'flagged']);
 
-        if(auth()->user()->inRole('accountant')) {
+        if (auth()->user()->inRole('accountant')) {
             $query->where('type', 'credit');
         }
 
@@ -152,13 +152,13 @@ class TransactionListScreen extends Screen
                     ->help('Enter the exact amount paid to bank'),
 
                 Input::make('remarks')
-                        ->title('Remark')
-                        ->help('Reason for offsetting funds')
-                        ->required(),
+                    ->title('Remark')
+                    ->help('Reason for offsetting funds')
+                    ->required(),
 
-                ]))
-            ->title('Offset Funds')
-            ->applyButton('Offset Institution Funds'),
+            ]))
+                ->title('Offset Funds')
+                ->applyButton('Offset Institution Funds'),
 
             Layout::modal('createStatementModal', Layout::rows([
                 Relation::make('institution_id')
@@ -267,37 +267,38 @@ class TransactionListScreen extends Screen
                 // })
 
                 TD::make('actions', 'Actions')
-                ->render(fn (Transaction $data) =>
-                     DropDown::make()
-                    ->icon('bs.three-dots-vertical')
-                    ->list([
+                    ->render(
+                        fn(Transaction $data) =>
+                        DropDown::make()
+                            ->icon('bs.three-dots-vertical')
+                            ->list([
 
-                        Button::make(__('Print Receipt'))
-                            ->icon('bs.receipt')
-                            ->confirm(__('Confirm Action to print receipt for ' . $data->institution->institution_name))
-                            ->method('print', [
-                                'id' => $data->id,
-                            ]),
+                                Button::make(__('Print Receipt'))
+                                    ->icon('bs.receipt')
+                                    ->confirm(__('Confirm Action to print receipt for ' . $data->institution->institution_name))
+                                    ->method('print', [
+                                        'id' => $data->id,
+                                    ]),
 
-                        Button::make(__('Rollback Transaction'))
-                            ->icon('bs.trash3')
-                            ->confirm(__('This transaction will be rolled back to initial state of pending.'))
-                            ->method('rollback', [
-                                'id' => $data->id,
+                                Button::make(__('Rollback Transaction'))
+                                    ->icon('bs.trash3')
+                                    ->confirm(__('This transaction will be rolled back to initial state of pending.'))
+                                    ->method('rollback', [
+                                        'id' => $data->id,
+                                    ])
+                                    ->class('btn link-danger')
+                                    ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
+
+                                Button::make(__('Delete Transaction'))
+                                    ->icon('bs.trash3')
+                                    ->confirm(__('This action can not be reversed. Are you sure you need to delete this transaction.'))
+                                    ->method('remove', [
+                                        'id' => $data->id,
+                                    ])
+                                    ->class('btn link-danger')
+                                    ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
                             ])
-                            ->class('btn link-danger')
-                            ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
-
-                        Button::make(__('Delete Transaction'))
-                            ->icon('bs.trash3')
-                            ->confirm(__('This action can not be reversed. Are you sure you need to delete this transaction.'))
-                            ->method('remove', [
-                                'id' => $data->id,
-                            ])
-                            ->class('btn link-danger')
-                            ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
-                    ])
-                ),
+                    ),
             ])
         ];
     }
@@ -357,7 +358,7 @@ class TransactionListScreen extends Screen
         $amount = (int) Str::of($request->input('amount'))->replace(['Ush', ','], '')->trim()->toString();
         $remarks = $request->input('remarks');
 
-        if($amount > $account->balance) {
+        if ($amount > $account->balance) {
 
             \RealRashid\SweetAlert\Facades\Alert::error('Insufficient funds', 'Unable to offset funds from this account. The current account balance is low<br /> <strong>Account Balance: Ush ' . number_format($account->balance) . '</strong>')->toHtml();
 
@@ -391,6 +392,18 @@ class TransactionListScreen extends Screen
     public function deposit(Request $request)
     {
         try {
+            // $institution = null;
+
+            // if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
+            //     $institution = Institution::find($request->input('institution_id'));
+            // } else {
+            //     $institution = $this->currentUser()->institution;
+            // }
+
+
+
+            // $accountId = $institution->account->id;
+
             $institution = null;
 
             if ($this->currentUser()->inRole('administrator') || $this->currentUser()->inRole('accountant')) {
@@ -399,7 +412,17 @@ class TransactionListScreen extends Screen
                 $institution = $this->currentUser()->institution;
             }
 
-            $accountId = $institution->account->id;
+            if ($institution->account) {
+                $accountId = $institution->account->id;
+            } else {
+                // Create a new account
+                $account = new Account();
+                $account->balance = 0;
+                $account->save();
+                $institution->account()->associate($account);
+                $institution->save();
+                $accountId = $account->id;
+            }
 
             $amount = $request->input('amount');
             $method = $request->input('method');
@@ -512,7 +535,7 @@ class TransactionListScreen extends Screen
         // Define the filter parameters
         $filterParams = [];
 
-        if (!empty ($institutionId)) {
+        if (!empty($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
 
