@@ -61,6 +61,7 @@ class RecalculateAccountBalances extends Command
                 ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
                 ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
                 ->where('rp.id', $registrationPeriod->id)
+                ->where('r.institution_id', $institution->id)
                 ->whereNotIn('sr.student_id', $studentIdsFromTransactions) // Exclude IDs 
                 ->get();
 
