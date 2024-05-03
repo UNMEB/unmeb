@@ -77,9 +77,9 @@ class RecalculateAccountBalances extends Command
             $orphanedNSINRegistrations = NsinStudentRegistration::withoutGlobalScopes()->select('nsr.student_id', 'nr.id')
                 ->from('nsin_student_registrations as nsr')
                 ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
-                ->join('nsin_registration_periods AS nrp', function ($join)  {
-                    $join->on('nrp.month','=','nr.month');
-                    $join->on('nrp.year_id','=','nr.year_id');
+                ->join('nsin_registration_periods AS nrp', function ($join) {
+                    $join->on('nrp.month', '=', 'nr.month');
+                    $join->on('nrp.year_id', '=', 'nr.year_id');
                 })
                 ->where('nrp.id', $nsinRegistrationPeriod->id)
                 ->where('nr.institution_id', $institution->id)
@@ -119,20 +119,20 @@ class RecalculateAccountBalances extends Command
 
             // Get all transactions (same as before)
             $examTransactions = Transaction::withoutGlobalScopes()
-                ->where('comment', 'LIKE', '%Exam Registration for student ID:%')
+                ->where('comment', 'LIKE', 'Exam Registration for student ID:%')
                 ->where('institution_id', $institution->id)
                 ->get();
 
             // Get all transactions (same as before)
             $nsinTransactions = Transaction::withoutGlobalScopes()
-                ->where('comment', 'LIKE', '%NSIN Registration for student ID:%')
+                ->where('comment', 'LIKE', 'NSIN Registration for student ID:%')
                 ->where('institution_id', $institution->id)
                 ->get();
 
             // Filter transactions based on existence of student registration
             $nsinTransactionsToDelete = $nsinTransactions->filter(function ($transaction) use ($nsinIdsFromTransactions) {
                 // Extract student ID from comment (same as before)
-                $studentId = Str::after($transaction->comment, '%NSIN Registration for student ID:');
+                $studentId = Str::after($transaction->comment, 'NSIN Registration for student ID:');
                 // Check if student ID exists in registered students
                 return !in_array($studentId, $nsinIdsFromTransactions->toArray());
             });
@@ -140,7 +140,7 @@ class RecalculateAccountBalances extends Command
             // Filter transactions based on existence of student registration
             $examTransactionsToDelete = $examTransactions->filter(function ($transaction) use ($examIdsFromTransactions) {
                 // Extract student ID from comment (same as before)
-                $studentId = Str::after($transaction->comment, '%Exam Registration for student ID:');
+                $studentId = Str::after($transaction->comment, 'Exam Registration for student ID:');
                 // Check if student ID exists in registered students
                 return !in_array($studentId, $examIdsFromTransactions->toArray());
             });
@@ -156,6 +156,18 @@ class RecalculateAccountBalances extends Command
                 $this->info('Found orphaned exam transaction to delete. Deleting...');
                 Transaction::where('id', $transaction->id)->delete();
             }
+
+            // Delete all reversals for the account
+            $reversedTransactions = Transaction::where('institution_id', $institution->id)
+                ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
+                ->orWhere('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:')
+                ->get();
+
+            foreach ($reversedTransactions as $transaction) {
+                $this->info('Found orphaned reversed transaction to delete. Deleting...');
+                Transaction::where('id', $transaction->id)->delete();
+            }
+
 
             $this->info('Recalculating account balances for institution: ' . $institution->institution_name);
 
