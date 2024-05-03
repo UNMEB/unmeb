@@ -148,24 +148,24 @@ class RecalculateAccountBalances extends Command
             // Delete the transactions without a student registration
             foreach ($nsinTransactionsToDelete as $transaction) {
                 $this->info('Found orphaned nsin transaction to delete. Deleting...');
-                Transaction::where('id', $transaction->id)->delete();
+                Transaction::withoutGlobalScopes()->where('id', $transaction->id)->delete();
             }
 
             // Delete the transactions without a student registration
             foreach ($examTransactionsToDelete as $transaction) {
                 $this->info('Found orphaned exam transaction to delete. Deleting...');
-                Transaction::where('id', $transaction->id)->delete();
+                Transaction::withoutGlobalScopes()->where('id', $transaction->id)->delete();
             }
 
             // Delete all reversals for the account
-            $reversedTransactions = Transaction::where('institution_id', $institution->id)
+            $reversedTransactions = Transaction::withoutGlobalScopes()->where('institution_id', $institution->id)
                 ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
                 ->orWhere('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:')
                 ->get();
 
             foreach ($reversedTransactions as $transaction) {
                 $this->info('Found orphaned reversed transaction to delete. Deleting...');
-                Transaction::where('id', $transaction->id)->delete();
+                Transaction::withoutGlobalScopes()->where('id', $transaction->id)->delete();
             }
 
 
