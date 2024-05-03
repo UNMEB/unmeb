@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Account;
+use App\Models\NsinRegistrationPeriod;
+use App\Models\NsinStudentRegistration;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Models\StudentRegistration;
@@ -42,33 +44,72 @@ class RecalculateAccountBalances extends Command
             $institution = Institution::withoutGlobalScopes()->findOrFail($institutionId);
 
             // Get all transactions related to exam registration
-            $transactions = Transaction::withoutGlobalScopes()
+            $examTransactions = Transaction::withoutGlobalScopes()
                 ->where('comment', 'LIKE', 'Exam Registration for student ID:%')
                 ->where('institution_id', $institution->id)
                 ->get();
 
+            // Get all transactions related to NSIN registration
+            $nsinTransactions = Transaction::withoutGlobalScopes()
+                ->where('comment', 'LIKE', 'NSIN Registration for Student ID:%')
+                ->where('institution_id', $institution->id)
+                ->get();
+
             // Extract student IDs from transactions
-            $studentIdsFromTransactions = $transactions->pluck('comment')
+            $nsinIdsFromTransactions = $nsinTransactions->pluck('comment')
+                ->map(function ($comment) {
+                    return Str::after($comment, 'NSIN Registration for student ID:');
+                });
+
+            // Extract student IDs from transactions
+            $examIdsFromTransactions = $examTransactions->pluck('comment')
                 ->map(function ($comment) {
                     return Str::after($comment, 'Exam Registration for student ID:');
                 });
 
             // Get student registrations for the current period
-            $registrationPeriod = RegistrationPeriod::whereFlag(1, true)->first();
+            $examRegistrationPeriod = RegistrationPeriod::whereFlag(1, true)->first();
 
-            $orphanedRegistrations = StudentRegistration::withoutGlobalScopes()->select('sr.student_id', 'r.id')
+            // Get nsin student registrations for current period
+            $nsinRegistrationPeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
+
+            // Get all orphaned NSIN Registrations
+            $orphanedNSINRegistrations = NsinStudentRegistration::withoutGlobalScopes()->select('nsr.student_id', 'nr.id')
+                ->from('nsin_student_registrations as nsr')
+                ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+                ->join('nsin_registration_periods AS nrp', function ($join)  {
+                    $join->on('nrp.month','=','nr.month');
+                    $join->on('nrp.year_id','=','nr.year_id');
+                })
+                ->where('nrp.id', $nsinRegistrationPeriod->id)
+                ->where('nr.institution_id', $institution->id)
+                ->whereNotIn('nsr.student_id', $nsinIdsFromTransactions)
+                ->get();
+
+            $orphanedExamRegistrations = StudentRegistration::withoutGlobalScopes()->select('sr.student_id', 'r.id')
                 ->from('student_registrations as sr')
                 ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
                 ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-                ->where('rp.id', $registrationPeriod->id)
+                ->where('rp.id', $examRegistrationPeriod->id)
                 ->where('r.institution_id', $institution->id)
-                ->whereNotIn('sr.student_id', $studentIdsFromTransactions) // Exclude IDs 
+                ->whereNotIn('sr.student_id', $examIdsFromTransactions) // Exclude IDs 
                 ->get();
 
-            $this->info('Found ' . $orphanedRegistrations->count() .' orphaned registrations');
+            $this->info('Found ' . $orphanedNSINRegistrations->count() . ' orphaned NSIN registrations');
+
+            $this->info('Found ' . $orphanedExamRegistrations->count() . ' orphaned Exam registrations');
 
             // Loop through orphaned registrations and delete them
-            foreach ($orphanedRegistrations as $orphanedRegistration) {
+            foreach ($orphanedNSINRegistrations as $orphanedRegistration) {
+                $this->info('Found an orphaned NSIN registration. Deleting...');
+                $deleted = NsinStudentRegistration::where([
+                    'nsin_registration_id' => $orphanedRegistration->id,
+                    'student_id' => $orphanedRegistration->student_id
+                ])->delete();
+            }
+
+            // Loop through orphaned registrations and delete them
+            foreach ($orphanedExamRegistrations as $orphanedRegistration) {
                 $this->info('Found an orphaned registration. Deleting...');
                 $deleted = StudentRegistration::where([
                     'registration_id' => $orphanedRegistration->id,
@@ -77,22 +118,42 @@ class RecalculateAccountBalances extends Command
             }
 
             // Get all transactions (same as before)
-            $transactions = Transaction::withoutGlobalScopes()
+            $examTransactions = Transaction::withoutGlobalScopes()
                 ->where('comment', 'LIKE', 'Exam Registration for student ID:%')
                 ->where('institution_id', $institution->id)
                 ->get();
 
+            // Get all transactions (same as before)
+            $nsinTransactions = Transaction::withoutGlobalScopes()
+                ->where('comment', 'LIKE', 'NSIN Registration for student ID:%')
+                ->where('institution_id', $institution->id)
+                ->get();
+
             // Filter transactions based on existence of student registration
-            $transactionsToDelete = $transactions->filter(function ($transaction) use ($studentIdsFromTransactions) {
+            $nsinTransactionsToDelete = $nsinTransactions->filter(function ($transaction) use ($nsinIdsFromTransactions) {
+                // Extract student ID from comment (same as before)
+                $studentId = Str::after($transaction->comment, 'NSIN Registration for student ID:');
+                // Check if student ID exists in registered students
+                return !in_array($studentId, $nsinIdsFromTransactions->toArray());
+            });
+
+            // Filter transactions based on existence of student registration
+            $examTransactionsToDelete = $examTransactions->filter(function ($transaction) use ($examIdsFromTransactions) {
                 // Extract student ID from comment (same as before)
                 $studentId = Str::after($transaction->comment, 'Exam Registration for student ID:');
                 // Check if student ID exists in registered students
-                return !in_array($studentId, $studentIdsFromTransactions->toArray());
+                return !in_array($studentId, $examIdsFromTransactions->toArray());
             });
 
             // Delete the transactions without a student registration
-            foreach ($transactionsToDelete as $transaction) {
-                $this->info('Found orphaned transaction to delete. Deleting...');
+            foreach ($nsinTransactionsToDelete as $transaction) {
+                $this->info('Found orphaned nsin transaction to delete. Deleting...');
+                Transaction::where('id', $transaction->id)->delete();
+            }
+
+            // Delete the transactions without a student registration
+            foreach ($examTransactionsToDelete as $transaction) {
+                $this->info('Found orphaned exam transaction to delete. Deleting...');
                 Transaction::where('id', $transaction->id)->delete();
             }
 
@@ -170,6 +231,7 @@ class RecalculateAccountBalances extends Command
             DB::commit();
 
         } catch (\Throwable $th) {
+            $this->info($th->getMessage());
             DB::rollBack();
         }
     }
