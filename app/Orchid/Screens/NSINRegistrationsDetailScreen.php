@@ -99,13 +99,8 @@ class NSINRegistrationsDetailScreen extends Screen
                 Button::make('Rollback NSIN Registration')
                 ->icon('bs.receipt')
                 ->class('btn link-success')
-                ->method('rollback'),
-
-                Button::make('Delete NSINs')
-                ->icon('bs.trash3')
-                ->confirm(__('Once you confirm, all NSINs will be deleted for the current period'))
-                ->method('delete')
-                ->class('btn link-danger'),
+                ->method('rollback')
+                ->canSee(auth()->user()->inRole('administrator')),
 
             ])
         ];

@@ -300,7 +300,7 @@ class NewNsinApplicationsScreen extends Screen
                     $nsinStudentRegistration = new NsinStudentRegistration();
                     $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                     $nsinStudentRegistration->student_id = $studentId;
-                    // $nsinStudentRegistration->nsin = $nsinPattern . '/' . $studentCode;
+                    $nsinStudentRegistration->nsin = $nsinPattern . '/' . $studentCode;
                     $nsinStudentRegistration->student_code = $studentCode;
                     $nsinStudentRegistration->verify = 0;
                     $nsinStudentRegistration->save();

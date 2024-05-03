@@ -162,7 +162,7 @@ class RecalculateAccountBalances extends Command
                 ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
                 ->orWhere('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')
                 ->orWhere('comment', 'LIKE', 'Reversal of Logbook Fee for Student ID:%')
-                ->orWhere('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:')
+                ->orWhere('comment', 'LIKE', 'Reversal of Research Guide Fee for Student ID:%')
                 ->get();
 
             $this->info($reversedTransactions->count() . ' transactions ready to be reversed');
@@ -216,6 +216,8 @@ class RecalculateAccountBalances extends Command
                 // Filter out reversals using WHERE NOT LIKE
                 ->where('comment', 'NOT LIKE', 'Reversal of Exam Registration Fee for Student ID:%')
                 ->where('comment', 'NOT LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
+                ->where('comment', 'NOT LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
+                ->where('comment', 'NOT LIKE', 'Reversal of Research Guide Fee for Student ID:%')
                 ->whereNotIn('id', Transaction::withoutGlobalScopes()
                     ->where('account_id', $account->id)
                     ->where('status', 'approved')
