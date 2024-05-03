@@ -64,6 +64,8 @@ class RecalculateAccountBalances extends Command
                 ->whereNotIn('sr.student_id', $studentIdsFromTransactions) // Exclude IDs 
                 ->get();
 
+            $this->info('Found ' . $orphanedRegistrations->count() .' orphaned registrations');
+
             // Loop through orphaned registrations and delete them
             foreach ($orphanedRegistrations as $orphanedRegistration) {
                 $this->info('Found an orphaned registration. Deleting...');
