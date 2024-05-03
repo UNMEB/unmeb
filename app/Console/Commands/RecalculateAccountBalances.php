@@ -160,8 +160,12 @@ class RecalculateAccountBalances extends Command
             // Delete all reversals for the account
             $reversedTransactions = Transaction::withoutGlobalScopes()->where('institution_id', $institution->id)
                 ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
-                ->orWhere('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:')
+                ->orWhere('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')
+                ->orWhere('comment', 'LIKE', 'Reversal of Logbook Fee for Student ID:%')
+                ->orWhere('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:')
                 ->get();
+
+            $this->info($reversedTransactions->count() . ' transactions ready to be reversed');
 
             foreach ($reversedTransactions as $transaction) {
                 $this->info('Found orphaned reversed transaction to delete. Deleting...');
