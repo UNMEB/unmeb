@@ -118,7 +118,7 @@ class RecalculateAccountBalances extends Command
                 ->where('account_id', $account->id)
                 ->where('status', 'approved')
                 ->where('type', 'credit')
-                ->where('approved_by', 299)
+                ->where('approved_by', 273)
                 ->sum('amount');
 
             // Set total approved funds as new account balance
@@ -142,7 +142,7 @@ class RecalculateAccountBalances extends Command
                 ->whereNotIn('id', Transaction::withoutGlobalScopes()
                     ->where('account_id', $account->id)
                     ->where('status', 'approved')
-                    ->where('approved_by', 299)
+                    ->where('approved_by', 273)
                     ->where('type', 'credit')
                     ->pluck('id'))
                 ->sum('amount');
