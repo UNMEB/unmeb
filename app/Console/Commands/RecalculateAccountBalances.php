@@ -119,20 +119,20 @@ class RecalculateAccountBalances extends Command
 
             // Get all transactions (same as before)
             $examTransactions = Transaction::withoutGlobalScopes()
-                ->where('comment', 'LIKE', 'Exam Registration for student ID:%')
+                ->where('comment', 'LIKE', '%Exam Registration for student ID:%')
                 ->where('institution_id', $institution->id)
                 ->get();
 
             // Get all transactions (same as before)
             $nsinTransactions = Transaction::withoutGlobalScopes()
-                ->where('comment', 'LIKE', 'NSIN Registration for student ID:%')
+                ->where('comment', 'LIKE', '%NSIN Registration for student ID:%')
                 ->where('institution_id', $institution->id)
                 ->get();
 
             // Filter transactions based on existence of student registration
             $nsinTransactionsToDelete = $nsinTransactions->filter(function ($transaction) use ($nsinIdsFromTransactions) {
                 // Extract student ID from comment (same as before)
-                $studentId = Str::after($transaction->comment, 'NSIN Registration for student ID:');
+                $studentId = Str::after($transaction->comment, '%NSIN Registration for student ID:');
                 // Check if student ID exists in registered students
                 return !in_array($studentId, $nsinIdsFromTransactions->toArray());
             });
@@ -140,7 +140,7 @@ class RecalculateAccountBalances extends Command
             // Filter transactions based on existence of student registration
             $examTransactionsToDelete = $examTransactions->filter(function ($transaction) use ($examIdsFromTransactions) {
                 // Extract student ID from comment (same as before)
-                $studentId = Str::after($transaction->comment, 'Exam Registration for student ID:');
+                $studentId = Str::after($transaction->comment, '%Exam Registration for student ID:');
                 // Check if student ID exists in registered students
                 return !in_array($studentId, $examIdsFromTransactions->toArray());
             });
