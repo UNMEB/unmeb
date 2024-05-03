@@ -117,6 +117,7 @@ class AccountListScreen extends Screen
 
             Layout::table('accounts', [
                 TD::make('id', 'ID'),
+                TD::make('institution_id', 'Institution ID'),
                 TD::make('institution', 'Institution')->render(function (Account $account) {
                     return $account->institution->institution_name;
                 }),
