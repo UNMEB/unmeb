@@ -33,7 +33,6 @@ class UserEditLayout extends Rows
                 ->title('User Picture')
                 ->width(270)
                 ->height(270)
-                ->required()
                 ->targetRelativeUrl(),
 
             Input::make('user.name')

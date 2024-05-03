@@ -437,7 +437,7 @@ class TransactionListScreen extends Screen
             // return back();
         } catch (\Throwable $th) {
             // throw $th;
-            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage());
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage() . ' ' . $th->getTraceAsString());
         }
     }
 

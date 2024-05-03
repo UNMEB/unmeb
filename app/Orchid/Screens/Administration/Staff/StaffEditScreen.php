@@ -90,6 +90,7 @@ class StaffEditScreen extends Screen
                             ->width('270')
                             ->height('270')
                             ->targetRelativeUrl()
+                            ->required(false)
                     ]),
 
                     Group::make([

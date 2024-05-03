@@ -52,7 +52,7 @@ class StudentListScreen extends Screen
 
     public function __construct(Request $request)
     {
-        
+
     }
 
     /**
@@ -65,30 +65,30 @@ class StudentListScreen extends Screen
         $this->filters = $request->get("filter");
 
         $query = Student::withoutGlobalScopes()
-                ->with('district')
-                ->select([
-                    's.id as id',
-                    's.surname',
-                    's.firstname',
-                    's.othername',
-                    's.gender',
-                    's.dob',
-                    's.district_id',
-                    's.country_id',
-                    's.location',
-                    's.nsin as nsin',
-                    's.passport_number',
-                    's.nin',
-                    's.telephone',
-                    's.refugee_number',
-                    's.lin',
-                    's.date_time',
-                    's.passport'
-                ])
-                ->from('students As s')
-                ->orderBy('s.created_at', 'desc');
-        
-        if(auth()->user()->inRole('institution')) {
+            ->with('district')
+            ->select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                's.district_id',
+                's.country_id',
+                's.location',
+                's.nsin as nsin',
+                's.passport_number',
+                's.nin',
+                's.telephone',
+                's.refugee_number',
+                's.lin',
+                's.date_time',
+                's.passport'
+            ])
+            ->from('students As s')
+            ->orderBy('s.created_at', 'desc');
+
+        if (auth()->user()->inRole('institution')) {
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
 
@@ -110,17 +110,17 @@ class StudentListScreen extends Screen
                     [$firstTerm, $secondTerm] = $terms;
                     $query->where(function ($query) use ($firstTerm, $secondTerm) {
                         $query->where('firstname', 'like', '%' . $firstTerm . '%')
-                        ->where('surname', 'like', '%' . $secondTerm . '%');
+                            ->where('surname', 'like', '%' . $secondTerm . '%');
                     })->orWhere(function ($query) use ($firstTerm, $secondTerm) {
                         // Check if the first term matches the surname and the second term matches the firstname
                         $query->where('surname', 'like', '%' . $firstTerm . '%')
                             ->where('firstname', 'like', '%' . $secondTerm . '%');
                     });
-                }   
+                }
 
                 $query->where('firstname', 'like', '%' . $name . '%')
-                        ->orWhere('surname', 'like', '%' . $name . '%')
-                        ->orWhere('othername', 'like', '%' . $name . '%');
+                    ->orWhere('surname', 'like', '%' . $name . '%')
+                    ->orWhere('othername', 'like', '%' . $name . '%');
             }
 
             if (isset($this->filters['gender']) && $this->filters['gender'] !== null) {
@@ -164,7 +164,14 @@ class StudentListScreen extends Screen
                 ->modal('createStudentModal')
                 ->method('save')
                 ->icon('plus')
-                ->class('btn btn-default btn-dark'),
+                ->class('btn btn-default btn-success'),
+
+
+            ModalToggle::make('Add Student With NSIN')
+                ->modal('createStudentWithNsinModal')
+                ->method('save')
+                ->icon('plus')
+                ->class('btn btn-default btn-success'),
 
             ModalToggle::make('Import Students')
                 ->modal('uploadStudentsModal')
@@ -181,10 +188,10 @@ class StudentListScreen extends Screen
                 ->class('btn btn-primary'),
 
             DropDown::make()
-            ->icon('bs.three-dots-vertical')
-            ->list([
-                ModalToggle::make('Rollback Action')
-            ])->canSee(auth()->user()->inRole('administrator'))
+                ->icon('bs.three-dots-vertical')
+                ->list([
+                    ModalToggle::make('Rollback Action')
+                ])->canSee(auth()->user()->inRole('administrator'))
         ];
     }
 
@@ -293,6 +300,11 @@ class StudentListScreen extends Screen
                 ->size(Modal::SIZE_LG)
                 ->title('Create Student')
                 ->applyButton('Create Student'),
+
+            Layout::modal('createStudentModal', AddNewStudentForm::class)
+                ->size(Modal::SIZE_LG)
+                ->title('Create Student')
+                ->applyButton('Save Student Info'),
 
             Layout::modal('uploadStudentsModal', [
 
@@ -466,7 +478,7 @@ class StudentListScreen extends Screen
 
         if ($previousNSIN != null) {
             $student = Student::firstWhere('nsin', $previousNSIN);
-            
+
             // Check if $student is not null before accessing its properties
             if ($student != null) {
                 $student->nsin = null;

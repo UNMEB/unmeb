@@ -206,10 +206,6 @@ class RecalculateAccountBalances extends Command
                 ->where('account_id', $account->id)
                 ->where('status', 'approved')
                 ->where('type', 'debit')
-                ->where('comment', 'NOT LIKE', 'Exam Registration Fee for Student ID:%')
-                ->where('comment', 'NOT LIKE', 'NSIN Registration Fee for Student ID:%')
-                ->where('comment', 'NOT LIKE', 'Logbook Registration Fee for Student ID:%')
-                ->where('comment', 'NOT LIKE', 'Research Guide Fee for Student ID:%')
                 ->sum('amount');
 
             // Get total credits except those already added under approved funds
