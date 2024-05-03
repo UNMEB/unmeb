@@ -6,8 +6,6 @@ use App\Models\Country;
 use App\Models\Course;
 use App\Models\District;
 use App\Models\Institution;
-use App\Models\Student;
-use App\Models\StudentRegistration;
 use Illuminate\Http\Request;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
@@ -18,20 +16,15 @@ use Orchid\Screen\Layouts\Listener;
 use Orchid\Screen\Repository;
 use Orchid\Support\Facades\Layout;
 
-class AddNewStudentForm extends Listener
+class AddStudentWithNSINForm extends Listener
 {
-    // Form Values
-    public $student = null;
 
     /**
      * List of field names for which values will be listened.
      *
      * @var string[]
      */
-    protected $targets = [
-        'new_registration',
-        'previous_nsin',
-    ];
+    protected $targets = [];
 
     /**
      * The screen's layout elements.
@@ -42,10 +35,10 @@ class AddNewStudentForm extends Listener
     {
         return [
             Layout::rows([
-                Input::make('previous_nsin')
-                    ->title('Previous NSIN')
-                    ->required()
-                    ->canSee($this->query->get('new_registration') == 'Continuing'),
+
+                Input::make('student.nsin')
+                    ->title('Student NSIN')
+                    ->required(),
 
                 Group::make([
                     Input::make('student.nin')
@@ -62,19 +55,14 @@ class AddNewStudentForm extends Listener
                     Input::make('student.surname')
                         ->title('Surname')
                         ->placeholder('Enter Surname')
-                        ->value($this->student->surname ?? null)
                         ->required(),
-
-
                     Input::make('student.firstname')
                         ->title('First Name')
                         ->required()
-                        ->value($this->student->firstname ?? null)
                         ->placeholder('Enter First name'),
 
                     Input::make('student.othername')
                         ->title('Other Name')
-                        ->value($this->student->othername ?? null)
                         ->placeholder('Enter Other name'),
                 ]),
 
@@ -93,6 +81,7 @@ class AddNewStudentForm extends Listener
                     ->fromModel(Course::class, 'course_name'),
 
                 Group::make([
+
                     Select::make('student.gender')
                         ->options([
                             'Male' => 'MALE',
@@ -100,29 +89,23 @@ class AddNewStudentForm extends Listener
                         ])
                         ->title('Student Gender')
                         ->empty('Non Selected')
-                        ->value($this->student->gender ?? null)
-                        // ->disabled($this->student != null && $this->student->gender != null)
                         ->required(),
 
-
-                    Input::make('student.dob')
+                        Input::make('student.dob')
                         ->title('Date Of Birth')
                         ->type('date')
                         ->placeholder('Enter date of birth')
                         ->required()
-                        ->noCalendar()
-                        ->value($this->student->dob ?? ''),
+                        ->noCalendar(),
                 ]),
 
                 Group::make([
                     Input::make('student.telephone')
                         ->title('Phone Number')
-                        ->placeholder('Enter phone number')
-                        ->value($this->student->telephone ?? null),
+                        ->placeholder('Enter phone number'),
 
                     Input::make('student.email')
                         ->title('Student Email Address')
-                        ->value($this->student->email ?? null)
                         ->placeholder('Enter email address'),
                 ]),
 
@@ -131,22 +114,18 @@ class AddNewStudentForm extends Listener
                     Select::make('student.country_id')
                         ->title('Country')
                         ->fromModel(Country::class, 'name')
-                        ->empty('Non Selected')
-                        ->value($this->student->country_id ?? null),
+                        ->empty('Non Selected'),
 
                     Select::make('student.district_id')
                         ->title('District')
                         ->fromModel(District::class, 'district_name')
-                        ->empty('Non Selected')
-                        ->value($this->student->district_id ?? null),
+                        ->empty('Non Selected'),
 
                     Input::make('student.location')
                         ->title('Home Address')
                         ->placeholder('Enter student address')
-                        ->value($this->student->location ?? null)
                         ->required(),
                 ]),
-
 
                 Picture::make('student.passport')
                     ->title('Provide Student Photo')
@@ -154,9 +133,8 @@ class AddNewStudentForm extends Listener
                     ->placeholder('Enter student passport photo')
                     ->required()
                     ->width(480)
-                    ->height(480)
-                    ->targetRelativeUrl(),
-
+                    ->height(480),
+                
             ])
         ];
     }
@@ -171,17 +149,6 @@ class AddNewStudentForm extends Listener
      */
     public function handle(Repository $repository, Request $request): Repository
     {
-        $previousNSIN = $request->get('previous_nsin');
-
-        if ($previousNSIN != null) {
-            // Prepopulate our form
-            $student = Student::withoutGlobalScopes()->firstWhere('nsin', $previousNSIN);
-            $this->student = $student;
-        }
-
-        return $repository
-            ->set('institution_id', $request->get('institution_id'))
-            ->set('new_registration', $request->get('new_registration'))
-            ->set('previous_nsin', $request->get('previous_nsin'));
+        return $repository;
     }
 }

@@ -16,6 +16,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Year;
 use App\Orchid\Layouts\AddNewStudentForm;
+use App\Orchid\Layouts\AddStudentWithNSINForm;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -169,7 +170,7 @@ class StudentListScreen extends Screen
 
             ModalToggle::make('Add Student With NSIN')
                 ->modal('createStudentWithNsinModal')
-                ->method('save')
+                ->method('saveWithNSIN')
                 ->icon('plus')
                 ->class('btn btn-default btn-success'),
 
@@ -301,9 +302,9 @@ class StudentListScreen extends Screen
                 ->title('Create Student')
                 ->applyButton('Create Student'),
 
-            Layout::modal('createStudentModal', AddNewStudentForm::class)
+            Layout::modal('createStudentWithNsinModal', AddStudentWithNSINForm::class)
                 ->size(Modal::SIZE_LG)
-                ->title('Create Student')
+                ->title('Save Student With NSIN')
                 ->applyButton('Save Student Info'),
 
             Layout::modal('uploadStudentsModal', [
@@ -634,5 +635,61 @@ class StudentListScreen extends Screen
         $student->fill($request->input('student'))->save();
 
         Alert::success('Student record updated');
+    }
+
+    public function saveWithNSIN(Request $request)
+    {
+        $request->validate([
+            'student.surname' => 'required',
+            'student.firstname' => 'required',
+            'student.gender' => 'required',
+            'student.passport' => 'required',
+            'student.telephone' => 'required',
+            'student.district_id' => 'required',
+            'student.applied_program' => 'required',
+            'student.country_id' => 'required',
+            'student.nsin' => 'required',
+            'student.dob' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    $age = Carbon::parse($value)->age;
+                    if ($age < 18) {
+                        $fail('The student must be at least 18 years old.');
+                    }
+                },
+            ],
+        ]);
+
+        $institutionId = auth()->user()->inRole('institution') ? auth()->user()->institution_id : $request->input('student.institution_id');
+
+        $student = new Student();
+
+        // Assign other properties
+        $student->firstname = $request->input('student.firstname');
+        $student->surname = $request->input('student.surname');
+        $student->othername = $request->input('student.othername');
+        $student->dob = $request->input('student.dob');
+        $student->gender = $request->input('student.gender');
+        $student->district_id = $request->input('student.district_id');
+        $student->country_id = $request->input('student.country_id');
+        $student->telephone = $request->input('student.telephone');
+        $student->email = $request->input('student.email');
+        $student->date_time = now();
+        $student->nin = $request->input('student.nin');
+        $student->passport_number = $request->input('student.passport_number');
+        $student->lin = $request->input('student.lin');
+        $student->institution_id = $institutionId;
+        $student->passport = $request->input('student.passport');
+        $student->location = $request->input('student.location');
+        $student->applied_program = $request->input('student.applied_program');
+        $student->nsin = $request->input('student.nsin');
+
+
+        // Save the student
+        $student->save();
+
+        \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Student records saved.');
+
+        return redirect()->back();
     }
 }
