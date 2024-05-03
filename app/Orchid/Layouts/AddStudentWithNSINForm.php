@@ -78,7 +78,8 @@ class AddStudentWithNSINForm extends Listener
                 Relation::make('student.applied_program')
                     ->title('Select Program')
                     ->placeholder('Select Program')
-                    ->fromModel(Course::class, 'course_name'),
+                    ->fromModel(Course::class, 'course_name')
+                    ->required(),
 
                 Group::make([
 
