@@ -46,6 +46,31 @@ class NsinStudentRegistrationObserver
 
         // if verify is set to 1 generate NSIN
         if ($nsinStudentRegistration->verify == 1) {
+            // Check if the observer should proceed
+            if ($nsinStudentRegistration->is_observer_triggered) {
+                return;
+            }
+
+            // Set the flag to true to prevent recursive calls
+            $nsinStudentRegistration->is_observer_triggered = true;
+
+            $nsinRegistrationId = $nsinStudentRegistration->nsin_registration_id;
+
+            // Eager load the nsinRegistration with necessary fields, including the related year
+            $nsinRegistration = $nsinStudentRegistration->load([
+                'nsinRegistration' => function ($query) {
+                    $query->select('id', 'month', 'year_id', 'institution_id', 'course_id')
+                        ->with('year:id,year'); // Assuming 'year' is the relationship name and 'year' is the field in the years table
+                }
+            ])->nsinRegistration;
+
+            $studentIds = NsinStudentRegistration::where("nsin_registration_id", $nsinRegistrationId)
+                ->pluck("student_id")->toArray();
+
+            $students = Student::whereIn("id", $studentIds)
+                ->orderBy('surname', 'asc')
+                ->pluck('id')->toArray();
+
             // Use eager loaded relations and select only necessary fields
             $institutionCode = Institution::where('id', $nsinRegistration->institution_id)->value('code');
             $courseCode = Course::where('id', $nsinRegistration->course_id)->value('course_code');
@@ -54,16 +79,34 @@ class NsinStudentRegistrationObserver
             $nsinYear = Str::substr($nsinRegistration->year->year, 2); // Accessing year from the eager loaded relationship
 
             // Generate the NSIN using interpolation
-            $nsin = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}/{$nsinStudentRegistration->student_code}";
+            $nsinPattern = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}/";
 
-            $nsinStudentRegistration->nsin = $nsin;
+            $currentStudentId = $nsinStudentRegistration->student_id;
+
+            // Get this students array key index from student ids
+            $currentStudentIndex = array_search($currentStudentId, $students);
+
+            $studentCode = str_pad($currentStudentIndex, 3, '0', STR_PAD_LEFT);
+
+            $provisionalNSIN = $nsinPattern . '/' . $studentCode;
+
+            // Make sure the NSIN does not exist in students table or nsin_student_registrations table
+            $studentCount = count($students);
+
+            // If NSIN already exists, generate a new one by incrementing the student count
+            do {
+                $studentCount++;
+                $provisionalNSIN = $nsinPattern . str_pad($studentCount, 3, '0', STR_PAD_LEFT);
+                $existingNSIN = Student::where('nsin', $provisionalNSIN)->exists() || NsinStudentRegistration::where('nsin', $provisionalNSIN)->exists();
+            } while ($existingNSIN);
+
+            // Save the NSIN to the database
+            $nsinStudentRegistration->nsin = $provisionalNSIN;
             $nsinStudentRegistration->saveQuietly();
 
-            $studentId = $nsinStudentRegistration->student_id;
-
-            $student = Student::where("id", $studentId)->first();
+            $student = Student::where("id", $currentStudentId)->first();
             if ($student) {
-                $student->nsin = $nsin;
+                $student->nsin = $provisionalNSIN;
                 $student->saveQuietly();
             }
 
@@ -104,38 +147,13 @@ class NsinStudentRegistrationObserver
                 $account->save();
             }
 
-            $researchGuidelineTransaction = Transaction::where('comment', 'Research Guideline Fee for Student ID: ' . $studentId)->first();
-            
-            if ($researchGuidelineTransaction) {
-                // Create a new transaction to record the reversal
-                $reversalResearchGuideTransaction = new Transaction([
-                    'amount' => $researchGuidelineTransaction->amount, // reverse the amount
-                    'type' => 'credit', // credit the reversed amount
-                    'account_id' => $researchGuidelineTransaction->account_id,
-                    'institution_id' => $researchGuidelineTransaction->institution_id,
-                    'initiated_by' => auth()->user()->id,
-                    'status' => 'approved',
-                    'comment' => 'Reversal of Research Guide Fee for Student ID: ' . $studentId,
-                ]);
-                $reversalResearchGuideTransaction->save();
-
-                // Update the original transaction to mark it as reversed
-                $researchGuidelineTransaction->status = 'reversed';
-                $researchGuidelineTransaction->save();
-
-                // Update account balance with increment
-                $account = $researchGuidelineTransaction->account;
-                $account->balance += $researchGuidelineTransaction->amount; // Increment the balance by the original transaction amount
-                $account->save();
-            }
-
             // Find the logbook transaction for this student
             $logbookTransaction = Transaction::where('comment', '=', 'Logbook Fee for Student ID: ' . $studentId)->first();
 
             if ($logbookTransaction) {
                 // Create a new transaction to record the reversal
                 $reversalLogbookTransaction = new Transaction([
-                    'amount' => $logbookTransaction->amount, // reverse the amount
+                    'amount' => -$logbookTransaction->amount, // reverse the amount
                     'type' => 'credit', // credit the reversed amount
                     'account_id' => $logbookTransaction->account_id,
                     'institution_id' => $logbookTransaction->institution_id,
@@ -154,9 +172,7 @@ class NsinStudentRegistrationObserver
                 $account->balance += $logbookTransaction->amount; // Increment the balance by the original transaction amount
                 $account->save();
             }
-
         }
-
     }
 
     /**

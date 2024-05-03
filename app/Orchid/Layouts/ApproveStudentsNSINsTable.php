@@ -39,20 +39,19 @@ class ApproveStudentsNSINsTable extends FormTable
             TD::make('dob', 'Date of Birth'),
             TD::make('country_id', 'Country')->render(fn(Student $student) => optional($student->country)->name),
             TD::make('district_id', 'District')->render(fn(Student $student) => optional($student->district)->district_name),
-            TD::make('telephone', 'Phone Number'),
-            // TD::make('email', 'Email'),
             TD::make('Status', 'Status')->render(function ($row) {
-                return $row->verify == 1 ? 'Approved' : '';
+                if($row->verify == 0) {
+                    return 'Pending';
+                } else if($row->verify == 1) {
+                    return 'Approved';
+                } else if($row->verify == 2) {
+                    return 'Rejected';
+                }
             }),
-            // TD::make('remarks', 'Remarks')->render(function (Student $student) {
-            //     return Select::make
-            // }),
             TD::make('approval', 'Approval Actions')->render(fn(Student $student) => Group::make([
                 CheckBox::make('approve_students[' . $student->id . ']')->placeholder('Approve')->sendTrueOrFalse(),
                 // Input::make('approve_reasons[' . $student->id . ']')
             ]))->alignCenter(),
-            // TDCheckbox::make('students_approve', 'Students'),
-            // TDCheckbox::make('students_reject', 'Students'),
             TD::make('actions', 'Rejection Actions')->render(function (Student $student) {
                 return Group::make([
                     CheckBox::make('reject_students[' . $student->id . ']')->placeholder('Reject')->sendTrueOrFalse(),

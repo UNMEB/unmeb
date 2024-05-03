@@ -138,7 +138,7 @@ class Student extends Model
 
     public function nsinRegistrations()
     {
-        return $this->hasMany(NsinRegistration::class);
+        return $this->belongsToMany(NsinRegistration::class, 'nsin_student_registrations', 'student_id', 'nsin_registration_id');
     }
 
     public function examRegistrations()

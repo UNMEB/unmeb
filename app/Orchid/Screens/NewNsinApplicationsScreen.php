@@ -211,9 +211,6 @@ class NewNsinApplicationsScreen extends Screen
 
             $sortedStudentIds = Student::whereIn('id', $studentIds)->orderBy('surname')->pluck('id')->toArray();
 
-            
-    
-
             $nsinRegistrationPeriod = NsinRegistrationPeriod::find($nrpID);
             $yearId = $nsinRegistrationPeriod->year_id;
             $month = $nsinRegistrationPeriod->month;
@@ -260,37 +257,13 @@ class NewNsinApplicationsScreen extends Screen
             $nsinMonth = Str::upper(Str::limit($nsinRegistration->month, 3, ''));
             $nsinYear = Str::substr($nsinRegistration->year->year, 2); // Accessing year from the eager loaded relationship
 
-            // Generate the NSIN pattern
-            $nsinPattern = "{$nsinMonth}{$nsinYear}/{$institutionCode}/{$courseCode}";
-
-            $matchingNSINs = NsinStudentRegistration::withoutGlobalScopes()
-                ->where('nsin', 'LIKE', "$nsinPattern%")
-                ->select('nsin')
-                ->unionAll(function ($query) use ($nsinPattern) {
-                    $query->select('nsin')
-                        ->from('students')
-                        ->where('nsin', 'LIKE', "$nsinPattern%");
-                })
-                ->orderBy('nsin', 'DESC')
-                ->first();
-
-            if (!$matchingNSINs) {
-                $studentCode = "001";
-            } else {
-                $studentCode = $matchingNSINs->student_code;
-            }
-
-            
+                        
             foreach ($sortedStudentIds as $key => $studentId) {
 
                 $studentFees = $nsinRegistrationFee + $logbookFee->course_fee + ($isDiplomaCourse ? $researchGuidelineFee : 0);
 
-                // Generate unique student code
-                $studentCode = $this->generateUniqueStudentCode($nsinPattern);
-
                 // Find if this student code already exists
                 $existingStudentRegistration = NsinStudentRegistration::withoutGlobalScopes()
-                    ->where('student_code', $studentCode)
                     ->where('student_id', $studentId)
                     ->where('nsin_registration_id', $nsinRegistration->id)
                     ->first();
@@ -300,8 +273,6 @@ class NewNsinApplicationsScreen extends Screen
                     $nsinStudentRegistration = new NsinStudentRegistration();
                     $nsinStudentRegistration->nsin_registration_id = $nsinRegistration->id;
                     $nsinStudentRegistration->student_id = $studentId;
-                    $nsinStudentRegistration->nsin = $nsinPattern . '/' . $studentCode;
-                    $nsinStudentRegistration->student_code = $studentCode;
                     $nsinStudentRegistration->verify = 0;
                     $nsinStudentRegistration->save();
 
@@ -347,7 +318,7 @@ class NewNsinApplicationsScreen extends Screen
 
 
                 $institution->account->update([
-                    'balance' => $institution->account->balace - $feesTotal,
+                    'balance' => $institution->account->balance - $studentFees,
                 ]);
 
                 $numberOfStudents = count($studentIds);
@@ -355,7 +326,7 @@ class NewNsinApplicationsScreen extends Screen
                 $logbookTotal = $logbookFee->course_fee * $numberOfStudents;
                 $researchGuidelineTotal = $isDiplomaCourse ? ($researchGuidelineFee * $numberOfStudents) : 0;
                 $totalDeduction = $nsinTotal + $logbookTotal + $researchGuidelineTotal;
-                $remainingBalance = $institution->account->balance;
+                $remainingBalance = $institution->account->balance - $totalDeduction;
     
                 $amountForNSIN = 'Ush ' . number_format($nsinTotal);
                 $amountForLogbook = 'Ush ' . number_format($logbookTotal);
@@ -412,23 +383,6 @@ class NewNsinApplicationsScreen extends Screen
         $url = route('platform.registration.nsin.applications.new', $filterParams);
 
         return redirect()->to($url);
-    }
-
-    // Function to generate a unique student code
-    private function generateUniqueStudentCode($nsinPattern)
-    {
-        $lastStudent = NsinStudentRegistration::withoutGlobalScopes()
-            ->where('nsin', 'LIKE', $nsinPattern . '%')
-            ->orderBy('student_code', 'desc')
-            ->first();
-
-        if ($lastStudent) {
-            $studentCode = str_pad((int) $lastStudent->student_code + 1, 3, '0', STR_PAD_LEFT);
-        } else {
-            $studentCode = "001";
-        }
-
-        return $studentCode;
     }
 
 }

@@ -4,6 +4,7 @@ namespace App\Orchid\Layouts;
 
 use App\Models\Student;
 use App\Orchid\Screens\FormTable;
+use App\Orchid\Screens\TDCheckbox;
 use Orchid\Screen\Fields\CheckBox;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Input;
@@ -40,15 +41,14 @@ class ApproveStudentsForExamTable extends FormTable
             TD::make('NSIN', 'NSIN'),
             TD::make('telephone', 'Phone Number'),
             // TD::make('email', 'Email'),
-            TD::make('approval', 'Approval Actions')->render(fn(Student $student) => Group::make([
-                CheckBox::make('approve_students[' . $student->id . ']')->placeholder('Approve')->sendTrueOrFalse(),
-                // Input::make('approve_reasons[' . $student->id . ']')
-            ]))->alignCenter(),
+            // TD::make('approval', 'Approval Actions')->render(fn(Student $student) => Group::make([
+            //     CheckBox::make('approve_students[' . $student->id . ']')->placeholder('Approve')->sendTrueOrFalse(),
+            //     // Input::make('approve_reasons[' . $student->id . ']')
+            // ]))->alignCenter(),
+            TDCheckbox::make('approve_students', 'Approve'),
+            TDCheckbox::make('reject)students', 'Reject'),
             TD::make('actions', 'Rejection Actions')->render(function (Student $student) {
-                return Group::make([
-                    CheckBox::make('reject_students[' . $student->id . ']')->placeholder('Reject')->sendTrueOrFalse(),
-                    Input::make('reject_reasons[' . $student->id . ']')
-                ]);
+                return Input::make('reject_reasons[' . $student->id . ']');
             })->align("center"),
         ];
     }
