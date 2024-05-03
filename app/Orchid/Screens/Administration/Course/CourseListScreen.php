@@ -148,11 +148,11 @@ class CourseListScreen extends Screen
                 ->applyButton('Create Program'),
 
             Layout::modal('editCourseModal', Layout::rows([
-                Input::make('course.name')
+                Input::make('course.course_name')
                     ->title('Program Name')
                     ->placeholder('Enter course name'),
 
-                Input::make('course.code')
+                Input::make('course.course_code')
                     ->title('Program Code')
                     ->placeholder('Enter course code'),
 
