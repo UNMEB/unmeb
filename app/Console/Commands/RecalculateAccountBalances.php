@@ -3,6 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Account;
+use App\Models\RegistrationPeriod;
+use App\Models\Student;
+use App\Models\StudentRegistration;
 use App\Models\Transaction;
 use App\Models\Institution;
 use Illuminate\Console\Command;
@@ -29,8 +32,61 @@ class RecalculateAccountBalances extends Command
      */
     public function handle()
     {
+        // Find orphaned registrations
         $institutionId = $this->argument('institution_id');
-        $institution = Institution::findOrFail($institutionId);
+        $institution = Institution::withoutGlobalScopes()->findOrFail($institutionId);
+
+        // Get all transactions related to exam registration
+        $transactions = Transaction::withoutGlobalScopes()
+            ->where('comment', 'LIKE', 'Exam Registration for student ID:%')
+            ->where('institution_id', $institution->id)
+            ->get();
+
+        // Extract student IDs from transactions
+        $studentIdsFromTransactions = $transactions->pluck('comment')
+            ->map(function ($comment) {
+                return Str::after($comment, 'Exam Registration for student ID:');
+            });
+
+        // Get student registrations for the current period
+        $registrationPeriod = RegistrationPeriod::whereFlag(1, true)->first();
+
+        $orphanedRegistrations = StudentRegistration::withoutGlobalScopes()->select('sr.student_id', 'r.id')
+            ->from('student_registrations as sr')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->where('rp.id', $registrationPeriod->id)
+            ->whereNotIn('sr.student_id', $studentIdsFromTransactions) // Exclude IDs 
+            ->get();
+
+        // Loop through orphaned registrations and delete them
+        foreach ($orphanedRegistrations as $orphanedRegistration) {
+            $this->info('Found an orphaned registration. Deleting...');
+            $deleted = StudentRegistration::where([
+                'registration_id' => $orphanedRegistration->id,
+                'student_id' => $orphanedRegistration->student_id
+            ])->delete();
+        }
+
+        // Get all transactions (same as before)
+        $transactions = Transaction::withoutGlobalScopes()
+            ->where('comment', 'LIKE', 'Exam Registration for student ID:%')
+            ->where('institution_id', $institution->id)
+            ->get();
+
+        // Filter transactions based on existence of student registration
+        $transactionsToDelete = $transactions->filter(function ($transaction) use ($studentIdsFromTransactions) {
+            // Extract student ID from comment (same as before)
+            $studentId = Str::after($transaction->comment, 'Exam Registration for student ID:');
+            // Check if student ID exists in registered students
+            return !in_array($studentId, $studentIdsFromTransactions->toArray());
+        });
+
+        // Delete the transactions without a student registration
+        foreach ($transactionsToDelete as $transaction) {
+            $this->info('Found orphaned transaction to delete. Deleting...');
+            Transaction::where('id', $transaction->id)->delete();
+        }
 
         $this->info('Recalculating account balances for institution: ' . $institution->institution_name);
 
@@ -43,61 +99,65 @@ class RecalculateAccountBalances extends Command
 
         $this->info('Account found for institution: ' . $institution->institution_name);
 
-        // Set the initial account balance to zero
+        // Reset account balance to zero
         $account->balance = 0;
+        $account->save();
+
+        $this->info('Account balance reset to zero.');
 
         // Top up account balance with funds approved by Semei
         $approvedFunds = Transaction::withoutGlobalScopes()
             ->where('account_id', $account->id)
             ->where('status', 'approved')
-            ->where('approved_by', 273)
             ->where('type', 'credit')
-            ->get();
+            ->where('approved_by', 299)
+            ->sum('amount');
 
-        // Get the total approved funds and add them to the account
-        $totalApprovedFunds = $approvedFunds->sum('amount');
-        $account->balance += $totalApprovedFunds;
+        // Set total approved funds as new account balance
+        $newAccountBalance = $approvedFunds;
 
-        $this->info('Total approved funds added: ' . $totalApprovedFunds);
-
-        // Get all exam transactions using comment starting with Exam Registration for student ID
-        $examTransactions = Transaction::withoutGlobalScopes()->where('account_id', $account->id)
-            ->where('comment', 'like', 'Exam Registration for student ID%')
-            ->get();
-
-        $this->info('Found ' . $examTransactions->count() . ' exam transactions for institution: ' . $institution->institution_name);
-
-        // Check for duplicates; these will have the same comment e.g. Exam Registration for student ID: 137542
-        $uniqueTransactions = $examTransactions->unique('comment');
-
-        // If you need to delete the duplicates from the database:
-        $duplicateComments = $examTransactions->pluck('comment')->duplicates()->all();
-        Transaction::withoutGlobalScopes()->whereIn('comment', $duplicateComments)->delete();
-
-        $this->info('Deleted ' . count($duplicateComments) . ' duplicate exam transactions');
-
-        // After deleting the duplicates, deduct these funds from the account balance
-        $totalExamFunds = $examTransactions->sum('amount');
-        $account->balance -= $totalExamFunds;
-
-        $this->info('Total exam funds deducted: ' . $totalExamFunds);
-
-        // Deduct remaining debits with different comments
-        $remainingDebits = Transaction::withoutGlobalScopes()
+        // Get total debits
+        $totalDebits = Transaction::withoutGlobalScopes()
             ->where('account_id', $account->id)
             ->where('status', 'approved')
             ->where('type', 'debit')
-            ->whereNotIn('comment', $uniqueTransactions->pluck('comment')->toArray())
-            ->get();
+            ->sum('amount');
 
-        $totalRemainingDebits = $remainingDebits->sum('amount');
-        $account->balance -= $totalRemainingDebits;
+        // Get total credits except those already added under approved funds
+        $totalCredits = Transaction::withoutGlobalScopes()
+            ->where('account_id', $account->id)
+            ->where('status', 'approved')
+            ->where('type', 'credit')
+            // Filter out reversals using WHERE NOT LIKE
+            ->where('comment', 'NOT LIKE', 'Reversal of Exam Registration Fee for Student ID:%')
+            ->where('comment', 'NOT LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
+            ->whereNotIn('id', Transaction::withoutGlobalScopes()
+                ->where('account_id', $account->id)
+                ->where('status', 'approved')
+                ->where('approved_by', 299)
+                ->where('type', 'credit')
+                ->pluck('id'))
+            ->sum('amount');
 
-        $this->info('Total remaining debit funds deducted: ' . $totalRemainingDebits);
+        // Deduct total debits from new account balance
+        $newAccountBalance -= $totalDebits;
 
+        // Add total credits to new account balance
+        $newAccountBalance += $totalCredits;
+
+        $account->balance = $newAccountBalance;
         $account->save();
 
-        $this->info('Account balance recalculated successfully for institution: ' . $institution->institution_name);
-    }
+        $this->info('Account balance recalculated successfully.');
 
+        $this->info('Summary:');
+        $this->info('--------------------------------------------');
+        $this->info('Total Approved Funds: ' . number_format($approvedFunds));
+        $this->info('Total Debits: ' . number_format($totalDebits));
+        $this->info('Total Credits: ' . number_format($totalCredits));
+        $this->info('--------------------------------------------');
+        $this->info('New Account Balance: ' . number_format($newAccountBalance));
+        $this->info('--------------------------------------------');
+    }
 }
+
