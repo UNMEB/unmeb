@@ -66,9 +66,8 @@ class NSINRegistrationsDetailScreen extends Screen
         ->join('students as s', 'sr.student_id', '=','s.id')
         ->where('rp.id', $registration_period_id)
         ->where('r.institution_id', $institution_id)
-        ->where('r.course_id', $course_id);
-
-        
+        ->where('r.course_id', $course_id)
+        ->orderBy('sr.nsin', 'desc');
 
         return [
             'students' => $query->paginate()
@@ -167,7 +166,7 @@ class NSINRegistrationsDetailScreen extends Screen
 
             // Find student record and replace NSIN with null
             Student::where('id', $studentId)->update([
-                'nsin' => 'NSIN RECALLED'
+                'nsin' => null
             ]);
         }
 

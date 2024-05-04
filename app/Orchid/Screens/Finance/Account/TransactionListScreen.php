@@ -254,17 +254,9 @@ class TransactionListScreen extends Screen
                 }),
                 TD::make('created_at', 'Transaction Date')
                     ->usingComponent(DateTimeSplit::class),
+
                 TD::make('updated_at', 'Updated At')
                     ->usingComponent(DateTimeSplit::class),
-                // TD::make('print_receipt', 'Receipt')->render(function (Transaction $data) {
-                //     return Button::make('Print Receipt')
-                //         ->method('print', [
-                //             'id' => $data->id
-                //         ])
-                //         ->disabled($data->status != 'approved')
-                //         ->class('btn btn-sm btn-success')
-                //         ->rawClick(false);
-                // })
 
                 TD::make('actions', 'Actions')
                     ->render(
@@ -275,7 +267,6 @@ class TransactionListScreen extends Screen
 
                                 Button::make(__('Print Receipt'))
                                     ->icon('bs.receipt')
-                                    ->confirm(__('Confirm Action to print receipt for ' . $data->institution->institution_name))
                                     ->method('print', [
                                         'id' => $data->id,
                                     ]),
@@ -286,7 +277,7 @@ class TransactionListScreen extends Screen
                                     ->method('rollback', [
                                         'id' => $data->id,
                                     ])
-                                    ->class('btn link-danger')
+                                    ->class('btn link-success')
                                     ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
 
                                 Button::make(__('Delete Transaction'))
@@ -301,6 +292,11 @@ class TransactionListScreen extends Screen
                     ),
             ])
         ];
+    }
+
+    public function rollback(Request $request)
+    {
+        dd($request->all());
     }
 
     public function print(Request $request, $id)
@@ -477,9 +473,13 @@ class TransactionListScreen extends Screen
 
         // Fetch transactions within the provided date range
         $query = Transaction::where('account_id', $account->id)
-            ->whereBetween('updated_at', [$startDate, $endDate]);
+            // ->where('comment', 'NOT LIKE', 'Reversal of Exam Registration Fee for Student ID:%')
+            // ->where('comment', 'NOT LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
+            // ->where('comment', 'NOT LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
+            // ->where('comment', 'NOT LIKE', 'Reversal of Research Guide Fee for Student ID:%')
+            ->whereBetween('created_at', [$startDate, $endDate]);
 
-        $transactions = $query->orderBy('updated_at', 'asc')->get();
+        $transactions = $query->orderBy('created_at', 'asc')->get();
 
         $institution = Institution::where('id', $institutionId)->first();
         $iName = $institution->institution_name;

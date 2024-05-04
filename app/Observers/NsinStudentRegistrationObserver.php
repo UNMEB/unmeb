@@ -146,7 +146,7 @@ class NsinStudentRegistrationObserver
             if ($logbookTransaction) {
                 // Create a new transaction to record the reversal
                 $reversalLogbookTransaction = new Transaction([
-                    'amount' => -$logbookTransaction->amount, // reverse the amount
+                    'amount' => $logbookTransaction->amount, // reverse the amount
                     'type' => 'credit', // credit the reversed amount
                     'account_id' => $logbookTransaction->account_id,
                     'institution_id' => $logbookTransaction->institution_id,
