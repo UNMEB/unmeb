@@ -46,14 +46,7 @@ class NsinStudentRegistrationObserver
 
         // if verify is set to 1 generate NSIN
         if ($nsinStudentRegistration->verify == 1) {
-            // Check if the observer should proceed
-            if ($nsinStudentRegistration->is_observer_triggered) {
-                return;
-            }
-
-            // Set the flag to true to prevent recursive calls
-            $nsinStudentRegistration->is_observer_triggered = true;
-
+           
             $nsinRegistrationId = $nsinStudentRegistration->nsin_registration_id;
 
             // Eager load the nsinRegistration with necessary fields, including the related year

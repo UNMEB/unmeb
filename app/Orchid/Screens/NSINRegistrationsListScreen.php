@@ -69,8 +69,15 @@ class NSINRegistrationsListScreen extends Screen
         if(auth()->user()->inRole('institution')) {
             $query->where('i.id', auth()->user()->institution_id);
         }
-        
+
         $query->groupBy('i.institution_name', 'c.course_name', 'y.year', 'rp.month', 'r.id', 'rp.id');
+
+        if (!empty($this->filters)) {
+            if (isset($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
+                $institutionId = $this->filters['institution_id'];
+                $query->where('r.institution_id', '=', $institutionId);
+            }
+        }
 
         return [
             'applications' => $query->paginate(),
@@ -201,6 +208,16 @@ class NSINRegistrationsListScreen extends Screen
 
     public function filter(Request $request)
     {
-        dd($request->all());
+        $institutionId = $request->input('institution_id');
+
+        $filterParams = [];
+
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        $url = route('platform.registration.nsin.registrations.list', $filterParams);
+
+        return redirect()->to($url);
     }
 }
