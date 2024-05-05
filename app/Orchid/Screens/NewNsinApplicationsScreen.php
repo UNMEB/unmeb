@@ -292,7 +292,7 @@ class NewNsinApplicationsScreen extends Screen
                 'institution_id' => $institution->id,
                 'initiated_by' => auth()->user()->id,
                 'status' => 'approved',
-                'NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+                'comment' => 'NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
 
             $logbookTransaction = Transaction::create([
@@ -302,11 +302,10 @@ class NewNsinApplicationsScreen extends Screen
                 'institution_id' => $institution->id,
                 'initiated_by' => auth()->user()->id,
                 'status' => 'approved',
-                'LOGBOOK REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+                'comment' => 'LOGBOOK REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
 
             $researchTransaction = null;
-
             if ($isDiplomaCourse) {
                 $researchTransaction = Transaction::create([
                     'amount' => $totalResearchFees,
@@ -315,7 +314,7 @@ class NewNsinApplicationsScreen extends Screen
                     'institution_id' => $institution->id,
                     'initiated_by' => auth()->user()->id,
                     'status' => 'approved',
-                    'RESEARCH GUIDELINES FOR ' . count($studentIds) . ' STUDENTS'
+                    'comment' => 'RESEARCH GUIDELINES FOR ' . count($studentIds) . ' STUDENTS'
                 ]);
             }
 
@@ -323,8 +322,8 @@ class NewNsinApplicationsScreen extends Screen
             $nsinTransactionLog = TransactionLog::create([
                 'transaction_id' => $nsinTransaction->id,
                 'user_id' => auth()->user()->id,
-                'action' => 'created',
-                'description' => 'NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+                'status' => 'created',
+                'description' => 'NSIN REGISTRATION'
             ]);
 
             // Get browser and location information
@@ -342,7 +341,7 @@ class NewNsinApplicationsScreen extends Screen
                     'nsin_registration_id' => $nsinRegistration->id,
                     'students' => $studentIds,
                     'logbook_transaction_id' => $logbookTransaction->id,
-                    'research_transaction_id' => $researchTransaction != null ? $researchTransaction->id : null,
+                    'research_transaction_id' => $researchTransaction ? $researchTransaction->id : null,
                 ]
             ]);
 
@@ -365,10 +364,11 @@ class NewNsinApplicationsScreen extends Screen
 
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            // throw $th;
+
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
         }
     }
-
 
 
     /**
