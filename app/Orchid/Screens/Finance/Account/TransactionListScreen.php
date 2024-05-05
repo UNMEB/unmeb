@@ -49,6 +49,8 @@ class TransactionListScreen extends Screen
             $query->where('type', 'credit');
         }
 
+        $query->orderBy('created_at', 'desc');
+
         return [
             'transactions' => $query->paginate()
         ];
