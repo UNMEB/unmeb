@@ -11,10 +11,14 @@ class TransactionMeta extends Model
 
     protected $fillable = [
         'transaction_id',
-        'type',
-        'registration_id',
-        'student_registration_id'
+        'key',
+        'value',
     ];
+
+    protected $casts = [
+        'value' => 'json',
+    ];
+
 
     public function transaction()
     {

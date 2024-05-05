@@ -12,7 +12,8 @@ class TransactionLog extends Model
     protected $fillable = [
         'transaction_id',
         'user_id',
-        'status'
+        'status',
+        'description'
     ];
 
     public function transaction()

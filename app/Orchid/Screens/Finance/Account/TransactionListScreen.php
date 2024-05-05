@@ -6,9 +6,11 @@ use App\Models\Account;
 use App\Models\Institution;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
+use App\Models\TransactionMeta;
 use App\Models\User;
 use Carbon\Carbon;
 use DB;
+use Http;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
@@ -404,7 +406,6 @@ class TransactionListScreen extends Screen
             $request->validate([
                 'amount' => 'required',
                 'method' => 'required',
-                'remote_tx_id' => 'required'
             ]);
 
             $institution = null;
@@ -429,31 +430,117 @@ class TransactionListScreen extends Screen
 
             $amount = $request->input('amount');
             $method = $request->input('method');
-            $remoteTxId = $request->input('remote_tx_id');
+
+            // Get browser and location information
+            $userAgent = $request->header('User-Agent');
+            $ipAddress = $request->ip();
+            $browser = $this->parseUserAgent($userAgent);
+            $networkMeta = $this->getNetworkMeta($ipAddress);
 
             $transaction = Transaction::create([
                 'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
                 'method' => $method,
                 'account_id' => $accountId,
                 'type' => 'credit',
+                'status' => 'pending',
                 'institution_id' => $institution->id,
-                'deposited_by' => auth()->user()->id,
-                'remote_tx_id' => $remoteTxId
+                'deposited_by' => auth()->user()->id
             ]);
-
-            $transaction->save();
 
             // Log the transaction
             TransactionLog::create([
                 'transaction_id' => $transaction->id,
-                'user_id' => $request->user_id,
-                'status' => 'pending',
+                'user_id' => auth()->user()->id,
+                'action' => 'created',
+                'description' => 'Transaction created',
             ]);
 
+            $depositInfo = [
+                'depositor_name' => auth()->user()->name,
+                'depositor_ip' => $ipAddress,
+                'deposited_at' => now()->toDateTimeString(),
+                'institution_name' => $institution->institution_name,
+                'browser' => $browser,
+            ];
+
+            if (!empty($networkMeta['city']) && !empty($networkMeta['region']) && !empty($networkMeta['country'])) {
+                $depositInfo['depositor_location'] = $networkMeta['city'] . ', ' . $networkMeta['region'] . ', ' . $networkMeta['country'];
+            }
+
+            if (!empty($networkMeta['timezone'])) {
+                $depositInfo['depositor_timezone'] = $networkMeta['timezone'];
+            }
+
+            if (!empty($networkMeta['isp'])) {
+                $depositInfo['depositor_isp'] = $networkMeta['isp'];
+            }
+
+            if (!empty($networkMeta['org'])) {
+                $depositInfo['depositor_org'] = $networkMeta['org'];
+            }
+
+            if (!empty($networkMeta['lat'])) {
+                $depositInfo['depositor_lat'] = $networkMeta['lat'];
+            }
+
+            if (!empty($networkMeta['lon'])) {
+                $depositInfo['depositor_lon'] = $networkMeta['lon'];
+            }
+
+            TransactionMeta::create([
+                'transaction_id' => $transaction->id,
+                'key' => 'deposit_info', // Add appropriate key for deposit info
+                'value' => json_encode($depositInfo),
+            ]);
+
+            DB::commit();
+
+            \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', 'Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
 
         } catch (\Throwable $th) {
-            //throw $th;
+
+            DB::rollBack();
+
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage());
         }
+    }
+
+    private function parseUserAgent($userAgent)
+    {
+        $agent = new \Jenssegers\Agent\Agent();
+        $agent->setUserAgent($userAgent);
+        return $agent->browser() . ' on ' . $agent->platform();
+    }
+
+    private function getNetworkMeta($ip)
+    {
+        // Check if testing offline
+        if ($ip === '127.0.0.1') {
+            return [];
+        }
+
+        $response = Http::get('http://ip-api.com/json/' . $ip);
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            dd($data);
+
+            return [
+                'country' => $data['country'],
+                'country_code' => $data['countryCode'],
+                'region' => $data['regionName'],
+                'city' => $data['city'],
+                'latitude' => $data['lat'],
+                'longitude' => $data['lon'],
+                'timezone' => $data['timezone'],
+                'isp' => $data['isp'],
+                'organization' => $data['org'],
+                'as' => $data['as']
+            ];
+        }
+
+        return [];
     }
 
 

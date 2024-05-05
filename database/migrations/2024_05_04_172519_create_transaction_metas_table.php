@@ -13,13 +13,11 @@ return new class extends Migration {
         Schema::create('transaction_metas', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('transaction_id');
-            $table->enum('type', ['exam', 'nsin', 'logbook', 'research']);
-            $table->unsignedBigInteger('registration_id')->nullable();
-            $table->unsignedBigInteger('student_registration_id')->nullable();
+            $table->string('key');
+            $table->jsonb('value')->nullable();
             $table->timestamps();
 
-            $table->foreign('transaction_id')->references('id')->on('transactions');
-            $table->timestamps();
+            $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
         });
     }
 
