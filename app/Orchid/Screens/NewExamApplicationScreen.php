@@ -220,6 +220,32 @@ class NewExamApplicationScreen extends Screen
 
                 if ($student) {
 
+                    $studentRegistration = StudentRegistration::firstOrCreate([
+                        'student_id' => $student->id,
+                        'registration_id' => $registration->id,
+                        'trial' => $trial,
+                    ], [
+                        'course_codes' => $courseCodes,
+                        'no_of_papers' => count($paperIds),
+                        'sr_flag' => 0,
+                        'remarks' => 'Registration Pending'
+                    ]);
+
+                    // Retrieve course paper IDs for the student
+                    $studentCoursePapers = CoursePaper::where('course_id', $course->id)
+                        ->whereIn('paper_id', $paperIds)
+                        ->pluck('id');
+
+                    // Insert student paper registrations
+                    $studentPaperRegistrations = [];
+                    foreach ($studentCoursePapers as $coursePaperId) {
+                        $studentPaperRegistrations[] = [
+                            'student_registration_id' => $studentRegistration->id,
+                            'course_paper_id' => $coursePaperId,
+                        ];
+                    }
+                    StudentPaperRegistration::insert($studentPaperRegistrations);
+
                 }
             }
 
