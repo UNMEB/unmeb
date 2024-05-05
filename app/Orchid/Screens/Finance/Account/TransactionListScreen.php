@@ -490,7 +490,7 @@ class TransactionListScreen extends Screen
             TransactionMeta::create([
                 'transaction_id' => $transaction->id,
                 'key' => 'deposit_info', // Add appropriate key for deposit info
-                'value' => json_encode($depositInfo),
+                'value' => $depositInfo,
             ]);
 
             DB::commit();

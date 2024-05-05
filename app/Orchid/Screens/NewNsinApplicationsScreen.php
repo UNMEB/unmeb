@@ -19,6 +19,7 @@ use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
@@ -175,27 +176,19 @@ class NewNsinApplicationsScreen extends Screen
 
         try {
 
-            $feesTotal = 0;
-
             $nrpID = session('nsin_registration_period_id');
             $institutionId = session('institution_id');
             $courseId = session('course_id');
 
             $settings = \Config::get('settings');
             $nsinRegistrationFee = $settings['fees.nsin_registration'];
-            $researchGuidelineFee = $settings['fees.research_fee'];
+            $logbookFee = LogbookFee::firstWhere('course_id', $courseId);
 
             if ($nsinRegistrationFee == 0 || is_null($nsinRegistrationFee)) {
                 throw new Exception('NSIN Student registration fee not yet set. Please contact support at UNMEB');
             }
 
-            if ($researchGuidelineFee == 0 || is_null($researchGuidelineFee)) {
-                throw new Exception('Research Guideline fees not yet set. Please contact support at UNMEB');
-            }
-
-            $logbookFee = LogbookFee::firstWhere('course_id', $courseId);
-
-            if (!$logbookFee) {
+            if (!$logbookFee || $logbookFee->course_fee == 0) {
                 throw new Exception("Unable to register students at the moment. The logbook fees for this course are not yet set. Please contact UNMEB Support", 1);
             }
 
@@ -203,30 +196,50 @@ class NewNsinApplicationsScreen extends Screen
             $courseCode = Course::where('id', $courseId)->value('course_code');
             $isDiplomaCourse = Str::startsWith($courseCode, ['A', 'D']);
 
-            $students = collect($request->get('students'))->keys();
-
-            if ($students->count() == 0) {
-                throw new Exception('Unable to submit data. You have not selected any students to register');
-            }
-
-            $studentIds = collect($request->get('students'))->values();
-
-            $sortedStudentIds = Student::whereIn('id', $studentIds)->orderBy('surname')->pluck('id')->toArray();
-
             $nsinRegistrationPeriod = NsinRegistrationPeriod::find($nrpID);
             $yearId = $nsinRegistrationPeriod->year_id;
             $month = $nsinRegistrationPeriod->month;
 
             $institution = Institution::findOrFail($institutionId);
 
-            // Total Up the fees
-            foreach ($sortedStudentIds as $key => $studentId) {
-                $feesTotal += $nsinRegistrationFee + $logbookFee->course_fee + ($isDiplomaCourse ? $researchGuidelineFee : 0);
+            // Initialize total fees with NSIN registration fee and logbook fee
+            $totalNsinFees = 0;
+            $totalLogbookFees = 0;
+            $totalResearchFees = 0;
 
-                $student = Student::where('id', $studentId)->update(['nsin' => null]);
+            // Get the student keys from the request
+            $studentKeys = collect($request->get('students'))->keys();
+
+            // Get the student ids from the request
+            $studentIds = collect($request->get('students'))->values();
+
+            if ($studentIds->count() == 0) {
+                throw new Exception('Unable to submit data. You have not selected any students to register');
             }
 
-            if ($feesTotal > $institution->account->balance) {
+            foreach ($studentIds as $studentId) {
+                // Calculate NSIN registration fee for each student
+                $totalNsinFees += $nsinRegistrationFee;
+
+                // Calculate logbook fee for each student
+                $totalLogbookFees += $logbookFee->course_fee;
+
+                // If it's a diploma course, calculate research guideline fee for each student
+                if ($isDiplomaCourse) {
+                    $researchGuidelineFee = $settings['fees.research_fee'];
+
+                    if ($researchGuidelineFee == 0 || is_null($researchGuidelineFee)) {
+                        throw new Exception('Research Guideline fees not yet set. Please contact support at UNMEB');
+                    }
+
+                    $totalResearchFees += $researchGuidelineFee;
+                }
+            }
+
+            // Get the overall total for all students
+            $overallTotal = $totalNsinFees + $totalLogbookFees + $totalResearchFees;
+
+            if ($overallTotal > $institution->account->balance) {
                 throw new Exception('Account balance too low to complete this transaction. Please top up to continue');
             }
 
@@ -246,23 +259,14 @@ class NewNsinApplicationsScreen extends Screen
                 $nsinRegistration->year_id = $yearId;
                 $nsinRegistration->completed = 0;
                 $nsinRegistration->approved = 0;
-                $nsinRegistration->books = 0;
-                $nsinRegistration->nsin = 0;
+                $nsinRegistration->books = count($studentIds);
+                $nsinRegistration->nsin = count($studentIds);
                 $nsinRegistration->nsin_verify = 0;
                 $nsinRegistration->old = 0;
                 $nsinRegistration->save();
             }
 
-            $institutionCode = Institution::where('id', $nsinRegistration->institution_id)->value('code');
-            $courseCode = Course::where('id', $nsinRegistration->course_id)->value('course_code');
-
-            $nsinMonth = Str::upper(Str::limit($nsinRegistration->month, 3, ''));
-            $nsinYear = Str::substr($nsinRegistration->year->year, 2); // Accessing year from the eager loaded relationship
-
-
-            foreach ($sortedStudentIds as $key => $studentId) {
-
-                $studentFees = $nsinRegistrationFee + $logbookFee->course_fee + ($isDiplomaCourse ? $researchGuidelineFee : 0);
+            foreach ($studentIds as $studentId) {
 
                 // Find if this student code already exists
                 $existingStudentRegistration = NsinStudentRegistration::withoutGlobalScopes()
@@ -277,98 +281,94 @@ class NewNsinApplicationsScreen extends Screen
                     $nsinStudentRegistration->student_id = $studentId;
                     $nsinStudentRegistration->verify = 0;
                     $nsinStudentRegistration->save();
-
-                    // Create Transaction for NSIN registration fee for this student
-                    $nsinTransaction = new Transaction([
-                        'amount' => $nsinRegistrationFee,
-                        'type' => 'debit',
-                        'account_id' => $institution->account->id,
-                        'institution_id' => $institution->id,
-                        'initiated_by' => auth()->user()->id,
-                        'status' => 'approved',
-                        'comment' => 'NSIN Registration Fee for Student ID: ' . $studentId,
-                    ]);
-                    $nsinTransaction->save();
-
-                    // Add meta information for NSIN Registration ID
-                    TransactionMeta::create([
-                        'transaction_id' => $nsinTransaction->id,
-                        'key' => 'nsin_registration_id',
-                        'value' => $nsinRegistration->id,
-                    ]);
-
-                    // Add meta information for NSIN Student Registration ID
-                    TransactionMeta::create([
-                        'transaction_id' => $nsinTransaction->id,
-                        'key' => 'nsin_student_registration_id',
-                        'value' => $nsinStudentRegistration->id,
-                    ]);
-
-                    // Create Transaction for logbook fee for this student
-                    $logbookTransaction = new Transaction([
-                        'amount' => $logbookFee->course_fee,
-                        'type' => 'debit',
-                        'account_id' => $institution->account->id,
-                        'institution_id' => $institution->id,
-                        'initiated_by' => auth()->user()->id,
-                        'status' => 'approved',
-                        'comment' => 'Logbook Fee for Student ID: ' . $studentId,
-                    ]);
-                    $logbookTransaction->save();
-
-                    
-                    if ($isDiplomaCourse) {
-                        // Create Transaction for research guideline fee for this student
-                        $researchTransaction = new Transaction([
-                            'amount' => $researchGuidelineFee,
-                            'type' => 'debit',
-                            'account_id' => $institution->account->id,
-                            'institution_id' => $institution->id,
-                            'initiated_by' => auth()->user()->id,
-                            'status' => 'approved',
-                            'comment' => 'Research Guideline Fee for Student ID: ' . $studentId,
-                        ]);
-
-                        $researchTransaction->save();
-
-                        $researchTransactionLog = new TransactionLog([
-                            
-                        ]);
-                        $researchTransactionLog->save();
-                    }
                 }
-
-
-                $institution->account->update([
-                    'balance' => $institution->account->balance - $studentFees,
-                ]);
-
-                $numberOfStudents = count($studentIds);
-                $nsinTotal = $nsinRegistrationFee * $numberOfStudents;
-                $logbookTotal = $logbookFee->course_fee * $numberOfStudents;
-                $researchGuidelineTotal = $isDiplomaCourse ? ($researchGuidelineFee * $numberOfStudents) : 0;
-                $totalDeduction = $nsinTotal + $logbookTotal + $researchGuidelineTotal;
-                $remainingBalance = $institution->account->balance - $totalDeduction;
-
-                $amountForNSIN = 'Ush ' . number_format($nsinTotal);
-                $amountForLogbook = 'Ush ' . number_format($logbookTotal);
-                $amountForResearch = 'Ush ' . number_format($researchGuidelineTotal);
-                $totalDeductionFormatted = 'Ush ' . number_format($totalDeduction);
-                $remainingBalanceFormatted = 'Ush ' . number_format($remainingBalance);
-
-                \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Registration</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Registration</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Fee</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
             }
+
+            // Create NSIN Registration For these students
+            $nsinTransaction = Transaction::create([
+                'amount' => $totalNsinFees,
+                'type' => 'debit',
+                'account_id' => $institution->account->id,
+                'institution_id' => $institution->id,
+                'initiated_by' => auth()->user()->id,
+                'status' => 'approved',
+                'NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+            ]);
+
+            $logbookTransaction = Transaction::create([
+                'amount' => $totalLogbookFees,
+                'type' => 'debit',
+                'account_id' => $institution->account->id,
+                'institution_id' => $institution->id,
+                'initiated_by' => auth()->user()->id,
+                'status' => 'approved',
+                'LOGBOOK REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+            ]);
+
+            $researchTransaction = null;
+
+            if ($isDiplomaCourse) {
+                $researchTransaction = Transaction::create([
+                    'amount' => $totalResearchFees,
+                    'type' => 'debit',
+                    'account_id' => $institution->account->id,
+                    'institution_id' => $institution->id,
+                    'initiated_by' => auth()->user()->id,
+                    'status' => 'approved',
+                    'RESEARCH GUIDELINES FOR ' . count($studentIds) . ' STUDENTS'
+                ]);
+            }
+
+            // Create transaction log for NSIN registration
+            $nsinTransactionLog = TransactionLog::create([
+                'transaction_id' => $nsinTransaction->id,
+                'user_id' => auth()->user()->id,
+                'action' => 'created',
+                'description' => 'NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+            ]);
+
+            // Get browser and location information
+            $userAgent = $request->header('User-Agent');
+            $ipAddress = $request->ip();
+            $browser = $this->parseUserAgent($userAgent);
+            $networkMeta = $this->getNetworkMeta($ipAddress);
+
+
+            // Create transaction meta for NSIN registration
+            $nsinTransactionMeta = TransactionMeta::create([
+                'transaction_id' => $nsinTransaction->id,
+                'key' => 'nsin_registration_info',
+                'value' => [
+                    'nsin_registration_id' => $nsinRegistration->id,
+                    'students' => $studentIds,
+                    'logbook_transaction_id' => $logbookTransaction->id,
+                    'research_transaction_id' => $researchTransaction != null ? $researchTransaction->id : null,
+                ]
+            ]);
+
+            $remainingBalance = $institution->account->balance - $overallTotal;
+
+            $institution->account->update([
+                'balance' => $institution->account->balance - $overallTotal,
+            ]);
+
+            $amountForNSIN = 'Ush ' . number_format($totalNsinFees);
+            $amountForLogbook = 'Ush ' . number_format($totalLogbookFees);
+            $amountForResearch = 'Ush ' . number_format($totalResearchFees);
+            $totalDeductionFormatted = 'Ush ' . number_format($overallTotal);
+            $remainingBalanceFormatted = 'Ush ' . number_format($remainingBalance);
+            $numberOfStudents = count($studentIds);
 
             DB::commit();
 
-            // throw new Exception('Not Yet Implemented');
-        } catch (\Throwable $th) {
-            // throw $th;
-            DB::rollBack();
+            \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Registration</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Registration</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Fee</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
 
-            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage())->persistent(true);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
     }
+
 
 
     /**
@@ -405,6 +405,44 @@ class NewNsinApplicationsScreen extends Screen
         $url = route('platform.registration.nsin.applications.new', $filterParams);
 
         return redirect()->to($url);
+    }
+
+    private function parseUserAgent($userAgent)
+    {
+        $agent = new \Jenssegers\Agent\Agent();
+        $agent->setUserAgent($userAgent);
+        return $agent->browser() . ' on ' . $agent->platform();
+    }
+
+    private function getNetworkMeta($ip)
+    {
+        // Check if testing offline
+        if ($ip === '127.0.0.1') {
+            return [];
+        }
+
+        $response = Http::get('http://ip-api.com/json/' . $ip);
+
+        if ($response->successful()) {
+            $data = $response->json();
+
+            dd($data);
+
+            return [
+                'country' => $data['country'],
+                'country_code' => $data['countryCode'],
+                'region' => $data['regionName'],
+                'city' => $data['city'],
+                'latitude' => $data['lat'],
+                'longitude' => $data['lon'],
+                'timezone' => $data['timezone'],
+                'isp' => $data['isp'],
+                'organization' => $data['org'],
+                'as' => $data['as']
+            ];
+        }
+
+        return [];
     }
 
 }
