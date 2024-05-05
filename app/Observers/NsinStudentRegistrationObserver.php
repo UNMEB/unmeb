@@ -46,7 +46,7 @@ class NsinStudentRegistrationObserver
 
         // if verify is set to 1 generate NSIN
         if ($nsinStudentRegistration->verify == 1) {
-           
+
             $nsinRegistrationId = $nsinStudentRegistration->nsin_registration_id;
 
             // Eager load the nsinRegistration with necessary fields, including the related year
@@ -76,17 +76,17 @@ class NsinStudentRegistrationObserver
 
             $currentStudentId = $nsinStudentRegistration->student_id;
 
-            // Get this students array key index from student ids
+            // Increment student count starting from index 0
+            $studentCount = 0;
+
+            // Get this student's array key index from student ids
             $currentStudentIndex = array_search($currentStudentId, $students);
 
             $studentCode = str_pad($currentStudentIndex, 3, '0', STR_PAD_LEFT);
 
-            $provisionalNSIN = $nsinPattern . '/' . $studentCode;
+            $provisionalNSIN = $nsinPattern . $studentCode;
 
             // Make sure the NSIN does not exist in students table or nsin_student_registrations table
-            $studentCount = count($students);
-
-            // If NSIN already exists, generate a new one by incrementing the student count
             do {
                 $studentCount++;
                 $provisionalNSIN = $nsinPattern . str_pad($studentCount, 3, '0', STR_PAD_LEFT);

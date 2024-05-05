@@ -182,10 +182,6 @@ class PlatformProvider extends OrchidServiceProvider
                             return null;
                         }, Color::DANGER),
 
-                    Menu::make('Rollback Transactions')
-                        ->route('platform.systems.finance.rollback')
-                        ->permission('platform.systems.finance.rollback'),
-
                 ])
                 ->permission('platform.finance.list'),
 
@@ -353,8 +349,7 @@ class PlatformProvider extends OrchidServiceProvider
                 ->addPermission('platform.finance.approve', 'Approve Deposits')
                 ->addPermission('platform.finance.transactions.reverse', 'Reverse Transactions')
                 ->addPermission('platform.finance.transactions.flag', 'Flag Transaction')
-                ->addPermission('platform.finance.accounts.list', 'View Institution Accounts')
-                ->addPermission('platform.systems.finance.rollback', 'Rollback Transaction Activity'),
+                ->addPermission('platform.finance.accounts.list', 'View Institution Accounts'),
 
             // Manage Report
             ItemPermission::group('Manage Reports')

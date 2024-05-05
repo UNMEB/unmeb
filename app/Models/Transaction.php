@@ -17,15 +17,18 @@ class Transaction extends Model
 
     protected $fillable = [
         'amount',
-        'method',
         'type',
+        'status',
         'account_id',
-        'is_approved',
+        'approved_by',
         'institution_id',
         'deposited_by',
-        'comment',
         'remote_transaction_id',
-        'status'
+        'initiated_by',
+        'user_id',
+        'comment',
+        'method',
+        'locked'
     ];
 
     protected $allowedFilters = [
@@ -56,23 +59,13 @@ class Transaction extends Model
         return auth()->user();
     }
 
-    protected static function booted()
+    public function logs()
     {
-        // Add a global scope to filter transactions based on user's institution access
-        static::addGlobalScope('institutionAccess', function (Builder $builder) {
-            $user = auth()->user();
+        return $this->hasMany(TransactionLog::class);
+    }
 
-            if ($user && $user->hasAccess('platform.internals.all_institutions')) {
-                // User has access to all institutions, no need to filter
-                return;
-            }
-
-            // Use the user's institution ID to filter transactions
-            $builder->whereHas('account', function ($query) use ($user) {
-                if ($user->institution) {
-                    $query->where('institution_id', $user->institution->id);
-                }
-            });
-        });
+    public function meta()
+    {
+        return $this->hasOne(TransactionMeta::class);
     }
 }

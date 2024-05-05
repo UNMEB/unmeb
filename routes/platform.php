@@ -548,18 +548,6 @@ Route::screen('finance/accounts', AccountListScreen::class)
         ->parent('platform.index')
         ->push(__('Accounts'), route('platform.systems.finance.accounts')));
 
-Route::screen('finance/transactions/rollback/details', RollbackTransactionDetailScreen::class)
-        ->name('platform.systems.finance.rollback.details')
-        ->breadcrumbs(fn(Trail $trail) => $trail
-            ->parent('platform.index')
-            ->push(__('Rollback Transactions Details'), route('platform.systems.finance.rollback.details')));
-
-Route::screen('finance/transactions/rollback', RollbackTransactionListScreen::class)
-    ->name('platform.systems.finance.rollback')
-    ->breadcrumbs(fn(Trail $trail) => $trail
-        ->parent('platform.index')
-        ->push(__('Rollback Transactions'), route('platform.systems.finance.rollback')));
-
 Route::screen('finance/transactions/pending', PendingTransactionListScreen::class)
     ->name('platform.systems.finance.pending')
     ->breadcrumbs(fn(Trail $trail) => $trail

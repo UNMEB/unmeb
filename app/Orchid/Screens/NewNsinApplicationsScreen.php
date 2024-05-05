@@ -11,6 +11,8 @@ use App\Models\NsinRegistrationPeriod;
 use App\Models\NsinStudentRegistration;
 use App\Models\Student;
 use App\Models\Transaction;
+use App\Models\TransactionLog;
+use App\Models\TransactionMeta;
 use App\Orchid\Layouts\RegisterStudentsForNSINForm;
 use App\Orchid\Layouts\RegisterStudentsForNSINTable;
 use DB;
@@ -216,7 +218,7 @@ class NewNsinApplicationsScreen extends Screen
             $month = $nsinRegistrationPeriod->month;
 
             $institution = Institution::findOrFail($institutionId);
-            
+
             // Total Up the fees
             foreach ($sortedStudentIds as $key => $studentId) {
                 $feesTotal += $nsinRegistrationFee + $logbookFee->course_fee + ($isDiplomaCourse ? $researchGuidelineFee : 0);
@@ -257,7 +259,7 @@ class NewNsinApplicationsScreen extends Screen
             $nsinMonth = Str::upper(Str::limit($nsinRegistration->month, 3, ''));
             $nsinYear = Str::substr($nsinRegistration->year->year, 2); // Accessing year from the eager loaded relationship
 
-                        
+
             foreach ($sortedStudentIds as $key => $studentId) {
 
                 $studentFees = $nsinRegistrationFee + $logbookFee->course_fee + ($isDiplomaCourse ? $researchGuidelineFee : 0);
@@ -288,6 +290,20 @@ class NewNsinApplicationsScreen extends Screen
                     ]);
                     $nsinTransaction->save();
 
+                    // Add meta information for NSIN Registration ID
+                    TransactionMeta::create([
+                        'transaction_id' => $nsinTransaction->id,
+                        'key' => 'nsin_registration_id',
+                        'value' => $nsinRegistration->id,
+                    ]);
+
+                    // Add meta information for NSIN Student Registration ID
+                    TransactionMeta::create([
+                        'transaction_id' => $nsinTransaction->id,
+                        'key' => 'nsin_student_registration_id',
+                        'value' => $nsinStudentRegistration->id,
+                    ]);
+
                     // Create Transaction for logbook fee for this student
                     $logbookTransaction = new Transaction([
                         'amount' => $logbookFee->course_fee,
@@ -300,6 +316,7 @@ class NewNsinApplicationsScreen extends Screen
                     ]);
                     $logbookTransaction->save();
 
+                    
                     if ($isDiplomaCourse) {
                         // Create Transaction for research guideline fee for this student
                         $researchTransaction = new Transaction([
@@ -311,8 +328,13 @@ class NewNsinApplicationsScreen extends Screen
                             'status' => 'approved',
                             'comment' => 'Research Guideline Fee for Student ID: ' . $studentId,
                         ]);
-    
+
                         $researchTransaction->save();
+
+                        $researchTransactionLog = new TransactionLog([
+                            
+                        ]);
+                        $researchTransactionLog->save();
                     }
                 }
 
@@ -327,13 +349,13 @@ class NewNsinApplicationsScreen extends Screen
                 $researchGuidelineTotal = $isDiplomaCourse ? ($researchGuidelineFee * $numberOfStudents) : 0;
                 $totalDeduction = $nsinTotal + $logbookTotal + $researchGuidelineTotal;
                 $remainingBalance = $institution->account->balance - $totalDeduction;
-    
+
                 $amountForNSIN = 'Ush ' . number_format($nsinTotal);
                 $amountForLogbook = 'Ush ' . number_format($logbookTotal);
                 $amountForResearch = 'Ush ' . number_format($researchGuidelineTotal);
                 $totalDeductionFormatted = 'Ush ' . number_format($totalDeduction);
                 $remainingBalanceFormatted = 'Ush ' . number_format($remainingBalance);
-    
+
                 \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Registration</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Registration</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Fee</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
             }
 

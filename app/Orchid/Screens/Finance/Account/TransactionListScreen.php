@@ -5,8 +5,10 @@ namespace App\Orchid\Screens\Finance\Account;
 use App\Models\Account;
 use App\Models\Institution;
 use App\Models\Transaction;
+use App\Models\TransactionLog;
 use App\Models\User;
 use Carbon\Carbon;
+use DB;
 use Illuminate\Http\Request;
 use NumberFormatter;
 use Orchid\Screen\Actions\Button;
@@ -265,22 +267,19 @@ class TransactionListScreen extends Screen
                             ->icon('bs.three-dots-vertical')
                             ->list([
 
-                                Button::make(__('Print Receipt'))
-                                    ->icon('bs.receipt')
-                                    ->method('print', [
-                                        'id' => $data->id,
-                                    ]),
-
-                                Button::make(__('Rollback Transaction'))
-                                    ->icon('bs.trash3')
-                                    ->confirm(__('This transaction will be rolled back to initial state of pending.'))
+                                Button::make(__('Rollback'))
                                     ->method('rollback', [
                                         'id' => $data->id,
                                     ])
                                     ->class('btn link-success')
                                     ->canSee(auth()->user()->inRole('accountant') || auth()->user()->inRole('administrator')),
 
-                                Button::make(__('Delete Transaction'))
+                                Button::make(__('Print Receipt'))
+                                    ->method('print', [
+                                        'id' => $data->id,
+                                    ]),
+
+                                Button::make(__('Delete'))
                                     ->icon('bs.trash3')
                                     ->confirm(__('This action can not be reversed. Are you sure you need to delete this transaction.'))
                                     ->method('remove', [
@@ -294,9 +293,20 @@ class TransactionListScreen extends Screen
         ];
     }
 
-    public function rollback(Request $request)
+    public function rollback(Request $request, $id)
     {
-        dd($request->all());
+        try {
+            $transaction = Transaction::findOrFail($id);
+            $amount = $transaction->amount;
+
+            // Rollback transaction status to pending
+            $transaction->status = 'pending';
+            $transaction->save();
+
+            \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Transaction status has been rolled back to pending');
+        } catch (\Throwable $th) {
+            \RealRashid\SweetAlert\Facades\Alert::success('Action Failed', 'Transaction rollback failed');
+        }
     }
 
     public function print(Request $request, $id)
@@ -387,7 +397,15 @@ class TransactionListScreen extends Screen
      */
     public function deposit(Request $request)
     {
+        DB::beginTransaction();
+
         try {
+
+            $request->validate([
+                'amount' => 'required',
+                'method' => 'required',
+                'remote_tx_id' => 'required'
+            ]);
 
             $institution = null;
 
@@ -411,29 +429,30 @@ class TransactionListScreen extends Screen
 
             $amount = $request->input('amount');
             $method = $request->input('method');
-            $remoteTxId = $request->input('transaction_id');
+            $remoteTxId = $request->input('remote_tx_id');
 
-            $transaction = new Transaction([
+            $transaction = Transaction::create([
                 'amount' => (int) Str::of($amount)->replace(['Ush', ','], '')->trim()->toString(),
                 'method' => $method,
                 'account_id' => $accountId,
                 'type' => 'credit',
                 'institution_id' => $institution->id,
-                'deposited_by' => $request->input('deposited_by'),
-                'initiated_by' => auth()->user()->id,
-                'transaction_id' => $remoteTxId,
+                'deposited_by' => auth()->user()->id,
+                'remote_tx_id' => $remoteTxId
             ]);
 
             $transaction->save();
 
-            // Alert::success('Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
+            // Log the transaction
+            TransactionLog::create([
+                'transaction_id' => $transaction->id,
+                'user_id' => $request->user_id,
+                'status' => 'pending',
+            ]);
 
-            \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', 'Institution account has been credited with ' . $amount . ' You\'ll be notified once an accountant has approved the transaction');
 
-            // return back();
         } catch (\Throwable $th) {
-            // throw $th;
-            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', $th->getMessage() . ' ' . $th->getTraceAsString());
+            //throw $th;
         }
     }
 
