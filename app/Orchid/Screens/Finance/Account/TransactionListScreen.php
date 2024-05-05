@@ -299,15 +299,93 @@ class TransactionListScreen extends Screen
     {
         try {
             $transaction = Transaction::findOrFail($id);
-            $amount = $transaction->amount;
+
+            // Check if transaction is older than a day
+            $created_at = $transaction->created_at;
+            $now = now();
+            $differenceInDays = $now->diffInDays($created_at);
+
+            if ($differenceInDays > 1) {
+                \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Transaction cannot be rolled back as it was created more than a day ago');
+                return redirect()->back();
+            }
 
             // Rollback transaction status to pending
             $transaction->status = 'pending';
             $transaction->save();
 
-            \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Transaction status has been rolled back to pending');
+            // Log transaction rollback
+            TransactionLog::create([
+                'transaction_id' => $transaction->id,
+                'user_id' => auth()->id(),
+                'action' => 'updated',
+                'description' => 'Transaction status rolled back to pending',
+            ]);
+
+            // If transaction was initially approved, deduct amount from account
+            if ($transaction->status === 'approved') {
+                $account = Account::findOrFail($transaction->account_id);
+                $account->balance -= $transaction->amount;
+                $account->save();
+
+                // Log amount deduction from account
+                TransactionLog::create([
+                    'transaction_id' => $transaction->id,
+                    'user_id' => auth()->id(),
+                    'action' => 'updated',
+                    'description' => 'Amount deducted from account',
+                ]);
+
+                \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Transaction status has been rolled back to pending and amount has been deducted from account');
+            } else {
+                \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Transaction status has been rolled back to pending');
+            }
+
+            // Get browser and location information
+            $userAgent = $request->header('User-Agent');
+            $ipAddress = $request->ip();
+            $browser = $this->parseUserAgent($userAgent);
+            $networkMeta = $this->getNetworkMeta($ipAddress);
+
+            $rollbackInfo = [
+                'rollback_by' => auth()->user()->name,
+                'rollback_at' => now()->toDateTimeString(),
+                'rollback_ip' => $ipAddress,
+                'rollback_browser' => $browser,
+            ];
+
+            if (!empty($networkMeta['city']) && !empty($networkMeta['region']) && !empty($networkMeta['country'])) {
+                $rollbackInfo['rollback_location'] = $networkMeta['city'] . ', ' . $networkMeta['region'] . ', ' . $networkMeta['country'];
+            }
+
+            if (!empty($networkMeta['timezone'])) {
+                $rollbackInfo['rollback_timezone'] = $networkMeta['timezone'];
+            }
+
+            if (!empty($networkMeta['isp'])) {
+                $rollbackInfo['rollback_isp'] = $networkMeta['isp'];
+            }
+
+            if (!empty($networkMeta['org'])) {
+                $rollbackInfo['rollback_org'] = $networkMeta['org'];
+            }
+
+            if (!empty($networkMeta['lat'])) {
+                $rollbackInfo['rollback_lat'] = $networkMeta['lat'];
+            }
+
+            if (!empty($networkMeta['lon'])) {
+                $rollbackInfo['rollback_lon'] = $networkMeta['lon'];
+            }
+
+            TransactionMeta::create([
+                'transaction_id' => $transaction->id,
+                'key' => 'rollback_info', // New key for rollback info
+                'value' => $rollbackInfo,
+            ]);
+
         } catch (\Throwable $th) {
-            \RealRashid\SweetAlert\Facades\Alert::success('Action Failed', 'Transaction rollback failed');
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Transaction rollback failed');
         }
     }
 
