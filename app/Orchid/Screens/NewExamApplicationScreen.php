@@ -324,8 +324,6 @@ class NewExamApplicationScreen extends Screen
         if ($response->successful()) {
             $data = $response->json();
 
-            dd($data);
-
             return [
                 'country' => $data['country'],
                 'country_code' => $data['countryCode'],
