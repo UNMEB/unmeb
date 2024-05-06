@@ -2,14 +2,19 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Course;
+use App\Models\Institution;
 use App\Models\Registration;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use DB;
 use Illuminate\Http\Request;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
@@ -31,11 +36,11 @@ class ExamRegistrationListScreen extends Screen
 
         $queryPeriod = $request->query('period');
 
-        if(is_null($queryPeriod)) {
+        if (is_null($queryPeriod)) {
             $this->activePeriod = RegistrationPeriod::whereFlag(1, true)->first()->id;
         }
 
-        if(!is_null($queryPeriod)) {
+        if (!is_null($queryPeriod)) {
             $this->activePeriod = $queryPeriod;
         }
 
@@ -58,18 +63,30 @@ class ExamRegistrationListScreen extends Screen
             ->join('courses AS c', 'c.id', '=', 'r.course_id')
             ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
 
-            $query->where('rp.id', $this->activePeriod);
+        $query->where('rp.id', $this->activePeriod);
 
-            $query->orderBy('institution_name', 'asc');
-            $query->orderBy('course_name', 'desc');
-            $query->orderBy('semester', 'asc');
+        $query->orderBy('institution_name', 'asc');
+        $query->orderBy('course_name', 'desc');
+        $query->orderBy('semester', 'asc');
 
-            if(auth()->user()->inRole('institution')) {
-                $query->where('r.institution_id',  auth()->user()->institution_id);
+        if (auth()->user()->inRole('institution')) {
+            $query->where('r.institution_id', auth()->user()->institution_id);
+        }
+
+        $query->where('rp.id', $this->activePeriod);
+
+        if (!empty($this->filters)) {
+            if (isset($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
+                $institutionId = $this->filters['institution_id'];
+                $query->where('r.institution_id', '=', $institutionId);
             }
 
-            $query->where('rp.id', $this->activePeriod);
-        
+            if (isset($this->filters['course_id']) && $this->filters['course_id'] !== null) {
+                $courseId = $this->filters['course_id'];
+                $query->where('r.course_id', '=', $courseId);
+            }
+        }
+
         return [
             'registrations' => $query->paginate(10),
         ];
@@ -83,12 +100,12 @@ class ExamRegistrationListScreen extends Screen
      */
     public function name(): ?string
     {
-        if(!is_null($this->activePeriod)) {
+        if (!is_null($this->activePeriod)) {
             $period = RegistrationPeriod::select('*')
-                    ->where('id', $this->activePeriod)
-                    ->first();
+                ->where('id', $this->activePeriod)
+                ->first();
 
-            return 'Exam registrations for ' . $period->reg_start_date->format('Y-m-d') . ' / '. $period->reg_end_date->format('Y-m-d');
+            return 'Exam registrations for ' . $period->reg_start_date->format('Y-m-d') . ' / ' . $period->reg_end_date->format('Y-m-d');
         }
 
         return 'Exam Registrations';
@@ -108,14 +125,14 @@ class ExamRegistrationListScreen extends Screen
     {
         // Get all NSIN Registration Periods
         $periods = RegistrationPeriod::select('id', 'reg_start_date', 'reg_end_date')
-                    ->orderBy('id', 'desc')
-                    ->get();
+            ->orderBy('id', 'desc')
+            ->get();
 
         $layouts = $periods->map(function ($period) {
-            return Link::make("#$period->id " . $period->reg_start_date->format('Y-m-d') . ' / '. $period->reg_end_date->format('Y-m-d'))
-            ->route('platform.registration.exam.registrations.list', [
-                'period' => $period->id,
-            ]);
+            return Link::make("#$period->id " . $period->reg_start_date->format('Y-m-d') . ' / ' . $period->reg_end_date->format('Y-m-d'))
+                ->route('platform.registration.exam.registrations.list', [
+                    'period' => $period->id,
+                ]);
         });
 
         return [
@@ -133,8 +150,35 @@ class ExamRegistrationListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::rows([
+                Group::make([
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->applyScope('userInstitutions')
+                        ->canSee(!auth()->user()->inRole('institution'))
+                        ->chunk(20),
+
+                    Relation::make('course_id')
+                        ->title('Select Institution')
+                        ->fromModel(Course::class, 'course_name')
+                        ->canSee(!auth()->user()->inRole('institution'))
+                        ->chunk(20),
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ]),
             Layout::table('registrations', [
-                TD::make('#')->render(fn ($model, object $loop) => $loop->index + 1),
+                TD::make('#')->render(fn($model, object $loop) => $loop->index + 1),
                 TD::make('institution_name', 'Institution')->canSee(!auth()->user()->inRole('institution')),
                 TD::make('course_name', 'Program'),
                 TD::make('semester', 'Semester'),
@@ -168,7 +212,27 @@ class ExamRegistrationListScreen extends Screen
                             'course_id' => $data->course_id,
                         ])
                 )
-            ])  
+            ])
         ];
+    }
+
+    public function filter(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+
+        $filterParams = [];
+
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        if (!empty($courseId)) {
+            $filterParams['filter[course_id]'] = $courseId;
+        }
+
+        $url = route('platform.registration.exam.registrations.list', $filterParams);
+
+        return redirect()->to($url);
     }
 }
