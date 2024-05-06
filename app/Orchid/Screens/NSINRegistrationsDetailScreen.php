@@ -246,7 +246,7 @@ class NSINRegistrationsDetailScreen extends Screen
             $nsinTransactionLog = TransactionLog::create([
                 'transaction_id' => $nsinTransaction->id,
                 'user_id' => auth()->user()->id,
-                'status' => 'created',
+                'action' => 'created',
                 'description' => 'REVERSAL FOR NSIN REGISTRATION'
             ]);
 
