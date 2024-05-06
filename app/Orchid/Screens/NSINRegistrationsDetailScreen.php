@@ -152,6 +152,11 @@ class NSINRegistrationsDetailScreen extends Screen
             $nsinRegistrationFee = $settings['fees.nsin_registration'];
             $logbookFee = LogbookFee::firstWhere('course_id', $course->id);
 
+            // Initialize total fees with NSIN registration fee and logbook fee
+            $totalNsinFees = 0;
+            $totalLogbookFees = 0;
+            $totalResearchFees = 0;
+
             if ($nsinRegistrationFee == 0 || is_null($nsinRegistrationFee)) {
                 throw new Exception('NSIN Student registration fee not yet set. Please contact support at UNMEB');
             }
@@ -179,7 +184,7 @@ class NSINRegistrationsDetailScreen extends Screen
                     ->where('registration_id', $currentRegistration->id)
                     ->first();
 
-                if ($studentExamReg->exists()) {
+                if (!is_null($studentExamReg)) {
                     throw new Exception('Cant rollback student with an active Exam Student registration');
                 }
 
@@ -205,7 +210,11 @@ class NSINRegistrationsDetailScreen extends Screen
             $overallTotal = $totalNsinFees + $totalLogbookFees + $totalResearchFees;
 
             foreach ($studentIds as $studentId) {
-
+                // Find the registration and delete it
+                NsinStudentRegistration::where([
+                    'student_id' => $studentId,
+                    'nsin_registration_id' => $registration_id,
+                ])->delete();
             }
 
             // Create NSIN Registration For these students
@@ -283,13 +292,13 @@ class NSINRegistrationsDetailScreen extends Screen
 
             DB::commit();
 
-            Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>NSINs Reversed</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Reversal</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Reversal</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Reversal</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Reversal</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
+            Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>NSINs Reversed</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Reversal</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Reversal</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Reversal</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Reversal</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>New Account Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
 
 
 
         } catch (\Throwable $th) {
             DB::rollBack();
-            // throw $th;
+            throw $th;
 
             Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
         }
