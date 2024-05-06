@@ -94,6 +94,7 @@ class ExamRegistrationDetailScreen extends Screen
                     Button::make('Rollback Exam Registration')
                         ->icon('bs.receipt')
                         ->class('btn link-success')
+                        ->canSee(auth()->user()->inRole('administrator'))
                         ->method('rollback'),
 
                     Button::make('Delete Registrations')
@@ -121,91 +122,7 @@ class ExamRegistrationDetailScreen extends Screen
 
     public function rollback(Request $request)
     {
-        DB::beginTransaction();
-        
-        try {
 
-            $request->validate([
-                'students' => 'required|array',
-                'students.*' => 'integer|exists:students,id', // Assuming students are stored in a table named 'students' with 'id' column.
-            ]);
-
-            $studentIds = $request->get('students');
-
-            $registration_id = session()->get('registration_id');
-            $institution_id = session()->get('institution_id');
-            $course_id = session()->get('course_id');
-
-            foreach ($studentIds as $studentId) {
-
-                // Get the student
-                $student = Student::withoutGlobalScopes()->findOrFail($studentId);
-
-                // Find the NSIN transactions and reverse it
-                $examTransaction = Transaction::withoutGlobalScopes()->where('comment', '=', "Exam Registration for student ID: $studentId")->first();
-
-                // Find the registration table and rollback amount
-                $registration = Registration::where([
-                    'institution_id' => $institution_id,
-                    'course_id' => $course_id,
-                    'id' => $registration_id
-                ])->first();
-
-                // Revert the balance less this transaction for exam
-                 $reversalAmount = $examTransaction->amount;
-
-                if ($registration) {
-                    $registration->amount -= $reversalAmount;
-                    $registration->save();
-                }
-
-                // Find the student registration and remove it
-                $studentRegistration = StudentRegistration::where([
-                    'student_id' => $student->id,
-                    'registration_id' => $registration_id,
-                ])->first();
-
-                if ($studentRegistration) {
-                    // Delete the student registration
-                    $studentRegistration->delete();
-                }
-
-                if ($examTransaction) {
-                    // Retrieve the account associated with the transaction
-                    $account = $examTransaction->account;
-
-                    // Create a new transaction to record the reversal
-                    $reversalTransaction = new Transaction([
-                        'amount' => $examTransaction->amount, // reverse the amount
-                        'type' => 'credit', // credit the reversed amount
-                        'account_id' => $examTransaction->account_id,
-                        'institution_id' => $examTransaction->institution_id,
-                        'initiated_by' => auth()->user()->id,
-                        'status' => 'approved',
-                        'comment' => 'Reversal of Exam Registration Fee for Student ID: ' . $studentId,
-                    ]);
-                    $reversalTransaction->save();
-
-                    // Update the original transaction to mark it as reversed
-                    $examTransaction->status = 'reversed';
-                    $examTransaction->save();
-
-                    // Update the account balance
-                    $account->balance += $examTransaction->amount;
-                    $account->save();
-                }
-            }
-
-            DB::commit();
-
-            Alert::success('Action Complete', count($studentIds) . ' Exam registration successfully recalled and transactions reversed.')->persistent(true);
-
-        } catch (\Throwable $th) {
-
-            DB::rollBack();
-
-            Alert::error('Action Failed', $th->getMessage(). ' '. $th->getTraceAsString())->persistent(true);
-        }
     }
 
     public function delete(Request $request)
