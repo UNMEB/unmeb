@@ -86,6 +86,14 @@ class NewExamApplicationScreen extends Screen
             ->whereNotIn('s.id', session('selected_student_ids', []))
             ->orderBy('s.nsin', 'asc');
 
+        // Get current course code
+        $course = Course::find(session('course_id'));
+        if ($course) {
+            $course_code = $course->course_code;
+            $query->where('s.nsin', 'LIKE', '%' . $course_code . '%');
+        }
+
+
         if (auth()->user()->inRole('institution')) {
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
