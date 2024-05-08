@@ -48,16 +48,16 @@ class NewExamApplicationScreen extends Screen
 
         $registeredStudentIds = Student::withoutGlobalScopes()
             ->from('students as s')
-            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->leftJoin('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('institutions as i', 'i.id', '=', 'r.institution_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->whereNotIn('sr.trial', ['Second', 'Third'])
-            // ->whereNot('r.year_of_study', session('year_of_study'))
             ->where('r.institution_id', session('institution_id'))
             ->where('rp.flag', '=', 1)
             ->pluck('s.id')
             ->toArray();
+
+        dd($registeredStudentIds);
 
         $query = Student::withoutGlobalScopes()
             ->with('district')
