@@ -364,7 +364,7 @@ class NewNsinApplicationsScreen extends Screen
 
         } catch (\Throwable $th) {
             DB::rollBack();
-            // throw $th;
+            throw $th;
 
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
         }
