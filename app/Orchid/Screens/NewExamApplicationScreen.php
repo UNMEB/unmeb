@@ -46,6 +46,19 @@ class NewExamApplicationScreen extends Screen
         session()->put("year_of_study", $request->get('year_of_study'));
         session()->put("trial", $request->get('trial'));
 
+        $registeredStudentIds = Student::withoutGlobalScopes()
+            ->from('students as s')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->where('sr.trial', '=', session('trial'))
+            ->where('r.year_of_study', session('year_of_study'))
+            ->where('r.institution_id', session('institution_id'))
+            ->where('rp.flag', '=', 1)
+            ->pluck('s.id')
+            ->toArray();
+
         $query = Student::withoutGlobalScopes()
             ->with('district')
             ->select([
@@ -69,13 +82,13 @@ class NewExamApplicationScreen extends Screen
             ])
             ->from('students As s')
             ->whereNotNull('s.nsin')
+            ->whereNotIn('s.id', $registeredStudentIds)
+            ->whereNotIn('s.id', session('selected_student_ids', []))
             ->orderBy('s.nsin', 'asc');
 
         if (auth()->user()->inRole('institution')) {
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
-
-        // dd($query->toRawSql());
 
         return [
             'applications' => $query->paginate(),
