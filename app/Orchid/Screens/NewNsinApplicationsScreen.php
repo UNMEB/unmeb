@@ -50,6 +50,48 @@ class NewNsinApplicationsScreen extends Screen
 
         $currentPeriod = NsinRegistrationPeriod::query()->where('id', session('nsin_registration_period_id'))->first();
 
+        // $query = Student::withoutGlobalScopes()
+        //     ->select([
+        //         's.id',
+        //         's.surname',
+        //         's.firstname',
+        //         's.othername',
+        //         's.dob',
+        //         's.gender',
+        //         's.country_id',
+        //         's.district_id',
+        //         's.nin',
+        //         's.passport_number',
+        //         's.refugee_number',
+        //         's.nsin'
+        //     ])
+        //     ->from('students as s')
+        //     ->where('s.institution_id', session('institution_id'));
+
+        // $courseCodes = Course::where('course_code', 'LIKE', 'C%')->pluck('course_code');
+        // $selectedCourseCode = Course::whereId(session('course_id'))->value('course_code');
+
+        // if ($courseCodes->contains($selectedCourseCode)) {
+        //     $query->whereNull('s.nsin');
+        // }
+
+        // TODO Find a solution for filtering Diploma Students
+
+        // $query->whereNotExists(function ($query) {
+        //     $query->select(DB::raw(1))
+        //         ->from('nsin_student_registrations as nsr')
+        //         ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+        //         ->join('institutions as i', 'i.id', '=', 'nr.institution_id')
+        //         ->join('nsin_registration_periods as nrp', function ($join) {
+        //             $join->on('nr.year_id', '=', 'nrp.year_id')
+        //                 ->on('nr.month', '=', 'nrp.month');
+        //         })
+        //         ->whereColumn('nsr.student_id', 's.id')
+        //         ->where('i.id', session('institution_id'))
+        //         ->where('nrp.flag', 1);
+        // })
+        //     ->orderBy('s.nsin', 'asc');
+
         $query = Student::withoutGlobalScopes()
             ->select([
                 's.id',
@@ -66,31 +108,8 @@ class NewNsinApplicationsScreen extends Screen
                 's.nsin'
             ])
             ->from('students as s')
-            ->where('s.institution_id', session('institution_id'));
-
-        // $courseCodes = Course::where('course_code', 'LIKE', 'C%')->pluck('course_code');
-        // $selectedCourseCode = Course::whereId(session('course_id'))->value('course_code');
-
-        // if ($courseCodes->contains($selectedCourseCode)) {
-        //     $query->whereNull('s.nsin');
-        // }
-
-        // TODO Find a solution for filtering Diploma Students
-
-        $query->whereNotExists(function ($query) {
-            $query->select(DB::raw(1))
-                ->from('nsin_student_registrations as nsr')
-                ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-                ->join('institutions as i', 'i.id', '=', 'nr.institution_id')
-                ->join('nsin_registration_periods as nrp', function ($join) {
-                    $join->on('nr.year_id', '=', 'nrp.year_id')
-                        ->on('nr.month', '=', 'nrp.month');
-                })
-                ->whereColumn('nsr.student_id', 's.id')
-                ->where('i.id', session('institution_id'))
-                ->where('nrp.flag', 1);
-        })
-            ->orderBy('s.nsin', 'asc');
+            ->where('s.institution_id', session('institution_id'))
+            ->whereNotIn('s.id', session('selected_student_ids', []));
 
         return [
             'students' => $query->paginate(10)
@@ -216,6 +235,11 @@ class NewNsinApplicationsScreen extends Screen
             if ($studentIds->count() == 0) {
                 throw new Exception('Unable to submit data. You have not selected any students to register');
             }
+
+            // Append new student IDs to the session array if it exists
+            $existingStudentIds = session('selected_student_ids', []);
+            $newStudentIds = array_merge($existingStudentIds, $studentIds);
+            session(['selected_student_ids' => $newStudentIds]);
 
             foreach ($studentIds as $studentId) {
                 // Calculate NSIN registration fee for each student
