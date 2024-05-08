@@ -68,13 +68,15 @@ class NewExamApplicationScreen extends Screen
                 's.passport',
             ])
             ->from('students as s')
-            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
+            ->join('nsin_student_registrations as nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->where('r.institution_id', session('institution_id'))
-            ->where('r.course_id', session('course_id'))
-            ->where('rp.flag', '=', 1);
+            ->where('rp.flag', '=', 1)
+            ->where('nsr.id', 'IS', 'NOT', NULL)
+            ->where('nr.institution_id', session('institution_id'))
+            ->where('nr.course_id', session('course_id'));
 
         // Get current course code
         $course = Course::find(session('course_id'));
