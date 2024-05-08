@@ -46,46 +46,34 @@ class NewExamApplicationScreen extends Screen
         session()->put("year_of_study", $request->get('year_of_study'));
         session()->put("trial", $request->get('trial'));
 
-        $institutionId = $request->get('institution_id');
-        $courseId = $request->get('course_id');
-
-        $registeredStudentIds = Student::withoutGlobalScopes()
-            ->from('students as s')
-            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
-            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->where('sr.trial', '=', session('trial'))
-            ->where('r.year_of_study', session('year_of_study'))
-            ->where('r.institution_id', session('institution_id'))
-            ->where('rp.flag', '=', 1)
-            ->pluck('s.id')
-            ->toArray();
-
         $query = Student::withoutGlobalScopes()
+            ->with('district')
             ->select([
-                's.id',
+                's.id as id',
                 's.surname',
                 's.firstname',
                 's.othername',
-                's.dob',
                 's.gender',
-                's.country_id',
+                's.dob',
                 's.district_id',
-                's.nin',
+                's.country_id',
+                's.location',
+                's.nsin',
                 's.passport_number',
+                's.nin',
+                's.telephone',
                 's.refugee_number',
-                's.nsin'
+                's.lin',
+                's.date_time',
+                's.passport',
             ])
-            ->from('students as s')
-            ->join('nsin_student_registrations as nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->where('nr.institution_id', session('institution_id'))
-            ->where('nr.course_id', session('course_id'))
-            ->whereNotIn('s.id', session('selected_student_ids', []))
-            ->whereNotIn('s.id', $registeredStudentIds)
+            ->from('students As s')
             ->whereNotNull('s.nsin')
             ->orderBy('s.nsin', 'asc');
+
+        if (auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
 
         // dd($query->toRawSql());
 
