@@ -97,7 +97,7 @@ class NewExamApplicationScreen extends Screen
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
 
-        $query->orderBy('s.nsin', 'desc');
+        $query->orderBy('s.nsin', 'asc');
 
         return [
             'applications' => $query->paginate(),
