@@ -68,12 +68,12 @@ class NewNsinApplicationsScreen extends Screen
             ->from('students as s')
             ->where('s.institution_id', session('institution_id'));
 
-        $courseCodes = Course::where('course_code', 'LIKE', 'C%')->pluck('course_code');
-        $selectedCourseCode = Course::whereId(session('course_id'))->value('course_code');
+        // $courseCodes = Course::where('course_code', 'LIKE', 'C%')->pluck('course_code');
+        // $selectedCourseCode = Course::whereId(session('course_id'))->value('course_code');
 
-        if ($courseCodes->contains($selectedCourseCode)) {
-            $query->whereNull('s.nsin');
-        }
+        // if ($courseCodes->contains($selectedCourseCode)) {
+        //     $query->whereNull('s.nsin');
+        // }
 
         // TODO Find a solution for filtering Diploma Students
 
