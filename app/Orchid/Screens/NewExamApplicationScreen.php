@@ -168,7 +168,7 @@ class NewExamApplicationScreen extends Screen
             $existingStudentIds = session('selected_student_ids', []);
             $newStudentIds = array_merge(
                 $existingStudentIds,
-                $studentIds->toArray()
+                $studentIds
             );
             session(['selected_student_ids' => $newStudentIds]);
 
