@@ -80,7 +80,7 @@ class NewExamApplicationScreen extends Screen
             ])
             ->from('students as s')
             ->whereIn('s.id', $studentsWithoutExamReg)
-            ->whereNotIn('s.id', function ($query) {
+            ->whereIn('s.id', function ($query) {
                 $query->select('student_id')
                     ->from('student_registrations')
                     ->join('registrations', 'registrations.id', '=', 'student_registrations.registration_id')
