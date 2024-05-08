@@ -82,7 +82,9 @@ class NewExamApplicationScreen extends Screen
             ->where('nr.institution_id', session('institution_id'))
             ->where('nr.course_id', session('course_id'))
             ->whereNotIn('s.id', session('selected_student_ids', []))
-            ->whereNotIn('s.id', $registeredStudentIds);
+            ->whereNotIn('s.id', $registeredStudentIds)
+            ->whereNotNull('s.nsin')
+            ->orderBy('s.nsin', 'asc');
 
         return [
             'applications' => $query->paginate(),
