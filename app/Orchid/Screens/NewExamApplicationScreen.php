@@ -48,8 +48,8 @@ class NewExamApplicationScreen extends Screen
 
         $registeredStudentIds = Student::withoutGlobalScopes()
             ->from('students as s')
-            ->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id')
-            ->leftJoin('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('institutions as i', 'i.id', '=', 'r.institution_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
             ->where('r.institution_id', session('institution_id'))
