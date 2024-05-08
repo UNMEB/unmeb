@@ -238,6 +238,9 @@ class ExamRegistrationDetailScreen extends Screen
             Alert::success('Action Completed', 'Students unregistered successfully.');
 
         } catch (\Throwable $th) {
+
+            throw $th;
+
             DB::rollBack();
 
             Alert::error('Action Failed', 'Unable to unregister students. Failed with error ' . $th->getMessage());
