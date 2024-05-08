@@ -49,38 +49,37 @@ class NewExamApplicationScreen extends Screen
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
 
-        $query = Student::withoutGlobalScopes();
-        $query->select([
-            's.id as id',
-            's.surname',
-            's.firstname',
-            's.othername',
-            's.gender',
-            's.dob',
-            's.district_id',
-            's.country_id',
-            's.nsin as nsin',
-            's.telephone',
-            's.passport',
-            's.passport_number',
-            's.lin',
-            's.email'
-        ])->from('students AS s')
-            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations AS nr', 'nsr.nsin_registration_id', '=', 'nr.id')
-            ->where('nr.institution_id', '=', session('institution_id'))
-            ->where('nr.course_id', '=', session('course_id'))
-            ->whereNotNull('s.nsin')
-            ->whereNotIn('s.id', function ($query) {
-                $query->select('student_id')
-                    ->distinct()
-                    ->from('student_registrations as sr')
-                    ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-                    ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-                    ->where('sr.trial', '=', session('trial'))
-                    ->where('rp.flag', '=', 1);
-            })
-            ->orderBy('s.nsin', 'ASC');
+        $registeredStudentIds = Student::withoutGlobalScopes()
+            ->from('students as s')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('institutions as i', 'i.id', '=', 'nr.institution_id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->where('sr.trial', '=', session('trial'))
+            ->where('i.id', session('institution_id'))
+            ->where('rp.flag', '=', 1)
+            ->pluck('s.id')
+            ->toArray();
+
+        $query = Student::withoutGlobalScopes()
+            ->select([
+                's.id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.dob',
+                's.gender',
+                's.country_id',
+                's.district_id',
+                's.nin',
+                's.passport_number',
+                's.refugee_number',
+                's.nsin'
+            ])
+            ->from('students as s')
+            ->where('s.institution_id', session('institution_id'))
+            ->whereNotIn('s.id', session('selected_student_ids', []))
+            ->whereNotIn('s.id', $registeredStudentIds);
 
         return [
             'applications' => $query->paginate(),
@@ -157,6 +156,14 @@ class NewExamApplicationScreen extends Screen
                 throw new Exception('You have not selected any students. Please select students that you wish to apply for Exams');
             }
 
+            // Append new student IDs to the session array if it exists
+            $existingStudentIds = session('selected_student_ids', []);
+            $newStudentIds = array_merge(
+                $existingStudentIds,
+                $studentIds->toArray()
+            );
+            session(['selected_student_ids' => $newStudentIds]);
+
             // Get surcharge for normal registration
             $normalCharge = SurchargeFee::join('surcharges', 'surcharge_fees.surcharge_id', '=', 'surcharges.id')
                 ->select('surcharge_fees.surcharge_id', 'surcharges.surcharge_name AS surcharge_name', 'surcharge_fees.course_fee')
@@ -208,7 +215,7 @@ class NewExamApplicationScreen extends Screen
                 $registration->registration_period_id = (int) $examRegistrationPeriodId;
                 $registration->completed = 0;
                 $registration->verify = 0;
-                $registration->approved =  0;
+                $registration->approved = 0;
                 $registration->surcharge_id = $normalCharge->surcharge_id;
                 $registration->date_time = now();
                 $registration->save();

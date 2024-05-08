@@ -85,9 +85,6 @@ class NewNsinApplicationsScreen extends Screen
             ->whereNotIn('s.id', session('selected_student_ids', []))
             ->whereNotIn('s.id', $registeredStudentIds);
 
-
-
-
         return [
             'students' => $query->paginate(10)
         ];
