@@ -46,37 +46,63 @@ class NewExamApplicationScreen extends Screen
         session()->put("year_of_study", $request->get('year_of_study'));
         session()->put("trial", $request->get('trial'));
 
-        // Students that have a valid student registration for active period
+        $studentsWithoutExamReg = Student::withoutGlobalScopes()
+            ->select('s.id')
+            ->from('students as s')
+            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations AS nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('student_registrations AS sr2')
+                    ->join('registrations AS r2', 'r2.id', '=', 'sr2.registration_id')
+                    ->join('registration_periods AS rp2', 'rp2.id', '=', 'r2.registration_period_id')
+                    ->whereRaw('sr2.student_id = s.id')
+                    ->where('r2.institution_id', session('institution_id'))
+                    ->where('rp2.flag', 1);
+            })
+            ->where('nr.institution_id', session('institution_id'))
+            ->pluck('id')
+            ->toArray();
+
+        $studentsWithExamReg = Student::withoutGlobalScopes()
+            ->select('s.id')
+            ->from('students as s')
+            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations AS nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('student_registrations AS sr2')
+                    ->join('registrations AS r2', 'r2.id', '=', 'sr2.registration_id')
+                    ->join('registration_periods AS rp2', 'rp2.id', '=', 'r2.registration_period_id')
+                    ->whereRaw('sr2.student_id = s.id')
+                    ->where('r2.institution_id', session('institution_id'))
+                    ->where('rp2.flag', 1);
+            })
+            ->where('nr.institution_id', session('institution_id'))
+            ->pluck('id')
+            ->toArray();
+
+        // Merge the two result sets
+        $mergedStudents = array_unique(array_merge($studentsWithoutExamReg, $studentsWithExamReg));
+
         $query = Student::withoutGlobalScopes()
             ->select([
-                's.id as id',
+                's.id',
                 's.surname',
                 's.firstname',
                 's.othername',
-                's.gender',
                 's.dob',
-                's.district_id',
+                's.gender',
                 's.country_id',
-                's.location',
-                's.nsin',
-                's.passport_number',
+                's.district_id',
                 's.nin',
-                's.telephone',
+                's.passport_number',
                 's.refugee_number',
-                's.lin',
-                's.date_time',
-                's.passport',
+                's.nsin'
             ])
             ->from('students as s')
-            ->join('nsin_student_registrations as nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
-            ->leftJoin('student_registrations as sr', 'sr.student_id', '=', 's.id')
-            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
-            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->where('rp.flag', '=', 1)
-            ->whereNotNull('nsr.id')
-            ->where('nr.institution_id', session('institution_id'))
-            ->where('nr.course_id', session('course_id'));
+            ->whereNotIn('s.id', session('selected_student_ids', []))
+            ->whereIn('s.id', $mergedStudents);
 
         // Get current course code
         $course = Course::find(session('course_id'));
@@ -92,7 +118,7 @@ class NewExamApplicationScreen extends Screen
         $query->orderBy('s.nsin', 'asc');
 
         return [
-            'applications' => $query->paginate(),
+            'applications' => $query->paginate(10)
         ];
 
     }
