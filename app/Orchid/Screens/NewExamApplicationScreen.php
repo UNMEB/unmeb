@@ -93,9 +93,6 @@ class NewExamApplicationScreen extends Screen
             $query->whereRaw("SUBSTRING_INDEX(SUBSTRING_INDEX(s.nsin, '/', -2), '/', -1) = '$course_code'");
         }
 
-        dd($query->toRawSql());
-
-
         if (auth()->user()->inRole('institution')) {
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
