@@ -62,7 +62,8 @@ class NewNsinApplicationsScreen extends Screen
             ->whereColumn('nsr.student_id', 's.id')
             ->where('i.id', session('institution_id'))
             ->where('nrp.flag', 1)
-            ->pluck('s.id');
+            ->pluck('s.id')
+            ->toArray();
 
         $query = Student::withoutGlobalScopes()
             ->select([
