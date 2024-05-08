@@ -77,7 +77,10 @@ class NewExamApplicationScreen extends Screen
                 's.nsin'
             ])
             ->from('students as s')
-            ->where('s.institution_id', session('institution_id'))
+            ->join('nsin_student_registrations as nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->where('nr.institution_id', session('institution_id'))
+            ->where('nr.course_id', session('course_id'))
             ->whereNotIn('s.id', session('selected_student_ids', []))
             ->whereNotIn('s.id', $registeredStudentIds);
 
