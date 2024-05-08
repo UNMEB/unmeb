@@ -82,7 +82,7 @@ class NewExamApplicationScreen extends Screen
             ])
             ->from('students As s')
             ->whereNotNull('s.nsin')
-            ->whereNotIn('s.id', $registeredStudentIds)
+            ->whereIn('s.id', $registeredStudentIds)
             ->whereNotIn('s.id', session('selected_student_ids', []));
 
 
