@@ -53,7 +53,7 @@ class NewExamApplicationScreen extends Screen
             ->from('students as s')
             ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
-            ->join('institutions as i', 'i.id', '=', 'nr.institution_id')
+            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
             ->where('sr.trial', '=', session('trial'))
             ->where('i.id', session('institution_id'))
