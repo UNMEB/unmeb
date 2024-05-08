@@ -215,7 +215,10 @@ class NewNsinApplicationsScreen extends Screen
 
             // Append new student IDs to the session array if it exists
             $existingStudentIds = session('selected_student_ids', []);
-            $newStudentIds = array_merge($existingStudentIds, $studentIds);
+            $newStudentIds = array_merge(
+                $existingStudentIds,
+                $studentIds->toArray()
+            );
             session(['selected_student_ids' => $newStudentIds]);
 
             foreach ($studentIds as $studentId) {
@@ -365,7 +368,7 @@ class NewNsinApplicationsScreen extends Screen
 
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            // throw $th;
 
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
         }
