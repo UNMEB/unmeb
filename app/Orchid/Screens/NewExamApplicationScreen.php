@@ -38,7 +38,6 @@ class NewExamApplicationScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-
         session()->put("exam_registration_period_id", $request->get('exam_registration_period_id'));
         session()->put("institution_id", $request->get('institution_id'));
         session()->put("course_id", $request->get('course_id'));
@@ -61,29 +60,8 @@ class NewExamApplicationScreen extends Screen
                     ->where('rp2.flag', 1);
             })
             ->where('nr.institution_id', session('institution_id'))
-            ->pluck('id')
+            ->pluck('s.id') // Pluck 'id' from students table
             ->toArray();
-
-        $studentsWithExamReg = Student::withoutGlobalScopes()
-            ->select('s.id')
-            ->from('students as s')
-            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations AS nr', 'nr.id', '=', 'nsr.nsin_registration_id')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('student_registrations AS sr2')
-                    ->join('registrations AS r2', 'r2.id', '=', 'sr2.registration_id')
-                    ->join('registration_periods AS rp2', 'rp2.id', '=', 'r2.registration_period_id')
-                    ->whereRaw('sr2.student_id = s.id')
-                    ->where('r2.institution_id', session('institution_id'))
-                    ->where('rp2.flag', 1);
-            })
-            ->where('nr.institution_id', session('institution_id'))
-            ->pluck('id')
-            ->toArray();
-
-        // Merge the two result sets
-        $mergedStudents = array_unique(array_merge($studentsWithoutExamReg, $studentsWithExamReg));
 
         $query = Student::withoutGlobalScopes()
             ->select([
@@ -101,8 +79,16 @@ class NewExamApplicationScreen extends Screen
                 's.nsin'
             ])
             ->from('students as s')
-            ->whereNotIn('s.id', session('selected_student_ids', []))
-            ->whereIn('s.id', $mergedStudents);
+            ->whereIn('s.id', $studentsWithoutExamReg)
+            ->whereNotIn('s.id', function ($query) {
+                $query->select('student_id')
+                    ->from('student_registrations')
+                    ->join('registrations', 'registrations.id', '=', 'student_registrations.registration_id')
+                    ->join('registration_periods', 'registration_periods.id', '=', 'registrations.registration_period_id')
+                    ->where('registration_periods.flag', 1)
+                    ->where('registrations.institution_id', session('institution_id'));
+            })
+            ->whereNotIn('s.id', session('selected_student_ids', []));
 
         // Get current course code
         $course = Course::find(session('course_id'));
@@ -120,8 +106,8 @@ class NewExamApplicationScreen extends Screen
         return [
             'applications' => $query->paginate(10)
         ];
-
     }
+
 
 
     /**
