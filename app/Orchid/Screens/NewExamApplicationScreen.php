@@ -83,8 +83,8 @@ class NewExamApplicationScreen extends Screen
             ->from('students As s')
             ->whereNotNull('s.nsin')
             ->whereNotIn('s.id', $registeredStudentIds)
-            ->whereNotIn('s.id', session('selected_student_ids', []))
-            ->orderBy('s.nsin', 'asc');
+            ->whereNotIn('s.id', session('selected_student_ids', []));
+
 
         // Get current course code
         $course = Course::find(session('course_id'));
@@ -96,6 +96,8 @@ class NewExamApplicationScreen extends Screen
         if (auth()->user()->inRole('institution')) {
             $query->where('s.institution_id', auth()->user()->institution_id);
         }
+
+        $query->orderBy('s.nsin', 'desc');
 
         return [
             'applications' => $query->paginate(),
