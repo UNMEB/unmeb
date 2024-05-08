@@ -74,7 +74,7 @@ class NewExamApplicationScreen extends Screen
             ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
             ->where('rp.flag', '=', 1)
-            ->where('nsr.id', 'IS', 'NOT', NULL)
+            ->whereNotNull('nsr.id')
             ->where('nr.institution_id', session('institution_id'))
             ->where('nr.course_id', session('course_id'));
 
