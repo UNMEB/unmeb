@@ -298,7 +298,7 @@ class NSINRegistrationsDetailScreen extends Screen
 
         } catch (\Throwable $th) {
             DB::rollBack();
-            throw $th;
+            // throw $th;
 
             Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
         }

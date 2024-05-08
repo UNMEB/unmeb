@@ -51,6 +51,7 @@ class Student extends Model
         'passport_number',
         'applied_program',
         'institution_id',
+        'nsin'
     ];
 
     protected $casts = [
@@ -58,7 +59,7 @@ class Student extends Model
     ];
 
     protected $allowedFilters = [
-        
+
     ];
 
     public function district()

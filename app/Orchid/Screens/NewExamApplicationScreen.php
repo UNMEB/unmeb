@@ -82,7 +82,6 @@ class NewExamApplicationScreen extends Screen
             })
             ->orderBy('s.nsin', 'ASC');
 
-
         return [
             'applications' => $query->paginate(),
         ];
@@ -209,7 +208,7 @@ class NewExamApplicationScreen extends Screen
                 $registration->registration_period_id = (int) $examRegistrationPeriodId;
                 $registration->completed = 0;
                 $registration->verify = 0;
-                $registration->approved = 0;
+                $registration->approved =  0;
                 $registration->surcharge_id = $normalCharge->surcharge_id;
                 $registration->date_time = now();
                 $registration->save();
