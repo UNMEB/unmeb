@@ -56,7 +56,8 @@ class NewExamApplicationScreen extends Screen
             ->join('institutions as i', 'i.id', '=', 'r.institution_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
             ->where('sr.trial', '=', session('trial'))
-            ->where('i.id', session('institution_id'))
+            ->where('r.year_of_study', session('year_of_study'))
+            ->where('r.institution_id', session('institution_id'))
             ->where('rp.flag', '=', 1)
             ->pluck('s.id')
             ->toArray();
@@ -85,6 +86,8 @@ class NewExamApplicationScreen extends Screen
             ->whereNotIn('s.id', $registeredStudentIds)
             ->whereNotNull('s.nsin')
             ->orderBy('s.nsin', 'asc');
+
+        // dd($query->toRawSql());
 
         return [
             'applications' => $query->paginate(),
