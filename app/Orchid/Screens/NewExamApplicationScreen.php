@@ -90,7 +90,7 @@ class NewExamApplicationScreen extends Screen
         $course = Course::find(session('course_id'));
         if ($course) {
             $course_code = $course->course_code;
-            $query->whereRaw("SUBSTRING_INDEX(SUBSTRING_INDEX(s.nsin, '/', -2), '/', -1) = '$course_code'");
+            $query->where('s.nsin', 'LIKE', '%/' . $course_code . '/%');
         }
 
         if (auth()->user()->inRole('institution')) {
