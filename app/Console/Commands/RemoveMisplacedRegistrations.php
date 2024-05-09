@@ -62,6 +62,38 @@ class RemoveMisplacedRegistrations extends Command
                 $this->info('No misplaced transactions found.');
             }
 
+
+            $activePeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
+
+
+            $affectedTransactions = DB::table('transactions')
+                ->where(function ($query) {
+                    $query->where('comment', 'LIKE', 'NSIN Registration Fee for Student ID:%')
+                        ->orWhere('comment', 'LIKE', 'Logbook Registration Fee for Student ID:%')
+                        ->orWhere('comment', 'LIKE', 'Research Guideline Fee for Student ID:%')
+                        ->whereDate('created_at', '<', '2024-05-06');
+                })
+                ->whereNotExists(function ($query) use ($activePeriod, $year) {
+                    $query->select(DB::raw(1))
+                        ->from('nsin_student_registrations')
+                        ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
+                        ->where('nsin_student_registrations.student_id', DB::raw("SUBSTRING_INDEX(SUBSTRING_INDEX(transactions.comment, ' ', -1),':',-1)"))
+                        ->where('nsin_registrations.month', $activePeriod->month)
+                        ->where('nsin_registrations.year_id', $activePeriod->year_id)
+                        ->whereYear('nsin_student_registrations.created_at', $year);
+                })
+                ->get();
+
+            $affectedTransactionIds = $affectedTransactions->pluck('id')->toArray();
+
+            if (!empty($affectedTransactionIds)) {
+                Transaction::withoutGlobalScopes()
+                    ->whereIn('id', $affectedTransactionIds)->delete();
+                $this->info('Deleted ' . count($affectedTransactionIds) . ' misplaced transactions successfully.');
+            } else {
+                $this->info('No misplaced transactions found.');
+            }
+
             DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
