@@ -32,7 +32,7 @@ class RemoveMisplacedRegistrations extends Command
     public function handle()
     {
         // Get all reversed transactions
-        $reversedTransactions = Transaction::where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
+        $reversedTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
 
         $this->info('Found ' . $reversedTransactions->count() . ' transactions ready to be reversed');
 
