@@ -61,6 +61,7 @@ class PackingListReportScreen extends Screen
                     'registration_periods.reg_end_date'
                 )
                 ->where('student_registrations.sr_flag', 1)
+                ->where('registration_periods.flag', 1)
                 ->groupBy(
                     'institutions.code',
                     'institutions.short_name',
