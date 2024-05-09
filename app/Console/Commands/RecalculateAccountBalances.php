@@ -37,13 +37,22 @@ class RecalculateAccountBalances extends Command
         try {
             DB::beginTransaction();
 
-            $this->info('Recalculating institutions accounts balances for ', Institution::withoutGlobalScopes()->count() . ' institutions');
+            $this->info('Recalculating institutions accounts balances for ' . Institution::withoutGlobalScopes()->count() . ' institutions');
 
             // 1. For each institution in the system, find all transactions where status is reversed and delete them
             Institution::chunk(100, function ($institutions) {
                 foreach ($institutions as $institution) {
                     $account = Account::withoutGlobalScopes()
-                        ->where('institution_id', $institution->id)->first();
+                        ->where('institution_id', $institution->id)
+                        ->first();
+
+                    if (!$account) {
+                        // If account doesn't exist, create a new one with initial balance of zero
+                        $account = new Account();
+                        $account->institution_id = $institution->id;
+                        $account->balance = 0;
+                        $account->save();
+                    }
 
                     // Get the current account balance
                     $this->info('Current account balance for ' . $institution->institution_name . ' is UGX ' . number_format($account->balance));
