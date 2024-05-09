@@ -37,7 +37,7 @@ class RecalculateAccountBalances extends Command
         try {
             DB::beginTransaction();
 
-            $this->info('Recalculating institutions accounts balances for ', Institution::count() . ' institutions');
+            $this->info('Recalculating institutions accounts balances for ', Institution::withoutGlobalScopes()->count() . ' institutions');
 
             // 1. For each institution in the system, find all transactions where status is reversed and delete them
             Institution::chunk(100, function ($institutions) {
