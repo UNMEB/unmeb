@@ -49,14 +49,11 @@ class RemoveMisplacedRegistrations extends Command
                 $studentId = preg_match('/\d+/', $transaction->comment, $matches) ? $matches[0] : null;
 
                 if ($studentId) {
-                    $registration = NsinStudentRegistration::where('student_id', $studentId)
+                    $nsinStudentRegistration = NsinStudentRegistration::where('student_id', $studentId)
                         ->whereYear('created_at', now()->year)
                         ->first();
 
-                    if (!$registration) {
-                        $transaction->delete();
-                        $this->info('Deleted transaction with ID ' . $transaction->id);
-                    }
+                    dd($nsinStudentRegistration->nsinRegistration());
                 } else {
                     $this->info('No student ID found for transaction with ID ' . $transaction->id);
                 }
