@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\NsinRegistration;
 use App\Models\Registration;
 use App\Models\Student;
 use App\Models\StudentRegistration;
@@ -70,10 +71,9 @@ class RemoveMisplacedRegistrations extends Command
 
         foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
             // Get the registration 
-            $registration = $nsinStudentRegistration->registration;
-
+            $registrationId = $nsinStudentRegistration->registration_id;
+            $registration = NsinRegistration::find($registrationId);
             dd($registration);
-
         }
     }
 
