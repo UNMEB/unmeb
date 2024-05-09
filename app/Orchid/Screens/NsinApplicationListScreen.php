@@ -79,7 +79,7 @@ class NsinApplicationListScreen extends Screen
 
         $query->where('nrp.id', $this->activePeriod);
 
-        $query->orderBy('t.institution_name', 'asc');
+        $query->orderBy('i.institution_name', 'asc');
 
         return [
             'applications' => $query->paginate()
