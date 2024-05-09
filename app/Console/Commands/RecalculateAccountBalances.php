@@ -93,7 +93,9 @@ class RecalculateAccountBalances extends Command
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            $this->error('An error occurred: ' . $e->getMessage());
+            // $this->error('An error occurred: ' . $e->getMessage());
+
+            throw $e;
         }
 
         // Bring the application back up
