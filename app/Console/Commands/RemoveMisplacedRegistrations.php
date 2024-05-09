@@ -39,8 +39,8 @@ class RemoveMisplacedRegistrations extends Command
             // Get all reversed NSIN transactions
             $reversedNSINTransactions = Transaction::withoutGlobalScopes()
                 ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
-                ->where('comment', 'LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
-                ->where('comment', 'LIKE', 'Reversal of Research Registration Fee for Student ID:%')
+                ->orWhere('comment', 'LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
+                ->orWhere('comment', 'LIKE', 'Reversal of Research Registration Fee for Student ID:%')
                 ->get();
 
             $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
