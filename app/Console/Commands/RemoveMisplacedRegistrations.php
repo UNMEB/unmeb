@@ -63,7 +63,7 @@ class RemoveMisplacedRegistrations extends Command
                 $this->info('No misplaced transactions found.');
             }
 
-            // DB::commit();
+            DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;

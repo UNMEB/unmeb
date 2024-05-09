@@ -55,7 +55,7 @@ class RecalculateAccountBalances extends Command
                     }
 
                     // Get the current account balance
-                    $this->info('Current account balance for ' . $institution->institution_name . ' is UGX ' . number_format($account->balance));
+                    $this->info('Current account balance for ' . $institution->institution_name . ' with ID ' . $institution->id . ' is UGX ' . number_format($account->balance));
 
                     // Set the account balance to zero
                     $account->balance = 0;

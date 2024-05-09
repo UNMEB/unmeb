@@ -21,5 +21,6 @@ yarn-error.log
 /.vscode
 
 unmeb.zip
+*.sql
 
 /public/photos/*

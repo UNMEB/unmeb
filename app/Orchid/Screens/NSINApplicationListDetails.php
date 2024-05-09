@@ -40,7 +40,7 @@ class NSINApplicationListDetails extends Screen
         session()->put('course_id', $courseId);
         session()->put('institution_id', $institutionId);
         session()->put('nsin_registration_id', $request->get('nsin_registration_id'));
-        
+
         $query = Student::withoutGlobalScopes();
         $query->select([
             's.id as id',
@@ -72,7 +72,7 @@ class NSINApplicationListDetails extends Screen
         $query->orderBy('s.nsin', 'asc');
 
         if (!empty($this->filters)) {
-            
+
             if (isset($this->filters['district_id']) && $this->filters['district_id'] !== null) {
                 $districtId = $this->filters['district_id'];
                 $query->where('s.district_id', '=', $districtId);
@@ -85,17 +85,17 @@ class NSINApplicationListDetails extends Screen
                     [$firstTerm, $secondTerm] = $terms;
                     $query->where(function ($query) use ($firstTerm, $secondTerm) {
                         $query->where('firstname', 'like', '%' . $firstTerm . '%')
-                        ->where('surname', 'like', '%' . $secondTerm . '%');
+                            ->where('surname', 'like', '%' . $secondTerm . '%');
                     })->orWhere(function ($query) use ($firstTerm, $secondTerm) {
                         // Check if the first term matches the surname and the second term matches the firstname
                         $query->where('surname', 'like', '%' . $firstTerm . '%')
                             ->where('firstname', 'like', '%' . $secondTerm . '%');
                     });
-                }   
+                }
 
                 $query->where('firstname', 'like', '%' . $name . '%')
-                        ->orWhere('surname', 'like', '%' . $name . '%')
-                        ->orWhere('othername', 'like', '%' . $name . '%');
+                    ->orWhere('surname', 'like', '%' . $name . '%')
+                    ->orWhere('othername', 'like', '%' . $name . '%');
             }
 
             if (isset($this->filters['gender']) && $this->filters['gender'] !== null) {
@@ -103,6 +103,8 @@ class NSINApplicationListDetails extends Screen
                 $query->where('s.gender', '=', $gender);
             }
         }
+
+        $query->distinct();
 
         return [
             'applications' => $query->paginate(),
@@ -127,10 +129,10 @@ class NSINApplicationListDetails extends Screen
     public function description(): ?string
     {
         $nsinRegistration = NsinRegistration::find($this->nsinRegistrationId);
-        if($nsinRegistration) {
+        if ($nsinRegistration) {
             $year = $nsinRegistration->year->year;
             $institution = $nsinRegistration->institution->institution_name;
-            return 'NSIN Applications for '. $institution . 'for the period ' . $nsinRegistration->month . '/' . $year;
+            return 'NSIN Applications for ' . $institution . 'for the period ' . $nsinRegistration->month . '/' . $year;
         }
         return '';
     }
@@ -144,10 +146,10 @@ class NSINApplicationListDetails extends Screen
     {
         return [
             Button::make('Export Applications')
-            ->icon('bs.receipt')
-            ->class('btn btn-success')
-            ->method('export')
-            ->rawClick(),
+                ->icon('bs.receipt')
+                ->class('btn btn-success')
+                ->method('export')
+                ->rawClick(),
         ];
     }
 
@@ -165,8 +167,8 @@ class NSINApplicationListDetails extends Screen
                         ->title('Filter By Student Name'),
 
                     Relation::make('district_id')
-                    ->fromModel(District::class, 'district_name')
-                    ->title('Filter By District of origin'),
+                        ->fromModel(District::class, 'district_name')
+                        ->title('Filter By District of origin'),
 
                     Select::make('gender')
                         ->title('Filter By Gender')
@@ -249,34 +251,34 @@ class NSINApplicationListDetails extends Screen
         $courseId = session()->get('course_id');
 
         $students = Student::withoutGlobalScopes()
-        ->select([
-            's.id as id',
-            's.surname',
-            's.firstname',
-            's.othername',
-            's.gender',
-            's.dob',
-            'd.district_name as district',
-            'c.nicename as country',
-            's.nsin as nsin',
-            's.telephone',
-            's.passport',
-            's.passport_number',
-            's.lin',
-            's.email'
-        ])
-        ->from('students as s')
-        ->join('nsin_student_registrations as nsr', 's.id', '=','nsr.student_id')
-        ->join('nsin_registrations as nr','nsr.nsin_registration_id','=','nr.id')
-        ->leftJoin('countries AS c', 'c.id','=','s.country_id')
-        ->leftJoin('districts as d', 'd.id','=','s.district_id')
-        ->where('nr.institution_id', $institutionId)
-        ->where('nr.course_id', $courseId)
-        ->where('nr.id', $nsin_registration_id)
-        ->get();
+            ->select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                'd.district_name as district',
+                'c.nicename as country',
+                's.nsin as nsin',
+                's.telephone',
+                's.passport',
+                's.passport_number',
+                's.lin',
+                's.email'
+            ])
+            ->from('students as s')
+            ->join('nsin_student_registrations as nsr', 's.id', '=', 'nsr.student_id')
+            ->join('nsin_registrations as nr', 'nsr.nsin_registration_id', '=', 'nr.id')
+            ->leftJoin('countries AS c', 'c.id', '=', 's.country_id')
+            ->leftJoin('districts as d', 'd.id', '=', 's.district_id')
+            ->where('nr.institution_id', $institutionId)
+            ->where('nr.course_id', $courseId)
+            ->where('nr.id', $nsin_registration_id)
+            ->get();
 
         return Excel::download(new NSINApplicationExport($students), 'nsin_applications.xlsx');
 
-        
+
     }
 }
