@@ -49,7 +49,9 @@ class RemoveMisplacedRegistrations extends Command
 
         $this->info('Found ' . $nsinStudentIds->count() . ' NSIN student IDs');
 
-        $nsinStudentRegistrations = StudentRegistration::whereIn('student_id', $nsinStudentIds)->get();
+        $nsinStudentRegistrations = StudentRegistration::whereIn('student_id', $nsinStudentIds)
+            ->whereYear('created_at', now()->year)
+            ->get();
 
         // Extract student ids from comments for exam transactions and get student registrations
         $examStudentIds = $reversedExamTransactions->map(function ($transaction) {
@@ -59,10 +61,11 @@ class RemoveMisplacedRegistrations extends Command
 
         $this->info('Found ' . $examStudentIds->count() . ' exam student IDs');
 
-        $examStudentRegistrations = StudentRegistration::whereIn('student_id', $examStudentIds)->get();
+        $examStudentRegistrations = StudentRegistration::whereIn('student_id', $examStudentIds)
+            ->whereYear('created_at', now()->year)
+            ->get();
 
-        // Further processing...
-        dd($nsinStudentRegistrations);
+        dd($nsinStudentRegistrations->first());
     }
 
 
