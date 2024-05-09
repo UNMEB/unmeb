@@ -49,6 +49,8 @@ class RemoveMisplacedRegistrations extends Command
             ->whereYear('created_at', now()->year)
             ->get();
 
+        $ids = [];
+
         foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
             // Get the registration 
             $registrationId = $nsinStudentRegistration->nsin_registration_id;
@@ -58,9 +60,14 @@ class RemoveMisplacedRegistrations extends Command
                 ->where('year_id', $activePeriod->year_id)
                 ->find($registrationId);
 
-            dd($registration);
+            if ($registration) {
+                array_push($ids, $registration->id);
+            }
+
 
         }
+
+        dd($ids);
 
         // Get all reversed exam transactions
         $reversedExamTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
