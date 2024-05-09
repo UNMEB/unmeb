@@ -45,47 +45,20 @@ class NewExamApplicationScreen extends Screen
         session()->put("year_of_study", $request->get('year_of_study'));
         session()->put("trial", $request->get('trial'));
 
-        $studentsWithoutExamReg = Student::withoutGlobalScopes()
-            ->select('s.id')
-            ->from('students as s')
-            ->join('nsin_student_registrations AS nsr', 'nsr.student_id', '=', 's.id')
-            ->join('nsin_registrations AS nr', 'nr.id', '=', 'nsr.nsin_registration_id')
-            ->whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('student_registrations AS sr2')
-                    ->join('registrations AS r2', 'r2.id', '=', 'sr2.registration_id')
-                    ->join('registration_periods AS rp2', 'rp2.id', '=', 'r2.registration_period_id')
-                    ->whereRaw('sr2.student_id = s.id')
-                    ->where('r2.institution_id', session('institution_id'))
-                    ->where('rp2.flag', 1);
-            })
-            ->where('nr.institution_id', session('institution_id'))
-            ->pluck('s.id') // Pluck 'id' from students table
-            ->toArray();
-
         $query = Student::withoutGlobalScopes()
-            ->select([
-                's.id',
-                's.surname',
-                's.firstname',
-                's.othername',
-                's.dob',
-                's.gender',
-                's.country_id',
-                's.district_id',
-                's.nin',
-                's.passport_number',
-                's.refugee_number',
-                's.nsin'
-            ])
+            ->select(([
+                's.*'
+            ]))
             ->from('students as s')
-            ->whereIn('s.id', $studentsWithoutExamReg)
-            ->whereIn('s.id', function ($query) {
+            ->whereNotNull('s.nsin')
+            ->whereNotIn('s.id', function ($query) {
                 $query->select('student_id')
                     ->from('student_registrations')
                     ->join('registrations', 'registrations.id', '=', 'student_registrations.registration_id')
                     ->join('registration_periods', 'registration_periods.id', '=', 'registrations.registration_period_id')
                     ->where('registration_periods.flag', 1)
+                    ->where('student_registrations.trial', session('trial'))
+                    ->where('registrations.year_of_study', session('year_of_study'))
                     ->where('registrations.institution_id', session('institution_id'));
             })
             ->whereNotIn('s.id', session('selected_student_ids', []));
@@ -104,7 +77,7 @@ class NewExamApplicationScreen extends Screen
         $query->orderBy('s.nsin', 'asc');
 
         return [
-            'applications' => $query->paginate(10)
+            'applications' => $query->paginate(20)
         ];
     }
 
