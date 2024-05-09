@@ -38,7 +38,7 @@ class PackingListReportScreen extends Screen
 
         return [
 
-            'report' => $results = StudentPaperRegistration::select(
+            'report' => StudentPaperRegistration::select(
                 'i.code AS Institution',
                 'i.short_name AS Center',
                 'c.course_code AS Course',
@@ -100,52 +100,6 @@ class PackingListReportScreen extends Screen
     public function layout(): iterable
     {
         return [
-            Layout::rows([
-                Group::make([
-                    Relation::make('Registration Period')
-                        ->title("Filter By Registration")
-                        ->placeholder("Registration Period")
-                        ->fromModel(RegistrationPeriod::class, 'id')
-                        ->displayAppend('startAndEndDate'),
-
-                    Relation::make('Institution')
-                        ->title("Filter By Institution")
-                        ->placeholder("Institution")
-                        ->fromModel(Institution::class, 'institution_name')
-                        ->canSee(!auth()->user()->inRole('institution')),
-
-                    // Select Year of Study
-                    Select::make('year_of_study')
-                        ->empty('None Selected')
-                        ->title('Select Year of Study')
-                        ->options([
-                            'Year 1 Semester 1' => 'Year 1 Semester 1',
-                            'Year 1 Semester 2' => 'Year 1 Semester 2',
-                            'Year 2 Semester 1' => 'Year 2 Semester 1',
-                            'Year 3 Semester 1' => 'Year 3 Semester 1',
-                            'Year 3 Semester 2' => 'Year 3 Semester 2',
-                        ]),
-
-                    Relation::make('Program')
-                        ->title("Filter Programs")
-                        ->placeholder("Program")
-                        ->multiple()
-                        ->fromModel(Course::class, 'course_name'),
-
-                ]),
-
-                Group::make([
-                    Button::make('Submit')
-                        ->method('filter'),
-
-                    // Reset Filters
-                    Button::make('Reset')
-                        ->method('reset')
-
-                ])->autoWidth()
-                    ->alignEnd(),
-
-            ])->title("Filter Packing List"),
             Layout::view('packing_list')
         ];
     }

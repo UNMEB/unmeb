@@ -30,33 +30,35 @@ class ExamApplicationDetailScreen extends Screen
         session()->put("course_id", $request->get('course_id'));
 
         $query = Student::withoutGlobalScopes()
-        ->select([
-            's.id as id',
-            's.surname',
-            's.firstname',
-            's.othername',
-            's.gender',
-            's.dob',
-            's.district_id',
-            's.country_id',
-            's.nsin as nsin',
-            's.telephone',
-            's.passport',
-            's.passport_number',
-            's.lin',
-            's.email',
-            'sr.trial',
-            'sr.course_codes',
-            'sr.no_of_papers'
-        ])
-        ->from('students as s')
-        ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-        ->join('registrations as r', 'sr.registration_id', '=','r.id')
-        ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-        ->where('rp.flag', 1)
-        ->where('r.id', session('registration_id'));
-        
-       
+            ->select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                's.district_id',
+                's.country_id',
+                's.nsin as nsin',
+                's.telephone',
+                's.passport',
+                's.passport_number',
+                's.lin',
+                's.email',
+                'sr.trial',
+                'sr.course_codes',
+                'sr.no_of_papers'
+            ])
+            ->from('students as s')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+            ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->where('rp.flag', 1)
+            ->where('r.id', session('registration_id'));
+
+        if (auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
 
         // $query->where('sr.sr_flag', 0);
 
@@ -94,10 +96,10 @@ class ExamApplicationDetailScreen extends Screen
     {
         return [
             Button::make('Export Applications')
-            ->icon('bs.receipt')
-            ->class('btn btn-success')
-            ->method('export')
-            ->rawClick()
+                ->icon('bs.receipt')
+                ->class('btn btn-success')
+                ->method('export')
+                ->rawClick()
         ];
     }
 
@@ -132,33 +134,33 @@ class ExamApplicationDetailScreen extends Screen
         $registrationId = session('registration_id');
 
         $students = Student::withoutGlobalScopes()
-        ->select([
-            's.id as id',
-            's.surname',
-            's.firstname',
-            's.othername',
-            's.gender',
-            's.dob',
-            'd.district_name as district',
-            'c.nicename as country',
-            's.nsin as nsin',
-            's.telephone',
-            'sr.trial',
-            'sr.course_codes',
-            'sr.no_of_papers'  
-        ])
-        ->from('students as s')
-        ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-        ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
-        ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-        ->leftJoin('countries AS c', 'c.id','=','s.country_id')
-        ->leftJoin('districts as d', 'd.id','=','s.district_id')
-        ->where('r.institution_id', $institutionId)
-        ->where('r.course_id', $courseId)
-        ->where('r.id', $registrationId)
-        ->get();
+            ->select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                'd.district_name as district',
+                'c.nicename as country',
+                's.nsin as nsin',
+                's.telephone',
+                'sr.trial',
+                'sr.course_codes',
+                'sr.no_of_papers'
+            ])
+            ->from('students as s')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->leftJoin('countries AS c', 'c.id', '=', 's.country_id')
+            ->leftJoin('districts as d', 'd.id', '=', 's.district_id')
+            ->where('r.institution_id', $institutionId)
+            ->where('r.course_id', $courseId)
+            ->where('r.id', $registrationId)
+            ->get();
 
         return Excel::download(new ExamApplicationExport($students), 'exam_applications.xlsx');
-        
+
     }
 }

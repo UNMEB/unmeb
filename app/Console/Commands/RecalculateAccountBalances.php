@@ -61,21 +61,11 @@ class RecalculateAccountBalances extends Command
                     $account->balance = 0;
                     $account->save();
 
-                    // Delete all transactions where status is reversed
-                    $reversedTransactions = Transaction::withoutGlobalScopes()
-                        ->where('institution_id', $account->institution_id)
-                        ->where('status', 'reversed');
-
-                    $this->info('Found ' . $reversedTransactions->count() . ' reversed transactions to remove from this institution');
-
-                    $reversedTransactions->delete();
-
                     // Top up account balance with funds approved by Semei
                     $approvedFunds = Transaction::withoutGlobalScopes()
                         ->where('account_id', $account->id)
                         ->where('status', 'approved')
                         ->where('type', 'credit')
-                        ->where('approved_by', 273)
                         ->sum('amount');
 
                     // Update account balance to new balance
@@ -88,6 +78,7 @@ class RecalculateAccountBalances extends Command
                         ->where('status', 'approved')
                         ->where('type', 'debit')
                         ->sum('amount');
+
 
                     $account->balance -= $totalDebits;
                     $account->save();
