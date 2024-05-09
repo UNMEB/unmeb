@@ -38,40 +38,30 @@ class PackingListReportScreen extends Screen
 
         return [
 
-            'report' => StudentPaperRegistration::query()
-                ->from('student_paper_registration')
-                ->join('course_paper', 'student_paper_registration.course_paper_id', '=', 'course_paper.id')
-                ->join('student_registrations', 'student_paper_registration.student_registration_id', '=', 'student_registrations.id')
-                ->join('courses', 'course_paper.course_id', '=', 'courses.id')
-                ->join('papers', 'course_paper.paper_id', '=', 'papers.id')
-                ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
-                ->join('registration_periods', 'registrations.registration_period_id', '=', 'registration_periods.id')
-                ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
-                ->select(
-                    'institutions.code AS Institution',
-                    'institutions.short_name AS Center',
-                    'registration_periods.id as registration_period_id',
-                    'registrations.id as registration_id',
-                    'registrations.year_of_study AS Year Of Study',
-                    'courses.course_code AS Course',
-                    'papers.abbrev AS Paper',
-                    'student_registrations.trial as attempt',
-                    DB::raw('COUNT(*) as registration_count'),
-                    'registration_periods.reg_start_date',
-                    'registration_periods.reg_end_date'
-                )
-                ->where('student_registrations.sr_flag', 1)
-                ->where('registration_periods.flag', 1)
-                ->groupBy(
-                    'institutions.code',
-                    'institutions.short_name',
-                    'registration_periods.id',
-                    'registrations.id',
-                    'registrations.year_of_study',
-                    'courses.course_code',
-                    'papers.abbrev',
-                    'student_registrations.trial'
-                )
+            'report' => $results = StudentPaperRegistration::select(
+                'i.code AS Institution',
+                'i.short_name AS Center',
+                'c.course_code AS Course',
+                'p.abbrev AS Paper',
+                'r.year_of_study AS Semester',
+                'sr.trial AS Attempt',
+                DB::raw('COUNT(sr.id) AS students')
+            )
+                ->join('course_papers AS cp', 'cp.id', '=', 'spr.course_paper_id')
+                ->join('courses AS c', 'c.id', '=', 'cp.course_id')
+                ->join('papers as p', 'p.id', '=', 'cp.paper_id')
+                ->join('student_registrations AS sr', 'sr.id', '=', 'spr.student_registration_id')
+                ->join('registrations AS r', 'r.id', '=', 'sr.registration_id')
+                ->join('registration_periods AS rp', 'rp.id', '=', 'r.registration_period_id')
+                ->join('institutions AS i', 'i.id', '=', 'r.institution_id')
+                ->where('rp.flag', 1)
+                ->groupBy('i.code', 'i.short_name', 'c.course_code', 'p.abbrev', 'r.year_of_study', 'sr.trial')
+                ->orderBy('i.code')
+                ->orderBy('i.short_name')
+                ->orderBy('c.course_code')
+                ->orderBy('p.abbrev')
+                ->orderBy('r.year_of_study')
+                ->orderBy('sr.trial')
                 ->get()
         ];
     }
