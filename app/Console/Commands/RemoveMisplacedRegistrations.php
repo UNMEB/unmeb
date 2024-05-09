@@ -32,9 +32,16 @@ class RemoveMisplacedRegistrations extends Command
     public function handle()
     {
         // Get all reversed transactions
-        $reversedTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
+        $reversedNSINTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')->get();
 
-        $this->info('Found ' . $reversedTransactions->count() . ' transactions ready to be reversed');
+        $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
+
+        // Get all reversed transactions
+        $reversedExamTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
+
+        $this->info('Found ' . $reversedExamTransactions->count() . ' exam transactions ready to be reversed');
+
+
 
 
     }
