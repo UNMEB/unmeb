@@ -66,13 +66,10 @@ class RemoveMisplacedRegistrations extends Command
             ->whereYear('created_at', now()->year)
             ->get();
 
-
-
-
         foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
             // Get the registration 
             $registrationId = $nsinStudentRegistration->registration_id;
-            $registration = NsinRegistration::find($registrationId);
+            $registration = NsinRegistration::withoutGlobalScopes()->find($registrationId);
             dd($registration);
         }
     }
