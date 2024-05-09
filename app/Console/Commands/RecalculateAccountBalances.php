@@ -42,8 +42,7 @@ class RecalculateAccountBalances extends Command
             // 1. For each institution in the system, find all transactions where status is reversed and delete them
             Institution::chunk(100, function ($institutions) {
                 foreach ($institutions as $institution) {
-                    $account = Account::
-                        withoutGlobalScopes()
+                    $account = Account::withoutGlobalScopes()
                         ->where('institution_id', $institution->id)->first();
 
                     // Get the current account balance
