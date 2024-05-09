@@ -56,7 +56,8 @@ class RemoveMisplacedRegistrations extends Command
             $affectedTransactionIds = $affectedTransactions->pluck('id')->toArray();
 
             if (!empty($affectedTransactionIds)) {
-                Transaction::whereIn('id', $affectedTransactionIds)->delete();
+                Transaction::withoutGlobalScopes()
+                    ->whereIn('id', $affectedTransactionIds)->delete();
                 $this->info('Deleted ' . count($affectedTransactionIds) . ' misplaced transactions successfully.');
             } else {
                 $this->info('No misplaced transactions found.');
