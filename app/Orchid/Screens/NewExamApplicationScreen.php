@@ -259,7 +259,7 @@ class NewExamApplicationScreen extends Screen
                 'institution_id' => $institution->id,
                 'initiated_by' => auth()->user()->id,
                 'status' => 'approved',
-                'description' => 'EXAM REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
+                'comment' => 'EXAM REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
 
             // Create transaction log for EXAM registration
