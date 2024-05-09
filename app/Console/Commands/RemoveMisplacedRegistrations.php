@@ -31,22 +31,11 @@ class RemoveMisplacedRegistrations extends Command
      */
     public function handle()
     {
-        $registrations = StudentRegistration::select('sr.student_id', 'r.id')
-            ->from('student_registrations as sr')
-            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
-            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
-            ->where('sr.created_at', '>', '2024-01-01')
-            ->where('rp.flag', '!=', 1)
-            ->get();
+        // Get all reversed transactions
+        $reversedTransactions = Transaction::where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
 
-        foreach ($registrations as $registration) {
-            $deleted = StudentRegistration::where([
-                'registration_id' => $registration->id,
-                'student_id' => $registration->student_id
-            ])->delete();
+        $this->info('Found ' . $reversedTransactions->count() . ' transactions ready to be reversed');
 
-            $this->info($deleted ? 'Record for ' . $registration->student_id .' deleted ':'Record for ' . $registration->student_id .' not deleted ');
-        }
-        $this->info($registrations->count() . ' misplaced registrations and corresponding transactions removed successfully.');
+
     }
 }
