@@ -69,6 +69,7 @@ class RemoveMisplacedRegistrations extends Command
         foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
             // Get the registration 
             $registrationId = $nsinStudentRegistration->registration_id;
+            dd($registrationId);
             $registration = NsinRegistration::withoutGlobalScopes()->find($registrationId);
             dd($registration);
         }
