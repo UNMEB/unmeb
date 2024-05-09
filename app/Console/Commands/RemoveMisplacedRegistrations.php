@@ -35,25 +35,29 @@ class RemoveMisplacedRegistrations extends Command
     {
         // Get all reversed NSIN transactions
         $reversedNSINTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')->get();
-
         $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
-
-        // Get all reversed exam transactions
-        $reversedExamTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
-
-        $this->info('Found ' . $reversedExamTransactions->count() . ' exam transactions ready to be reversed');
 
         // Extract student ids from comments for NSIN transactions and get student registrations
         $nsinStudentIds = $reversedNSINTransactions->map(function ($transaction) {
             preg_match('/\d+/', $transaction->comment, $matches);
             return $matches[0] ?? null;
         })->filter();
-
         $this->info('Found ' . $nsinStudentIds->count() . ' NSIN student IDs');
 
         $nsinStudentRegistrations = NsinStudentRegistration::whereIn('student_id', $nsinStudentIds)
             ->whereYear('created_at', now()->year)
             ->get();
+
+        foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
+            // Get the registration 
+            $registrationId = $nsinStudentRegistration->registration_id;
+            $registration = NsinRegistration::withoutGlobalScopes()->find($registrationId);
+            dd($registration);
+        }
+
+        // Get all reversed exam transactions
+        $reversedExamTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
+        $this->info('Found ' . $reversedExamTransactions->count() . ' exam transactions ready to be reversed');
 
         // Extract student ids from comments for exam transactions and get student registrations
         $examStudentIds = $reversedExamTransactions->map(function ($transaction) {
@@ -67,14 +71,9 @@ class RemoveMisplacedRegistrations extends Command
             ->whereYear('created_at', now()->year)
             ->get();
 
-        foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
-            // Get the registration 
-            $registrationId = $nsinStudentRegistration->registration_id;
-            dd($registrationId);
-            $registration = NsinRegistration::withoutGlobalScopes()->find($registrationId);
-            dd($registration);
-        }
+        // Handle exam transactions
     }
+
 
 
 }
