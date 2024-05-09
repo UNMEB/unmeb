@@ -34,6 +34,7 @@ class RemoveMisplacedRegistrations extends Command
      */
     public function handle()
     {
+        DB::beginTransaction();
         try {
             // Get all reversed NSIN transactions
             $reversedNSINTransactions = Transaction::withoutGlobalScopes()
@@ -61,6 +62,7 @@ class RemoveMisplacedRegistrations extends Command
                 }
             }
         } catch (\Throwable $th) {
+            DB::rollBack();
             throw $th;
         }
     }
