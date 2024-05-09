@@ -37,6 +37,8 @@ class RecalculateAccountBalances extends Command
         try {
             DB::beginTransaction();
 
+            $this->info('Recalculating institutions accounts balances for ', Institution::count() . ' institutions');
+
             // 1. For each institution in the system, find all transactions where status is reversed and delete them
             Institution::chunk(100, function ($institutions) {
                 foreach ($institutions as $institution) {
@@ -48,6 +50,15 @@ class RecalculateAccountBalances extends Command
                     // Set the account balance to zero
                     $account->balance = 0;
                     $account->save();
+
+                    // Delete all transactions where status is reversed
+                    $reversedTransactions = Transaction::withoutGlobalScopes()
+                        ->where('institution_id', $account->institution_id)
+                        ->where('status', 'reversed');
+
+                    $this->info('Found ' . $reversedTransactions->count() . ' reversed transactions to remove from this institution');
+
+                    $reversedTransactions->delete();
 
                     // Top up account balance with funds approved by Semei
                     $approvedFunds = Transaction::withoutGlobalScopes()
