@@ -104,6 +104,10 @@ class NSINApplicationListDetails extends Screen
             }
         }
 
+        if (auth()->user()->inRole('institution')) {
+            $query->where('s.institution_id', auth()->user()->institution_id);
+        }
+
         $query->distinct();
 
         return [
