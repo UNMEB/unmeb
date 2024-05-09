@@ -34,58 +34,35 @@ class RemoveMisplacedRegistrations extends Command
      */
     public function handle()
     {
-        // Get all reversed NSIN transactions
-        $reversedNSINTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')->get();
-        $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
+        try {
+            // Get all reversed NSIN transactions
+            $reversedNSINTransactions = Transaction::withoutGlobalScopes()
+                ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
+                ->where('comment', 'LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
+                ->where('comment', 'LIKE', 'Reversal of Research Registration Fee for Student ID:%')
+                ->get();
 
-        // Extract student ids from comments for NSIN transactions and get student registrations
-        $nsinStudentIds = $reversedNSINTransactions->map(function ($transaction) {
-            preg_match('/\d+/', $transaction->comment, $matches);
-            return $matches[0] ?? null;
-        })->filter();
-        $this->info('Found ' . $nsinStudentIds->count() . ' NSIN student IDs');
+            $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
 
-        $nsinStudentRegistrations = NsinStudentRegistration::whereIn('student_id', $nsinStudentIds)
-            ->whereYear('created_at', now()->year)
-            ->get();
+            foreach ($reversedNSINTransactions as $transaction) {
+                $studentId = preg_match('/\d+/', $transaction->comment, $matches) ? $matches[0] : null;
 
-        $ids = [];
+                if ($studentId) {
+                    $registration = NsinStudentRegistration::where('student_id', $studentId)
+                        ->whereYear('created_at', now()->year)
+                        ->first();
 
-        foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
-            // Get the registration 
-            $registrationId = $nsinStudentRegistration->nsin_registration_id;
-            $activePeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
-            $registration = NsinRegistration::withoutGlobalScopes()
-                ->where('month', $activePeriod->month)
-                ->where('year_id', $activePeriod->year_id)
-                ->find($registrationId);
-
-            if ($registration) {
-                array_push($ids, $registration->id);
+                    if (!$registration) {
+                        $transaction->delete();
+                        $this->info('Deleted transaction with ID ' . $transaction->id);
+                    }
+                } else {
+                    $this->info('No student ID found for transaction with ID ' . $transaction->id);
+                }
             }
-
-
+        } catch (\Throwable $th) {
+            throw $th;
         }
-
-        dd($ids);
-
-        // Get all reversed exam transactions
-        $reversedExamTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
-        $this->info('Found ' . $reversedExamTransactions->count() . ' exam transactions ready to be reversed');
-
-        // Extract student ids from comments for exam transactions and get student registrations
-        $examStudentIds = $reversedExamTransactions->map(function ($transaction) {
-            preg_match('/\d+/', $transaction->comment, $matches);
-            return $matches[0] ?? null;
-        })->filter();
-
-        $this->info('Found ' . $examStudentIds->count() . ' exam student IDs');
-
-        $examStudentRegistrations = StudentRegistration::whereIn('student_id', $examStudentIds)
-            ->whereYear('created_at', now()->year)
-            ->get();
-
-        // Handle exam transactions
     }
 
 
