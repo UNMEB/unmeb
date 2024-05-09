@@ -89,6 +89,9 @@ class RecalculateAccountBalances extends Command
                         ->where('type', 'debit')
                         ->sum('amount');
 
+                    $account->balance -= $totalDebits;
+                    $account->save();
+
                     $this->info('Summary:');
                     $this->info('--------------------------------------------');
                     $this->info('Total Approved Funds: ' . number_format($approvedFunds));
