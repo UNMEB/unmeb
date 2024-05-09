@@ -5,9 +5,6 @@ namespace App\Console\Commands;
 use App\Models\NsinRegistration;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\NsinStudentRegistration;
-use App\Models\Registration;
-use App\Models\Student;
-use App\Models\StudentRegistration;
 use App\Models\Transaction;
 use Carbon\Carbon;
 use DB;
@@ -36,34 +33,39 @@ class RemoveMisplacedRegistrations extends Command
     {
         DB::beginTransaction();
         try {
-            // Get all reversed NSIN transactions
-            $reversedNSINTransactions = Transaction::withoutGlobalScopes()
-                ->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
-                ->orWhere('comment', 'LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
-                ->orWhere('comment', 'LIKE', 'Reversal of Research Registration Fee for Student ID:%')
+            $activePeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
+            $year = Carbon::now()->year;
+
+            $affectedTransactions = DB::table('transactions')
+                ->where(function ($query) {
+                    $query->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')
+                        ->orWhere('comment', 'LIKE', 'Reversal of Logbook Registration Fee for Student ID:%')
+                        ->orWhere('comment', 'LIKE', 'Reversal of Research Registration Fee for Student ID:%');
+                })
+                ->whereNotExists(function ($query) use ($activePeriod, $year) {
+                    $query->select(DB::raw(1))
+                        ->from('nsin_student_registrations')
+                        ->join('nsin_registrations', 'nsin_student_registrations.nsin_registration_id', '=', 'nsin_registrations.id')
+                        ->where('nsin_student_registrations.student_id', DB::raw("SUBSTRING_INDEX(SUBSTRING_INDEX(transactions.comment, ' ', -1),':',-1)"))
+                        ->where('nsin_registrations.month', $activePeriod->month)
+                        ->where('nsin_registrations.year_id', $activePeriod->year_id)
+                        ->whereYear('nsin_student_registrations.created_at', $year);
+                })
                 ->get();
 
-            $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
+            $affectedTransactionIds = $affectedTransactions->pluck('id')->toArray();
 
-            foreach ($reversedNSINTransactions as $transaction) {
-                $studentId = preg_match('/\d+/', $transaction->comment, $matches) ? $matches[0] : null;
-
-                if ($studentId) {
-                    $nsinStudentRegistration = NsinStudentRegistration::where('student_id', $studentId)
-                        ->whereYear('created_at', now()->year)
-                        ->first();
-
-                    dd($nsinStudentRegistration->nsinRegistration());
-                } else {
-                    $this->info('No student ID found for transaction with ID ' . $transaction->id);
-                }
+            if (!empty($affectedTransactionIds)) {
+                Transaction::whereIn('id', $affectedTransactionIds)->delete();
+                $this->info('Deleted ' . count($affectedTransactionIds) . ' misplaced transactions successfully.');
+            } else {
+                $this->info('No misplaced transactions found.');
             }
+
+            // DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
         }
     }
-
-
-
 }

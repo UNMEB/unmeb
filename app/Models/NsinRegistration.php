@@ -17,7 +17,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class NsinRegistration extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, OrderByLatest, LogsActivity;
+    use HasFactory, AsSource, Filterable, Sortable, OrderByLatest, LogsActivity;
 
     protected $fillable = [
         'institution_id',
