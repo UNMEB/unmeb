@@ -147,6 +147,9 @@ class ExamRegistrationDetailScreen extends Screen
             ->where('surcharges.flag', 1)
             ->firstOrFail();
 
+        $institution = Institution::findOrFail($institution_id);
+        
+
 
     }
 

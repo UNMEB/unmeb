@@ -40,11 +40,11 @@ class NsinApplicationListScreen extends Screen
 
         $queryPeriod = $request->query('period');
 
-        if(is_null($queryPeriod)) {
+        if (is_null($queryPeriod)) {
             $this->activePeriod = NsinRegistrationPeriod::whereFlag(1, true)->first()->id;
         }
 
-        if(!is_null($queryPeriod)) {
+        if (!is_null($queryPeriod)) {
             $this->activePeriod = $queryPeriod;
         }
 
@@ -63,9 +63,9 @@ class NsinApplicationListScreen extends Screen
             ->from('students AS s')
             ->join('nsin_student_registrations As nsr', 'nsr.student_id', '=', 's.id')
             ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
-            ->join('nsin_registration_periods AS nrp', function ($join)  {
-                $join->on('nrp.month','=','nr.month');
-                $join->on('nrp.year_id','=','nr.year_id');
+            ->join('nsin_registration_periods AS nrp', function ($join) {
+                $join->on('nrp.month', '=', 'nr.month');
+                $join->on('nrp.year_id', '=', 'nr.year_id');
             })
             ->join('institutions AS i', 'i.id', '=', 'nr.institution_id')
             ->join('courses AS c', 'c.id', '=', 'nr.course_id')
@@ -73,13 +73,13 @@ class NsinApplicationListScreen extends Screen
             ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_year', 'registration_month', 'registration_id');
 
 
-        if(auth()->user()->inRole('institution')) {
+        if (auth()->user()->inRole('institution')) {
             $query->where('nr.institution_id', auth()->user()->institution_id);
         }
 
         $query->where('nrp.id', $this->activePeriod);
-   
-        $query->orderBy('registration_year', 'desc');
+
+        $query->orderBy('t.institution_name', 'asc');
 
         return [
             'applications' => $query->paginate()
@@ -93,14 +93,14 @@ class NsinApplicationListScreen extends Screen
      */
     public function name(): ?string
     {
-        if(!is_null($this->activePeriod)) {
+        if (!is_null($this->activePeriod)) {
             $period = NsinRegistrationPeriod::select('nsin_registration_periods.id', 'years.year', 'month')
-                    ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
-                    ->orderBy('year', 'desc')
-                    ->where('nsin_registration_periods.id', $this->activePeriod)
-                    ->first();
+                ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
+                ->orderBy('year', 'desc')
+                ->where('nsin_registration_periods.id', $this->activePeriod)
+                ->first();
 
-            return 'NSIN Applications for ' . $period->month . ' '. $period->year;
+            return 'NSIN Applications for ' . $period->month . ' ' . $period->year;
         }
 
         return 'NSIN Applications';
@@ -121,15 +121,15 @@ class NsinApplicationListScreen extends Screen
     {
         // Get all NSIN Registration Periods
         $periods = NsinRegistrationPeriod::select('nsin_registration_periods.id', 'years.year', 'month')
-                    ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
-                    ->orderBy('year', 'desc')
-                    ->get();
+            ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
+            ->orderBy('year', 'desc')
+            ->get();
 
         $layouts = $periods->map(function ($period) {
             return Link::make($period->month . ' - ' . $period->year)
-            ->route('platform.registration.nsin.applications.list', [
-                'period' => $period->id,
-            ]);
+                ->route('platform.registration.nsin.applications.list', [
+                    'period' => $period->id,
+                ]);
         });
 
         return [
@@ -146,7 +146,7 @@ class NsinApplicationListScreen extends Screen
         ];
     }
 
-     /**
+    /**
      * The screen's layout elements.
      *
      * @return \Orchid\Screen\Layout[]|string[]
