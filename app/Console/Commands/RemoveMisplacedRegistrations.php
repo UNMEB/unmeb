@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\NsinRegistration;
+use App\Models\NsinRegistrationPeriod;
 use App\Models\NsinStudentRegistration;
 use App\Models\Registration;
 use App\Models\Student;
@@ -51,8 +52,14 @@ class RemoveMisplacedRegistrations extends Command
         foreach ($nsinStudentRegistrations as $nsinStudentRegistration) {
             // Get the registration 
             $registrationId = $nsinStudentRegistration->nsin_registration_id;
-            $registration = NsinRegistration::withoutGlobalScopes()->find($registrationId);
+            $activePeriod = NsinRegistrationPeriod::whereFlag(1, true)->first();
+            $registration = NsinRegistration::withoutGlobalScopes()
+                ->where('month', $activePeriod->month)
+                ->where('year_id', $activePeriod->year_id)
+                ->find($registrationId);
+
             dd($registration);
+
         }
 
         // Get all reversed exam transactions
