@@ -31,18 +31,39 @@ class RemoveMisplacedRegistrations extends Command
      */
     public function handle()
     {
-        // Get all reversed transactions
+        // Get all reversed NSIN transactions
         $reversedNSINTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of NSIN Registration Fee for Student ID:%')->get();
 
         $this->info('Found ' . $reversedNSINTransactions->count() . ' NSIN transactions ready to be reversed');
 
-        // Get all reversed transactions
+        // Get all reversed exam transactions
         $reversedExamTransactions = Transaction::withoutGlobalScopes()->where('comment', 'LIKE', 'Reversal of Exam Registration Fee for Student ID:%')->get();
 
         $this->info('Found ' . $reversedExamTransactions->count() . ' exam transactions ready to be reversed');
 
+        // Extract student ids from comments for NSIN transactions and get student registrations
+        $nsinStudentIds = $reversedNSINTransactions->map(function ($transaction) {
+            preg_match('/\d+/', $transaction->comment, $matches);
+            return $matches[0] ?? null;
+        })->filter();
 
+        $this->info('Found ' . $nsinStudentIds->count() . ' NSIN student IDs');
 
+        $nsinStudentRegistrations = StudentRegistration::whereIn('student_id', $nsinStudentIds)->get();
 
+        // Extract student ids from comments for exam transactions and get student registrations
+        $examStudentIds = $reversedExamTransactions->map(function ($transaction) {
+            preg_match('/\d+/', $transaction->comment, $matches);
+            return $matches[0] ?? null;
+        })->filter();
+
+        $this->info('Found ' . $examStudentIds->count() . ' exam student IDs');
+
+        $examStudentRegistrations = StudentRegistration::whereIn('student_id', $examStudentIds)->get();
+
+        // Further processing...
+        dd($nsinStudentRegistrations);
     }
+
+
 }
