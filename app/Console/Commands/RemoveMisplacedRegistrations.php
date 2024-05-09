@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\NsinRegistration;
+use App\Models\NsinStudentRegistration;
 use App\Models\Registration;
 use App\Models\Student;
 use App\Models\StudentRegistration;
@@ -50,7 +51,7 @@ class RemoveMisplacedRegistrations extends Command
 
         $this->info('Found ' . $nsinStudentIds->count() . ' NSIN student IDs');
 
-        $nsinStudentRegistrations = StudentRegistration::whereIn('student_id', $nsinStudentIds)
+        $nsinStudentRegistrations = NsinStudentRegistration::whereIn('student_id', $nsinStudentIds)
             ->whereYear('created_at', now()->year)
             ->get();
 
