@@ -47,7 +47,7 @@ class PackingListReportScreen extends Screen
                 'sr.trial AS Attempt',
                 DB::raw('COUNT(sr.id) AS students')
             )
-                ->join('course_papers AS cp', 'cp.id', '=', 'spr.course_paper_id')
+                ->join('course_paper AS cp', 'cp.id', '=', 'spr.course_paper_id')
                 ->join('courses AS c', 'c.id', '=', 'cp.course_id')
                 ->join('papers as p', 'p.id', '=', 'cp.paper_id')
                 ->join('student_registrations AS sr', 'sr.id', '=', 'spr.student_registration_id')
