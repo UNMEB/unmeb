@@ -186,7 +186,7 @@ class ExamRegistrationDetailScreen extends Screen
 
             }
 
-            $examTransaction = Transaction::create([
+            $examTransaction = new Transaction([
                 'amount' => $totalTransactionAmount,
                 'type' => 'credit',
                 'account_id' => $institution->account->id,
@@ -195,6 +195,8 @@ class ExamRegistrationDetailScreen extends Screen
                 'status' => 'approved',
                 'comment' => 'REVERSAL FOR EXAM REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
+
+            $examTransaction->saveQuietly();
 
             $examTransactionLog = TransactionLog::create([
                 'transaction_id' => $examTransaction->id,

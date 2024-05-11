@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 use Orchid\Filters\Filterable;
 use Orchid\Filters\Types\Where;
 use Orchid\Screen\AsSource;
@@ -71,5 +72,16 @@ class Transaction extends Model
     public function institution()
     {
         return $this->belongsTo(Institution::class);
+    }
+
+    public function getFullCommentAttribute()
+    {
+        $studentId = Str::after($this->comment, 'STUDENT ID: ');
+        $student = Student::find($studentId);
+        if ($student) {
+            return $this->comment . ' ' . $student->full_name;
+        } else {
+            return $this->comment;
+        }
     }
 }

@@ -251,7 +251,7 @@ class NewNsinApplicationsScreen extends Screen
                 }
 
                 // Create NSIN transaction for this student
-                $nsinTransaction = Transaction::create([
+                $nsinTransaction = new Transaction([
                     'amount' => $nsinRegistrationFee,
                     'type' => 'debit',
                     'account_id' => $institution->account->id,
@@ -260,6 +260,7 @@ class NewNsinApplicationsScreen extends Screen
                     'status' => 'approved',
                     'comment' => 'NSIN REGISTRATION FOR 1 STUDENT'
                 ]);
+                $nsinTransaction->saveQuietly();
 
                 // Create transaction log for NSIN registration
                 $nsinTransactionLog = TransactionLog::create([
@@ -277,7 +278,7 @@ class NewNsinApplicationsScreen extends Screen
 
 
                 // Create logbook transaction for this student
-                $logbookTransaction = Transaction::create([
+                $logbookTransaction = new Transaction([
                     'amount' => $logbookFee->course_fee,
                     'type' => 'debit',
                     'account_id' => $institution->account->id,
@@ -286,6 +287,7 @@ class NewNsinApplicationsScreen extends Screen
                     'status' => 'approved',
                     'comment' => 'LOGBOOK REGISTRATION FOR 1 STUDENT'
                 ]);
+                $logbookTransaction->saveQuietly();
 
                 // Create transaction log for logbook registration
                 $logbookTransactionLog = TransactionLog::create([
@@ -306,7 +308,7 @@ class NewNsinApplicationsScreen extends Screen
 
                 // Create research transaction for this student if applicable
                 if ($isDiplomaCourse) {
-                    $researchTransaction = Transaction::create([
+                    $researchTransaction = new Transaction([
                         'amount' => $researchGuidelineFee,
                         'type' => 'debit',
                         'account_id' => $institution->account->id,
@@ -315,6 +317,8 @@ class NewNsinApplicationsScreen extends Screen
                         'status' => 'approved',
                         'comment' => 'RESEARCH GUIDELINES FOR 1 STUDENT'
                     ]);
+
+                    $researchTransaction->saveQuietly();
 
                     // Create transaction log for research guidelines
                     $researchTransactionLog = TransactionLog::create([

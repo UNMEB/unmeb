@@ -223,30 +223,30 @@
             </thead>
             <tbody>
                 <?php
-                $totalDebit = 0;
-                $totalCredit = 0;
-                $balance = 0;
+$totalDebit = 0;
+$totalCredit = 0;
+$balance = 0;
                 ?>
                 @foreach ($transactions as $transaction)
-                    <tr>
-                        <td>{{ $transaction->created_at }}</td>
-                        <td>{{ $transaction->comment }}</td>
-                        <td>{{ $transaction->type == 'debit' ? number_format($transaction->amount) : '' }}</td>
-                        <td>{{ $transaction->type == 'credit' ? number_format($transaction->amount) : '' }}</td>
-                        <td>
-                            <?php
-                            $balance += $transaction->type == 'debit' ? -$transaction->amount : $transaction->amount;
-                            echo number_format($balance);
-                            ?>
-                        </td>
-                    </tr>
-                    <?php
+                                <tr>
+                                    <td>{{ $transaction->created_at }}</td>
+                                    <td style="font-size: 10px">{{ $transaction->full_comment }}</td>
+                                    <td>{{ $transaction->type == 'debit' ? number_format($transaction->amount) : '' }}</td>
+                                    <td>{{ $transaction->type == 'credit' ? number_format($transaction->amount) : '' }}</td>
+                                    <td>
+                                        <?php
+                    $balance += $transaction->type == 'debit' ? -$transaction->amount : $transaction->amount;
+                    echo number_format($balance);
+                                                                                                            ?>
+                                    </td>
+                                </tr>
+                                <?php
                     if ($transaction->type == 'debit') {
                         $totalDebit += $transaction->amount;
                     } elseif ($transaction->type == 'credit') {
                         $totalCredit += $transaction->amount;
                     }
-                    ?>
+                                                                                                    ?>
                 @endforeach
                 <tr>
                     <td colspan="2"><strong>Total</strong></td>

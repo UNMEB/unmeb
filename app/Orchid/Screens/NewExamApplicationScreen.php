@@ -252,7 +252,7 @@ class NewExamApplicationScreen extends Screen
             }
 
             // Create a transaction
-            $examTransaction = Transaction::create([
+            $examTransaction = new Transaction([
                 'amount' => $totalTransactionAmount,
                 'type' => 'debit',
                 'account_id' => $institution->account->id,
@@ -261,6 +261,7 @@ class NewExamApplicationScreen extends Screen
                 'status' => 'approved',
                 'comment' => 'EXAM REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
+            $examTransaction->saveQuietly();
 
             // Create transaction log for EXAM registration
             $examTransactionLog = TransactionLog::create([

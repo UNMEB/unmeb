@@ -218,7 +218,7 @@ class NSINRegistrationsDetailScreen extends Screen
             }
 
             // Create NSIN Registration For these students
-            $nsinTransaction = Transaction::create([
+            $nsinTransaction = new Transaction([
                 'amount' => $totalNsinFees,
                 'type' => 'credit',
                 'account_id' => $institution->account->id,
@@ -227,8 +227,9 @@ class NSINRegistrationsDetailScreen extends Screen
                 'status' => 'approved',
                 'comment' => 'REVERSED NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
+            $nsinTransaction->saveQuietly();
 
-            $logbookTransaction = Transaction::create([
+            $logbookTransaction = new Transaction([
                 'amount' => $totalLogbookFees,
                 'type' => 'credit',
                 'account_id' => $institution->account->id,
@@ -237,10 +238,11 @@ class NSINRegistrationsDetailScreen extends Screen
                 'status' => 'approved',
                 'comment' => 'REVERSED LOGBOOK REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
             ]);
+            $logbookTransaction->saveQuietly();
 
             $researchTransaction = null;
             if ($isDiplomaCourse) {
-                $researchTransaction = Transaction::create([
+                $researchTransaction = new Transaction([
                     'amount' => $totalResearchFees,
                     'type' => 'credit',
                     'account_id' => $institution->account->id,
@@ -249,6 +251,8 @@ class NSINRegistrationsDetailScreen extends Screen
                     'status' => 'approved',
                     'comment' => 'REVERSAL FOR RESEARCH GUIDELINES FOR ' . count($studentIds) . ' STUDENTS'
                 ]);
+
+                $researchTransaction->saveQuietly();
             }
 
             // Create transaction log for NSIN registration
