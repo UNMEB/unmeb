@@ -65,6 +65,7 @@ class RecalculateAccountBalances extends Command
                 // Delete all transactions that are not approved by 273
                 Transaction::withoutGlobalScopes()
                     ->whereNotIn('status', ['pending', 'declined'])
+                    ->where('institution_id', $institution->id)
                     ->where(function ($query) {
                         $query->where('approved_by', '!=', 273)
                             ->orWhereNull('approved_by');
