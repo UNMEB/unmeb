@@ -38,7 +38,7 @@ class RecalculateAccountBalances extends Command
         // Put the application into maintenance mode
         Artisan::call('down');
 
-        // DB::beginTransaction();
+        DB::beginTransaction();
 
         try {
 
@@ -208,9 +208,9 @@ class RecalculateAccountBalances extends Command
                 $this->info('--------------------------------------------');
             }
 
-            // DB::commit();
+            DB::commit();
         } catch (\PDOException $e) {
-            // DB::rollBack();
+            DB::rollBack();
             $this->error('An error occurred: ' . $e->getMessage());
 
             throw $e;
