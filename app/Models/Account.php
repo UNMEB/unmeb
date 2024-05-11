@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\HasInstitution;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Account extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, LogsActivity;
+    use HasFactory, AsSource, Filterable, Sortable, LogsActivity;
 
     protected $fillable = [
         'institution_id',

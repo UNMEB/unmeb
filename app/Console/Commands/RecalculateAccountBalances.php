@@ -38,7 +38,7 @@ class RecalculateAccountBalances extends Command
         // Put the application into maintenance mode
         Artisan::call('down');
 
-        DB::beginTransaction();
+        // DB::beginTransaction();
 
         try {
 
@@ -208,9 +208,9 @@ class RecalculateAccountBalances extends Command
                 $this->info('--------------------------------------------');
             }
 
-            DB::commit();
+            // DB::commit();
         } catch (\PDOException $e) {
-            DB::rollBack();
+            // DB::rollBack();
             $this->error('An error occurred: ' . $e->getMessage());
 
             throw $e;
@@ -232,19 +232,15 @@ class RecalculateAccountBalances extends Command
      */
     protected function createTransaction($account, $institution, $amount, $comment, $createdAt)
     {
-        try {
-            // Create a new transaction
-            $transaction = new Transaction();
-            $transaction->amount = $amount;
-            $transaction->type = 'debit';
-            $transaction->status = 'approved';
-            $transaction->account_id = $account->id;
-            $transaction->institution_id = $institution->id;
-            $transaction->comment = $comment;
-            $transaction->setCreatedAt($createdAt);
-            $transaction->save();
-        } catch (\PDOException $th) {
-            throw $th;
-        }
+        // Create a new transaction
+        $transaction = new Transaction();
+        $transaction->amount = $amount;
+        $transaction->type = 'debit';
+        $transaction->status = 'approved';
+        $transaction->account_id = $account->id;
+        $transaction->institution_id = $institution->id;
+        $transaction->comment = $comment;
+        $transaction->setCreatedAt($createdAt);
+        $transaction->saveQuietly();
     }
 }

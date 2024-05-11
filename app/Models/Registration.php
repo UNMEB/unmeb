@@ -2,9 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\InstitutionScope;
-use App\Orchid\Filters\Filters\InstitutionNameFilter;
-use App\Traits\HasInstitution;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Filters\Filterable;

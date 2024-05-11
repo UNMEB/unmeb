@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Traits\HasInstitution;
 use App\Traits\OrderByLatest;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

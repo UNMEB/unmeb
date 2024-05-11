@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Models\Scopes\InstitutionScope;
-use App\Traits\HasInstitution;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Orchid\Attachment\Attachable;
@@ -16,7 +14,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Staff extends Model
 {
-    use HasFactory, AsSource, Filterable, Sortable, HasInstitution, Attachable, LogsActivity;
+    use HasFactory, AsSource, Filterable, Sortable, Attachable, LogsActivity;
 
     protected $fillable = [
         'institution_id',
