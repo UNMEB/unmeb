@@ -237,16 +237,16 @@ $balance = 0;
                                         <?php
                     $balance += $transaction->type == 'debit' ? -$transaction->amount : $transaction->amount;
                     echo number_format($balance);
-                                                                                                            ?>
+                                                                                                                            ?>
                                     </td>
                                 </tr>
                                 <?php
                     if ($transaction->type == 'debit') {
-                        $totalDebit += $transaction->amount;
+                        $totalDebit -= $transaction->amount;
                     } elseif ($transaction->type == 'credit') {
                         $totalCredit += $transaction->amount;
                     }
-                                                                                                    ?>
+                                                                                                                    ?>
                 @endforeach
                 <tr>
                     <td colspan="2"><strong>Total</strong></td>
