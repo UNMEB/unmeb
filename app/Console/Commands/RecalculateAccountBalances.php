@@ -89,7 +89,7 @@ class RecalculateAccountBalances extends Command
                             ->on('nr.month', '=', 'nrp.month');
                     })
                     ->where('nrp.flag', 1)
-                    ->where('s.institution_id', $institution->id)
+                    ->where('nr.institution_id', $institution->id)
                     ->get();
 
                 $this->info('Found ' . $nsins->count() . ' NSIN Registrations for ' . $institution->institution_name);
@@ -120,8 +120,7 @@ class RecalculateAccountBalances extends Command
                     $this->createTransaction($account, $institution, $nsinRegistrationFee, 'NSIN REGISTRATION FEE FOR STUDENT ID: ' . $nsin->student_id, $nsin->created_at);
 
                     // Create a new transaction for logbook fee as a debit
-                    $logbookTransactionAmount = $isDiplomaCourse ? $nsinRegistrationFee + $logbookFee->course_fee + $settings['fees.research_fee'] : $nsinRegistrationFee + $logbookFee->course_fee;
-                    $this->createTransaction($account, $institution, $logbookTransactionAmount, 'LOGBOOK REGISTRATION FEE FOR STUDENT ID: ' . $nsin->student_id, $nsin->created_at);
+                    $this->createTransaction($account, $institution, $logbookFee->course_fee, 'LOGBOOK REGISTRATION FEE FOR STUDENT ID: ' . $nsin->student_id, $nsin->created_at);
 
                     if ($isDiplomaCourse) {
                         // Create a new transaction for research fee as a debit
@@ -233,6 +232,7 @@ class RecalculateAccountBalances extends Command
      */
     protected function createTransaction($account, $institution, $amount, $comment, $createdAt)
     {
+
         // Create a new transaction
         $transaction = new Transaction();
         $transaction->amount = $amount;
