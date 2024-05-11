@@ -80,7 +80,7 @@ class RemoveMisplacedRegistrations extends Command
                         ->where('nsin_student_registrations.student_id', DB::raw("SUBSTRING_INDEX(SUBSTRING_INDEX(transactions.comment, ' ', -1),':',-1)"))
                         ->where('nsin_registrations.month', $activePeriod->month)
                         ->where('nsin_registrations.year_id', $activePeriod->year_id)
-                        ->whereYear('nsin_student_registrations.created_at', $year);
+                        ->whereDate('nsin_student_registrations.created_at', '<', '2024-05-06');
                 })
                 ->get();
 

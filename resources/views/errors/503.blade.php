@@ -1,5 +1,5 @@
 @extends('errors::minimal')
 
-@section('title', __('Service Unavailable'))
+@section('title', __('Under Maintenance'))
 @section('code', '503')
-@section('message', __('Service Unavailable'))
+@section('message', __('UNMEB system is undergoing upgrade. Please check again later.'))
