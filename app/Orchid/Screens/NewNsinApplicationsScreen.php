@@ -201,15 +201,14 @@ class NewNsinApplicationsScreen extends Screen
                 throw new Exception('Unable to submit data. You have not selected any students to register');
             }
 
-            // Initialize total fees with NSIN registration fee and logbook fee
+
+            $numberOfStudents = count($students);
+
             $totalNsinFees = 0;
             $totalLogbookFees = 0;
             $totalResearchFees = 0;
-            $numberOfStudents = 0;
 
             foreach ($students as $studentId) {
-                $numberOfStudents++;
-
                 // Calculate NSIN registration fee for each student
                 $totalNsinFees += $nsinRegistrationFee;
 
@@ -250,6 +249,7 @@ class NewNsinApplicationsScreen extends Screen
                     $nsinStudentRegistration->save();
                 }
 
+
                 // Create NSIN transaction for this student
                 $nsinTransaction = new Transaction([
                     'amount' => $nsinRegistrationFee,
@@ -269,13 +269,6 @@ class NewNsinApplicationsScreen extends Screen
                     'action' => 'created',
                     'description' => 'NSIN REGISTRATION'
                 ]);
-
-                // Get browser and location information
-                $userAgent = $request->header('User-Agent');
-                $ipAddress = $request->ip();
-                $browser = $this->parseUserAgent($userAgent);
-                $networkMeta = $this->getNetworkMeta($ipAddress);
-
 
                 // Create logbook transaction for this student
                 $logbookTransaction = new Transaction([
@@ -305,6 +298,8 @@ class NewNsinApplicationsScreen extends Screen
                         'student' => $studentId,
                     ]
                 ]);
+
+                $researchTransaction = null;
 
                 // Create research transaction for this student if applicable
                 if ($isDiplomaCourse) {
@@ -336,6 +331,8 @@ class NewNsinApplicationsScreen extends Screen
                             'student' => $studentId,
                         ]
                     ]);
+
+
                 }
 
                 // Create transaction meta for NSIN registration
@@ -351,28 +348,27 @@ class NewNsinApplicationsScreen extends Screen
                 ]);
             }
 
-            // Calculate overall total for all students
-            $overallTotal = $totalNsinFees + $totalLogbookFees * $numberOfStudents + $totalResearchFees * $numberOfStudents;
+            $totalRegistrationFee = $totalNsinFees + $totalLogbookFees + $totalResearchFees;
 
-            if ($overallTotal > $institution->account->balance) {
+            if ($totalRegistrationFee > $institution->account->balance) {
                 throw new Exception('Account balance too low to complete this transaction. Please top up to continue');
             }
 
-            // Update institution account balance
             $institution->account->update([
-                'balance' => $institution->account->balance - $overallTotal,
+                'balance' => $institution->account->balance - $totalRegistrationFee,
             ]);
 
-            $amountForNSIN = 'Ush ' . number_format($totalNsinFees * $numberOfStudents);
-            $amountForLogbook = 'Ush ' . number_format($totalLogbookFees * $numberOfStudents);
-            $amountForResearch = 'Ush ' . number_format($totalResearchFees * $numberOfStudents);
-            $totalDeductionFormatted = 'Ush ' . number_format($overallTotal);
+            $amountForNSIN = 'Ush ' . number_format($totalNsinFees);
+            $amountForLogbook = 'Ush ' . number_format($totalLogbookFees);
+            $amountForResearch = 'Ush ' . number_format($totalResearchFees);
+            $totalDeductionFormatted = 'Ush ' . number_format($totalRegistrationFee);
             $remainingBalance = $institution->account->balance;
             $remainingBalanceFormatted = 'Ush ' . number_format($remainingBalance);
 
             DB::commit();
 
             \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Registration</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Registration</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Fee</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
+
         } catch (\Throwable $th) {
             DB::rollBack();
             \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
