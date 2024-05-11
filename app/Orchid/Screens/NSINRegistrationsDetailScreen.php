@@ -215,76 +215,41 @@ class NSINRegistrationsDetailScreen extends Screen
                     'student_id' => $studentId,
                     'nsin_registration_id' => $registration_id,
                 ])->delete();
+
+                $this->createTransaction(
+                    $institution->account,
+                    $institution,
+                    $nsinRegistrationFee,
+                    'REVERSED NSIN REGISTRATION FEE FOR STUDENT ID: ' . $studentId,
+                    now()
+                );
+
+                $this->createTransaction(
+                    $institution->account,
+                    $institution,
+                    $logbookFee->course_fee,
+                    'REVERSED LOGBOOK REGISTRATION FEE FOR STUDENT ID: ' . $studentId,
+                    now()
+                );
+
+                if ($isDiplomaCourse) {
+
+                    $researchGuidelineFee = $settings['fees.research_fee'];
+
+                    $this->createTransaction(
+                        $institution->account,
+                        $institution,
+                        $researchGuidelineFee,
+                        'REVERSED RESEARCH REGISTRATION FEE FOR STUDENT ID: ' . $studentId,
+                        now()
+                    );
+                }
             }
 
-            // Create NSIN Registration For these students
-            $nsinTransaction = new Transaction([
-                'amount' => $totalNsinFees,
-                'type' => 'credit',
-                'account_id' => $institution->account->id,
-                'institution_id' => $institution->id,
-                'initiated_by' => auth()->user()->id,
-                'status' => 'approved',
-                'comment' => 'REVERSED NSIN REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
-            ]);
-            $nsinTransaction->saveQuietly();
-
-            $logbookTransaction = new Transaction([
-                'amount' => $totalLogbookFees,
-                'type' => 'credit',
-                'account_id' => $institution->account->id,
-                'institution_id' => $institution->id,
-                'initiated_by' => auth()->user()->id,
-                'status' => 'approved',
-                'comment' => 'REVERSED LOGBOOK REGISTRATION FOR ' . count($studentIds) . ' STUDENTS'
-            ]);
-            $logbookTransaction->saveQuietly();
-
-            $researchTransaction = null;
-            if ($isDiplomaCourse) {
-                $researchTransaction = new Transaction([
-                    'amount' => $totalResearchFees,
-                    'type' => 'credit',
-                    'account_id' => $institution->account->id,
-                    'institution_id' => $institution->id,
-                    'initiated_by' => auth()->user()->id,
-                    'status' => 'approved',
-                    'comment' => 'REVERSAL FOR RESEARCH GUIDELINES FOR ' . count($studentIds) . ' STUDENTS'
-                ]);
-
-                $researchTransaction->saveQuietly();
-            }
-
-            // Create transaction log for NSIN registration
-            $nsinTransactionLog = TransactionLog::create([
-                'transaction_id' => $nsinTransaction->id,
-                'user_id' => auth()->user()->id,
-                'action' => 'created',
-                'description' => 'REVERSAL FOR NSIN REGISTRATION'
-            ]);
-
-            // Get browser and location information
-            $userAgent = $request->header('User-Agent');
-            $ipAddress = $request->ip();
-            $browser = $this->parseUserAgent($userAgent);
-            $networkMeta = $this->getNetworkMeta($ipAddress);
-
-            // Create transaction meta for NSIN registration
-            $nsinTransactionMeta = TransactionMeta::create([
-                'transaction_id' => $nsinTransaction->id,
-                'key' => 'nsin_registration_info',
-                'value' => [
-                    'nsin_registration_id' => $nsinRegistration->id,
-                    'students' => $studentIds,
-                    'logbook_transaction_id' => $logbookTransaction->id,
-                    'research_transaction_id' => $researchTransaction ? $researchTransaction->id : null,
-                ]
-            ]);
-
-            $remainingBalance = $institution->account->balance - $overallTotal;
+            $remainingBalance = $institution->account->balance + $overallTotal;
 
             $institution->account->update([
-                'balance' => $institution->account->balance + $overallTotal,
+                'balance' => $remainingBalance,
             ]);
 
             $amountForNSIN = 'Ush ' . number_format($totalNsinFees);
@@ -298,13 +263,11 @@ class NSINRegistrationsDetailScreen extends Screen
 
             Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>NSINs Reversed</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>NSIN Reversal</th><td>$amountForNSIN</td></tr><tr><th style='text-align: left; font-size:12px;'>Logbook Reversal</th><td>$amountForLogbook</td></tr><tr><th style='text-align: left; font-size:12px;'>Research Guideline Reversal</th><td>$amountForResearch</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Reversal</th><td>$totalDeductionFormatted</td></tr><tr><th style='text-align: left; font-size:12px;'>New Account Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
 
-
-
         } catch (\Throwable $th) {
             DB::rollBack();
-            // throw $th;
+            throw $th;
 
-            Alert::error('Action Failed', 'Unable to complete NSIN registration for selected students. Failed with error ' . $th->getMessage());
+            Alert::error('Action Failed', 'Unable to complete NSIN reversal for selected students. Failed with error ' . $th->getMessage());
         }
     }
 
@@ -346,5 +309,29 @@ class NSINRegistrationsDetailScreen extends Screen
         }
 
         return [];
+    }
+
+    /**
+     * Create a new transaction.
+     *
+     * @param  \App\Models\Account  $account
+     * @param  \App\Models\Institution  $institution
+     * @param  float  $amount
+     * @param  string  $comment
+     * @param  string  $createdAt
+     * @return void
+     */
+    protected function createTransaction($account, $institution, $amount, $comment, $createdAt)
+    {
+        // Create a new transaction
+        $transaction = new Transaction();
+        $transaction->amount = $amount;
+        $transaction->type = 'debit';
+        $transaction->status = 'approved';
+        $transaction->account_id = $account->id;
+        $transaction->institution_id = $institution->id;
+        $transaction->comment = $comment;
+        $transaction->setCreatedAt($createdAt);
+        $transaction->saveQuietly();
     }
 }

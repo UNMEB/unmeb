@@ -147,10 +147,10 @@ class RecalculateAccountBalances extends Command
                     )
                     ->from('students AS s')
                     ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-                    ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
-                    ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+                    ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
+                    ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
                     ->where('rp.flag', 1)
-                    ->where('s.institution_id', $institution->id)
+                    ->where('r.institution_id', $institution->id)
                     ->get();
 
                 $totalExamFees = 0;
