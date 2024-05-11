@@ -67,4 +67,9 @@ class Transaction extends Model
     {
         return $this->hasOne(TransactionMeta::class);
     }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 }

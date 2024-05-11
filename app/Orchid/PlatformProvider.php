@@ -95,6 +95,7 @@ class PlatformProvider extends OrchidServiceProvider
                         ->route('platform.registration.exam.registrations.list'),
 
                     Menu::make(__('Approve Exam Registrations'))
+                        ->icon('bs.arrow-right')
                         ->route('platform.registration.exam.approve')
                         ->permission('platform.registration.exam.approve'),
                 ])

@@ -61,4 +61,9 @@ class Account extends Model
     {
         return LogOptions::defaults();
     }
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 }

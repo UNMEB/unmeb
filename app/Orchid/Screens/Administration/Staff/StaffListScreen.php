@@ -25,8 +25,7 @@ class StaffListScreen extends Screen
     public function query(): iterable
     {
         return [
-            'staff' => Staff::with('institution')
-                ->filters()
+            'staff' => Staff::filters()
                 ->defaultSort('id', 'desc')
                 ->paginate(),
         ];
@@ -55,12 +54,12 @@ class StaffListScreen extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Link::make(__('Add Staff'))
                 ->icon('bs.plus-circle')
-            ->route('platform.staff.create'),
+                ->route('platform.staff.create'),
         ];
     }
 
@@ -74,7 +73,7 @@ class StaffListScreen extends Screen
         return [
             Layout::table('staff', [
                 TD::make('id', 'ID'),
-                TD::make('picture', 'Photo')->render(fn (Staff $staff) => $staff->avatar),
+                TD::make('picture', 'Photo')->render(fn(Staff $staff) => $staff->avatar),
                 TD::make('staff_name', 'Name'),
                 TD::make('designation', 'Designation'),
                 TD::make('status', 'Status'),
@@ -94,12 +93,12 @@ class StaffListScreen extends Screen
                 TD::make(__('Actions'))
                     ->align(TD::ALIGN_CENTER)
                     ->width('100px')
-                    ->render(fn (Staff $staff) => DropDown::make()
+                    ->render(fn(Staff $staff) => DropDown::make()
                         ->icon('bs.three-dots-vertical')
                         ->list([
 
                             Link::make(__('Edit'))
-                        ->route('platform.staff.edit', $staff->id)
+                                ->route('platform.staff.edit', $staff->id)
                                 ->icon('bs.pencil'),
 
                             Button::make(__('Delete'))
