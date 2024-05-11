@@ -34,12 +34,18 @@ class PendingTransactionListScreen extends Screen
      */
     public function query(): iterable
     {
-        $transactions = Transaction::with('institution', 'account')->where('status', 'pending')
+        $query = Transaction::with('institution', 'account')
+            ->where('status', 'pending')
             ->filters()
-            ->defaultSort('id', 'desc')
-            ->paginate();
+            ->defaultSort('id', 'desc');
+
+        if (auth()->user()->inRole('institution')) {
+            $query->where('institution_id', auth()->user()->institution_id);
+        }
+
+
         return [
-            'transactions' => $transactions
+            'transactions' => $query->paginate()
         ];
     }
 
@@ -324,7 +330,7 @@ class PendingTransactionListScreen extends Screen
         // Define the filter parameters
         $filterParams = [];
 
-        if (!empty ($institutionId)) {
+        if (!empty($institutionId)) {
             $filterParams['filter[institution_id]'] = $institutionId;
         }
 
