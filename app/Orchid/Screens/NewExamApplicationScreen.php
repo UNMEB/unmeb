@@ -50,6 +50,8 @@ class NewExamApplicationScreen extends Screen
                 's.*'
             ]))
             ->from('students as s')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
             ->whereNotNull('s.nsin')
             ->whereNotIn('s.id', function ($query) {
                 $query->select('student_id')
@@ -61,20 +63,23 @@ class NewExamApplicationScreen extends Screen
                     ->where('registrations.year_of_study', session('year_of_study'))
                     ->where('registrations.institution_id', session('institution_id'));
             })
-            ->whereNotIn('s.id', session('selected_student_ids', []));
+            ->whereNotIn('s.id', session('selected_student_ids', []))
+            ->where('r.course_id', session('course_id'));
 
         // Get current course code
-        $course = Course::find(session('course_id'));
-        if ($course) {
-            $course_code = $course->course_code;
-            $query->where('s.nsin', 'LIKE', '%/' . $course_code . '/%');
-        }
+        // $course = Course::find(session('course_id'));
+        // if ($course) {
+        //     $course_code = $course->course_code;
+        //     $query->where('s.nsin', 'LIKE', '%/' . $course_code . '/%');
+        // }
 
         if (auth()->user()->inRole('institution')) {
-            $query->where('s.institution_id', auth()->user()->institution_id);
+            $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
         $query->orderBy('s.nsin', 'asc');
+
+        // dd($query->toRawSql());
 
         return [
             'applications' => $query->paginate(20)
