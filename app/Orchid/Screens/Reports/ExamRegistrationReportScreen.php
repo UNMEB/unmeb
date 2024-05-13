@@ -6,8 +6,10 @@ use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Registration;
 use App\Models\StudentRegistration;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Redis;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Relation;
@@ -18,36 +20,56 @@ use Orchid\Support\Facades\Layout;
 
 class ExamRegistrationReportScreen extends Screen
 {
+    public $filters = [];
+
     /**
      * Fetch data to be displayed on the screen.
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
-        $query = Registration::filters()
-            ->select(
-                'rp.id AS rp_id',
-                'r.id AS r_id',
-                'i.institution_name',
-                'r.year_of_study',
-                'r.completed',
-                'r.verify',
-                'r.approved',
-                'sr.trial',
-                'rp.reg_start_date',
-                'rp.reg_end_date',
-                'c.course_name',
-            )
-            ->from('registrations as r')
-            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
-            ->join('student_registrations as sr', 'sr.registration_id', '=', 'r.id')
+        $this->filters = $request->get('filter');
+
+        $query = StudentRegistration::from('student_registrations as sr')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
             ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->join('institutions as i', 'i.id', '=', 'r.institution_id')
             ->join('courses as c', 'c.id', '=', 'r.course_id')
-            ->groupBy('r.id', 'i.institution_name', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved', 'trial');
-            
-            $query->orderBy('rp.id', 'desc');
-            $query->orderBy('i.institution_name', 'asc');
+            ->join('students as s', 's.id', '=', 'sr.student_id')
+            ->select(
+                'i.institution_name as institution',
+                'c.course_name as course',
+                'r.year_of_study',
+                DB::raw('COUNT(sr.student_id) as total_students'),
+                DB::raw('SUM(CASE WHEN s.gender = "Male" THEN 1 ELSE 0 END) as male_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Female" THEN 1 ELSE 0 END) as female_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Male" AND sr.sr_flag = 1 THEN 1 ELSE 0 END) as male_approved_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Female" AND sr.sr_flag = 1 THEN 1 ELSE 0 END) as female_approved_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Male" AND sr.sr_flag = 2 THEN 1 ELSE 0 END) as male_rejected_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Female" AND sr.sr_flag = 2 THEN 1 ELSE 0 END) as female_rejected_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Male" AND sr.sr_flag = 0 THEN 1 ELSE 0 END) as male_pending_count'),
+                DB::raw('SUM(CASE WHEN s.gender = "Female" AND sr.sr_flag = 0 THEN 1 ELSE 0 END) as female_pending_count'),
+                DB::raw('SUM(CASE WHEN sr.sr_flag = 0 THEN 1 ELSE 0 END) as pending_count'),
+                DB::raw('SUM(CASE WHEN sr.sr_flag = 1 THEN 1 ELSE 0 END) as approved_count'),
+                DB::raw('SUM(CASE WHEN sr.sr_flag = 2 THEN 1 ELSE 0 END) as rejected_count')
+            )
+            ->where('rp.flag', '=', 1)
+            ->groupBy('i.institution_name', 'c.course_name', 'r.year_of_study')
+            ->orderBy('i.institution_name')
+            ->orderBy('c.course_name');
+
+        if (!empty($this->filters)) {
+            if (isset($this->filters['institution_id']) && $this->filters['institution_id'] !== null) {
+                $institutionId = $this->filters['institution_id'];
+                $query->where('r.institution_id', '=', $institutionId);
+            }
+
+            if (isset($this->filters['course_id']) && $this->filters['course_id'] !== null) {
+                $courseId = $this->filters['course_id'];
+                $query->where('r.course_id', '=', $courseId);
+            }
+        }
 
         return [
             'report' => $query->paginate()
@@ -118,29 +140,19 @@ class ExamRegistrationReportScreen extends Screen
             ]),
 
             Layout::table('report', [
-                TD::make('institution_name', 'Institution'),
-                TD::make('course_name', 'Program'),
+                TD::make('institution', 'Institution'),
+                TD::make('course', 'Course'),
                 TD::make('year_of_study', 'Year Of Study'),
-                TD::make('reg_start_date', 'Registration Start Date'),
-                TD::make('reg_end_date', 'Registration Start Date'),
-                TD::make('pending', 'Pending')->render(function ($data) {
-                    return StudentRegistration::where([
-                        'registration_id' => $data->r_id,
-                        'sr_flag' => 0
-                    ])->count('id');
-                }),
-                TD::make('approved', 'Approved')->render(function ($data) {
-                    return StudentRegistration::where([
-                        'registration_id' => $data->r_id,
-                        'sr_flag' => 1
-                    ])->count('id');
-                }),
-                TD::make('rejected', 'Rejected')->render(function ($data) {
-                    return StudentRegistration::where([
-                        'registration_id' => $data->r_id,
-                        'sr_flag' => 2
-                    ])->count('id');
-                }),
+                TD::make('total_students', 'Total Students'),
+                TD::make('male_count', 'Registered Males'),
+                TD::make('female_count', 'Registered Females'),
+                TD::make('male_pending_count', 'Pending Males'),
+                TD::make('female_pending_count', 'Pending Females'),
+                TD::make('male_approved_count', 'Approved Males'),
+                TD::make('female_approved_count', 'Approved Females'),
+                TD::make('male_rejected_count', 'Rejected Males'),
+                TD::make('female_rejected_count', 'Rejected Females'),
+
             ])
         ];
     }
@@ -158,19 +170,17 @@ class ExamRegistrationReportScreen extends Screen
 
         $filters = [];
 
-        if (!empty ($institutionId)) {
+        if (!empty($institutionId)) {
             $filters['filter[institution_id]'] = $institutionId;
         }
 
-        if (!empty ($courseId)) {
+        if (!empty($courseId)) {
             $filters['filter[course_id]'] = $courseId;
         }
 
-
-
         $url = route('platform.reports.exam_registration', $filters);
 
-        return Redirect::to($url);
+        return redirect()->to($url);
     }
 
     /**

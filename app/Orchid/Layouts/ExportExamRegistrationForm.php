@@ -67,6 +67,20 @@ class ExportExamRegistrationForm extends Listener
                     ->options($this->courses)
                     ->canSee(count($this->courses) > 0),
 
+                // Select Year of Study
+                Select::make('year_of_study')
+                    ->empty('None Selected')
+                    ->title('Select Year of Study')
+                    ->options([
+                        'Year 1 Semester 1' => 'Year 1 Semester 1',
+                        'Year 1 Semester 2' => 'Year 1 Semester 2',
+                        'Year 2 Semester 1' => 'Year 2 Semester 1',
+                        'Year 2 Semester 2' => 'Year 2 Semester 2',
+                        'Year 3 Semester 1' => 'Year 3 Semester 1',
+                        'Year 3 Semester 2' => 'Year 3 Semester 2',
+                    ])
+                    ->required(),
+
                 // Select Exam Status
                 Select::make('exam_status')
                     ->title('Select Exam status')
@@ -94,6 +108,7 @@ class ExportExamRegistrationForm extends Listener
         $RegistrationPeriodId = $request->get('exam_registration_period_id');
         $institutionId = $request->get('institution_id');
         $courseId = $request->get('course_id');
+        $semester = $request->get('year_of_study');
 
         if ($institutionId != null) {
             // Load the courses
@@ -108,6 +123,7 @@ class ExportExamRegistrationForm extends Listener
 
         return $repository
             ->set('exam_registration_period_id', $RegistrationPeriodId)
+            ->set('year_of_study', $semester)
             ->set('institution_id', $institutionId)
             ->set('course_id', $courseId);
     }

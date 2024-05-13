@@ -214,6 +214,7 @@ class StudentListScreen extends Screen
     public function layout(): iterable
     {
         return [
+
             Layout::modal('exportPicturesModal', ExportStudentPictureForm::class),
             Layout::rows([
 
@@ -251,6 +252,8 @@ class StudentListScreen extends Screen
                 ])->autoWidth()
                     ->alignEnd(),
             ])->title("Filter Students"),
+
+            Layout::view('table_summary'),
 
             Layout::table('students', [
                 TD::make('id', 'ID'),

@@ -30,6 +30,7 @@ class ApproveExamRegistration extends Screen
             ->join('registrations as r', 'i.id', '=', 'r.institution_id')
             ->join('courses as c', 'r.course_id', '=', 'c.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
+            ->where('rp.flag', 1)
             ->select('i.id AS institution_id', 'i.institution_name', 'r.id as registration_id', 'c.id as course_id', 'c.course_name', 'rp.id as registration_period_id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             ->groupBy('i.id', 'i.institution_name', 'r.id', 'c.course_name', 'rp.id', 'rp.reg_start_date', 'rp.reg_end_date', 'r.completed', 'r.verify', 'r.approved')
             ->orderBy('r.updated_at', 'desc');
@@ -110,7 +111,7 @@ class ApproveExamRegistration extends Screen
                             ->count();
                         return $regs;
                     }),
-                
+
                 TD::make('actions', 'Actions')->render(fn($data) => Link::make('Details')
                     ->class('btn btn-primary btn-sm link-primary')
                     ->route('platform.registration.exam.approve.details', [
@@ -148,7 +149,7 @@ class ApproveExamRegistration extends Screen
     public function reset(Request $request)
     {
         $url = route('platform.registration.exam.approve');
-        
+
         return redirect()->to($url);
     }
 }

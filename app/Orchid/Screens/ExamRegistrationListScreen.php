@@ -253,9 +253,10 @@ class ExamRegistrationListScreen extends Screen
         $examRegistrationPeriodId = $request->input('exam_registration_period_id');
         $institutionId = $request->input('institution_id');
         $courseId = $request->input('course_id');
+        $semester = $request->input('year_of_study');
         $examStatus = $request->input('exam_status');
 
-        $students = Student::
+        $students = Student::withoutGlobalScopes()->
             select([
                 's.id as id',
                 's.surname',
@@ -281,6 +282,7 @@ class ExamRegistrationListScreen extends Screen
             ->where('r.course_id', $courseId)
             ->where('rp.flag', 1)
             ->where('sr.sr_flag', $examStatus)
+            ->where('r.year_of_study', $semester)
             ->get();
 
         return Excel::download(new ExamRegistrationExport($students), 'exam_registrations.xlsx');

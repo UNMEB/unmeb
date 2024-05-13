@@ -328,31 +328,35 @@ class NewExamApplicationScreen extends Screen
 
     private function getNetworkMeta($ip)
     {
-        // Check if testing offline
-        if ($ip === '127.0.0.1') {
+        try {
+            // Check if testing offline
+            if ($ip === '127.0.0.1') {
+                return [];
+            }
+
+            $response = Http::get('http://ip-api.com/json/' . $ip);
+
+            if ($response->successful()) {
+                $data = $response->json();
+
+                return [
+                    'country' => $data['country'],
+                    'country_code' => $data['countryCode'],
+                    'region' => $data['regionName'],
+                    'city' => $data['city'],
+                    'latitude' => $data['lat'],
+                    'longitude' => $data['lon'],
+                    'timezone' => $data['timezone'],
+                    'isp' => $data['isp'],
+                    'organization' => $data['org'],
+                    'as' => $data['as']
+                ];
+            }
+
+            return [];
+        } catch (\Throwable $th) {
             return [];
         }
-
-        $response = Http::get('http://ip-api.com/json/' . $ip);
-
-        if ($response->successful()) {
-            $data = $response->json();
-
-            return [
-                'country' => $data['country'],
-                'country_code' => $data['countryCode'],
-                'region' => $data['regionName'],
-                'city' => $data['city'],
-                'latitude' => $data['lat'],
-                'longitude' => $data['lon'],
-                'timezone' => $data['timezone'],
-                'isp' => $data['isp'],
-                'organization' => $data['org'],
-                'as' => $data['as']
-            ];
-        }
-
-        return [];
     }
 
 }
