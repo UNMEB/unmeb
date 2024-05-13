@@ -75,6 +75,8 @@ class ExamRegistrationDetailScreen extends Screen
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
+        $query->distinct();
+
         return [
             'students' => $query->paginate()
         ];

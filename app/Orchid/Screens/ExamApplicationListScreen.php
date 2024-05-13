@@ -2,15 +2,20 @@
 
 namespace App\Orchid\Screens;
 
+use App\Models\Course;
+use App\Models\Institution;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Models\StudentRegistration;
 use App\Orchid\Layouts\ApplyForExamsForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Actions\ModalToggle;
+use Orchid\Screen\Fields\Group;
+use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Screen;
 use Orchid\Screen\TD;
 use Orchid\Support\Facades\Layout;
@@ -32,14 +37,14 @@ class ExamApplicationListScreen extends Screen
 
         $queryPeriod = $request->query('period');
 
-        if(is_null($queryPeriod)) {
+        if (is_null($queryPeriod)) {
             $this->activePeriod = RegistrationPeriod::whereFlag(1, true)->first()->id;
         }
 
-        if(!is_null($queryPeriod)) {
+        if (!is_null($queryPeriod)) {
             $this->activePeriod = $queryPeriod;
         }
-    
+
         $query = Student::withoutGlobalScopes()
             ->select(
                 'r.id as registration_id',
@@ -59,16 +64,16 @@ class ExamApplicationListScreen extends Screen
             ->join('courses AS c', 'c.id', '=', 'r.course_id')
             ->groupBy('i.institution_name', 'i.id', 'c.course_name', 'c.id', 'registration_id');
 
-            $query->where('rp.id', $this->activePeriod);
+        $query->where('rp.id', $this->activePeriod);
 
-            $query->orderBy('institution_name', 'asc');
-            $query->orderBy('course_name', 'desc');
-            $query->orderBy('semester', 'asc');
+        $query->orderBy('institution_name', 'asc');
+        $query->orderBy('course_name', 'desc');
+        $query->orderBy('semester', 'asc');
 
-            if(auth()->user()->inRole('institution')) {
-                $query->where('r.institution_id',  auth()->user()->institution_id);
-            }
-        
+        if (auth()->user()->inRole('institution')) {
+            $query->where('r.institution_id', auth()->user()->institution_id);
+        }
+
         return [
             'applications' => $query->paginate(10),
         ];
@@ -81,13 +86,13 @@ class ExamApplicationListScreen extends Screen
      */
     public function name(): ?string
     {
-        if(!is_null($this->activePeriod)) {
+        if (!is_null($this->activePeriod)) {
             $period = RegistrationPeriod::select('*')
-                    ->where('id', $this->activePeriod)
-                    ->where('flag', 1)
-                    ->first();
+                ->where('id', $this->activePeriod)
+                ->where('flag', 1)
+                ->first();
 
-            return 'Exam Applications for ' . $period->reg_start_date->format('Y-m-d') . ' / '. $period->reg_end_date->format('Y-m-d');
+            return 'Exam Applications for ' . $period->reg_start_date->format('Y-m-d') . ' / ' . $period->reg_end_date->format('Y-m-d');
         }
 
         return 'Exam Applications';
@@ -107,15 +112,15 @@ class ExamApplicationListScreen extends Screen
     {
         // Get all NSIN Registration Periods
         $periods = RegistrationPeriod::select('*')
-                    ->where('flag', 1)
-                    ->orderBy('reg_start_date', 'desc')
-                    ->get();
+            ->where('flag', 1)
+            ->orderBy('reg_start_date', 'desc')
+            ->get();
 
         $layouts = $periods->map(function ($period) {
             return Link::make($period->reg_start_date->format('Y-m-d') . ' - ' . $period->reg_end_date->format('Y-m-d'))
-            ->route('platform.registration.exam.applications.list', [
-                'period' => $period->id,
-            ]);
+                ->route('platform.registration.exam.applications.list', [
+                    'period' => $period->id,
+                ]);
         });
 
         return [
@@ -127,10 +132,10 @@ class ExamApplicationListScreen extends Screen
                 ->rawClick(false),
 
             ModalToggle::make('Export Exam Applications')
-            ->class('btn btn-primary')
-            ->modal('exportExamApplications')
-            ->modalTitle('Export Exam Applications')
-            ->method('exportExamApplications'),
+                ->class('btn btn-primary')
+                ->modal('exportExamApplications')
+                ->modalTitle('Export Exam Applications')
+                ->method('exportExamApplications'),
 
             DropDown::make('Change Period')
                 ->icon('bs.arrow-down')
@@ -148,6 +153,34 @@ class ExamApplicationListScreen extends Screen
         return [
             Layout::modal('newExamApplicationModal', ApplyForExamsForm::class)
                 ->applyButton('Register for Exams'),
+
+            Layout::rows([
+                Group::make([
+                    Relation::make('institution_id')
+                        ->title('Select Institution')
+                        ->fromModel(Institution::class, 'institution_name')
+                        ->applyScope('userInstitutions')
+                        ->canSee(!auth()->user()->inRole('institution'))
+                        ->chunk(20),
+
+                    Relation::make('course_id')
+                        ->title('Select Institution')
+                        ->fromModel(Course::class, 'course_name')
+                        ->canSee(!auth()->user()->inRole('institution'))
+                        ->chunk(20),
+                ]),
+
+                Group::make([
+                    Button::make('Submit')
+                        ->method('filter'),
+
+                    // Reset Filters
+                    Button::make('Reset')
+                        ->method('reset')
+
+                ])->autoWidth()
+                    ->alignEnd(),
+            ]),
 
             Layout::table('applications', [
                 TD::make('registration_id', 'Reg. ID'),
@@ -178,13 +211,13 @@ class ExamApplicationListScreen extends Screen
                     fn($data) => Link::make('Details')
                         ->class('btn btn-primary btn-sm link-primary')
                         ->route('platform.registration.exam.applications.details', [
+                            'registration_period_id' => $this->activePeriod,
                             'registration_id' => $data->registration_id,
                             'institution_id' => $data->institution_id,
                             'course_id' => $data->course_id,
-
                         ])
                 )
-            ])  
+            ])
         ];
     }
 
@@ -205,6 +238,26 @@ class ExamApplicationListScreen extends Screen
             'year_of_study' => $yearOfStudy,
             'trial' => $trial
         ]);
+
+        return redirect()->to($url);
+    }
+
+    public function filter(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+
+        $filterParams = [];
+
+        if (!empty($institutionId)) {
+            $filterParams['filter[institution_id]'] = $institutionId;
+        }
+
+        if (!empty($courseId)) {
+            $filterParams['filter[course_id]'] = $courseId;
+        }
+
+        $url = route('platform.registration.exam.registrations.list', $filterParams);
 
         return redirect()->to($url);
     }

@@ -3,6 +3,7 @@
 namespace App\Orchid\Screens;
 
 use App\Exports\ExamApplicationExport;
+use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -25,45 +26,51 @@ class ExamApplicationDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
-        session()->put("registration_id", $request->get('registration_id'));
-        session()->put("institution_id", $request->get('institution_id'));
-        session()->put("course_id", $request->get('course_id'));
+        $registration_period_id = $request->get('registration_period_id');
+        $registration_id = $request->get('registration_id');
+        $institution_id = $request->get('institution_id');
+        $course_id = $request->get('course_id');
 
-        $query = Student::withoutGlobalScopes()
-            ->select([
-                's.id as id',
-                's.surname',
-                's.firstname',
-                's.othername',
-                's.gender',
-                's.dob',
-                's.district_id',
-                's.country_id',
-                's.nsin as nsin',
-                's.telephone',
-                's.passport',
-                's.passport_number',
-                's.lin',
-                's.email',
-                'sr.trial',
-                'sr.course_codes',
-                'sr.no_of_papers'
-            ])
+        session()->put('registration_id', $registration_id);
+        session()->put('institution_id', $institution_id);
+        session()->put('course_id', $course_id);
+
+        $query = RegistrationPeriod::select(
+            's.id as id',
+            's.surname',
+            's.firstname',
+            's.othername',
+            's.gender',
+            's.dob',
+            's.district_id',
+            's.country_id',
+            's.nsin as nsin',
+            's.telephone',
+            's.passport',
+            's.passport_number',
+            's.lin',
+            's.email',
+            'sr.trial',
+            'sr.course_codes',
+            'sr.no_of_papers',
+            'sr.created_at',
+            'sr.updated_at'
+        )
             ->from('students as s')
             ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
             ->join('registration_periods as rp', 'r.registration_period_id', '=', 'rp.id')
-            ->where('rp.flag', 1)
+            ->where('rp.id', $registration_period_id)
             ->where('r.id', session('registration_id'));
 
         if (auth()->user()->inRole('institution')) {
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
-        // $query->where('sr.sr_flag', 0);
+        $query->distinct();
 
         return [
-            'applications' => $query->paginate(),
+            'students' => $query->paginate()
         ];
     }
 
@@ -111,7 +118,7 @@ class ExamApplicationDetailScreen extends Screen
     public function layout(): iterable
     {
         return [
-            Layout::table('applications', [
+            Layout::table('students', [
                 TD::make('id', 'ID'),
                 TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
