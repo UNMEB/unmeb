@@ -17,8 +17,10 @@ use App\Models\User;
 use App\Models\Year;
 use App\Orchid\Layouts\AddNewStudentForm;
 use App\Orchid\Layouts\AddStudentWithNSINForm;
+use App\Orchid\Layouts\ExportStudentPictureForm;
 use App\Orchid\Layouts\RegisterStudentsForNinForm;
 use Carbon\Carbon;
+use Http;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
@@ -45,6 +47,7 @@ use Illuminate\Support\Str;
 use Maatwebsite\Excel\Excel as ExcelExcel;
 use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Fields\Picture;
+use ZipArchive;
 
 class StudentListScreen extends Screen
 {
@@ -188,6 +191,13 @@ class StudentListScreen extends Screen
                 ->canSee(auth()->user()->hasAccess('platform.students.export'))
                 ->class('btn btn-primary'),
 
+            ModalToggle::make('Export Pictures')
+                ->modal('exportPicturesModal')
+                ->modalTitle('Export Student Pictures')
+                ->method('exportPictures')
+                ->canSee(auth()->user()->hasAccess('platform.students.export'))
+                ->class('btn btn-primary'),
+
             DropDown::make()
                 ->icon('bs.three-dots-vertical')
                 ->list([
@@ -204,6 +214,7 @@ class StudentListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::modal('exportPicturesModal', ExportStudentPictureForm::class),
             Layout::rows([
 
                 Group::make([
@@ -691,5 +702,58 @@ class StudentListScreen extends Screen
         \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Student records saved.');
 
         return redirect()->back();
+    }
+
+    public function exportPictures(Request $request)
+    {
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+
+        $courseName = Course::find($courseId)->first()->course_name;
+
+        // Get list of student pictures
+        $students = Student::whereNotNull('passport')
+            ->from('students as s')
+            ->join('nsin_student_registrations as nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->join('nsin_registration_periods AS nrp', function ($join) {
+                $join->on('nrp.month', '=', 'nr.month');
+                $join->on('nrp.year_id', '=', 'nr.year_id');
+            })
+            ->where('nr.institution_id', $institutionId)
+            ->where('nr.course_id', $courseId)
+            ->whereNotNull('s.nsin')
+            ->get();
+
+        // Create a zip archive
+        $zip = new ZipArchive;
+        $zipFileName = Str::slug($courseName) . '_student_pictures.zip';
+        $zipFilePath = storage_path($zipFileName);
+
+        if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            // Add files to the zip file
+            foreach ($students as $student) {
+                if (filter_var($student->passport, FILTER_VALIDATE_URL)) {
+                    $response = Http::get($student->passport);
+                    if ($response->successful()) {
+                        $fileName = str_replace('/', '-', $student->nsin) . '.' . pathinfo($student->passport, PATHINFO_EXTENSION);
+                        $zip->addFromString($fileName, $response->body());
+                    }
+                }
+            }
+            // Close the zip file
+            $zip->close();
+
+            // Print out the link to the zip file
+            $link = asset('storage/' . $zipFileName);
+            // $this->info("Student pictures are zipped up. Download link: $link");
+
+            \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', "Click the link below to download the student pictures. <br> <a class='btn btn-link' href='$link'>Download Pictures</button>")
+                ->toHtml()
+                ->persistent(true);
+
+        } else {
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to download pictures at the moment');
+        }
     }
 }

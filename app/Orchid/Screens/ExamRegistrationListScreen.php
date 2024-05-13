@@ -2,17 +2,21 @@
 
 namespace App\Orchid\Screens;
 
+use App\Exports\ExamRegistrationExport;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\Registration;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
 use App\Models\StudentRegistration;
+use App\Orchid\Layouts\ExportExamRegistrationForm;
 use DB;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Screen;
@@ -136,6 +140,11 @@ class ExamRegistrationListScreen extends Screen
         });
 
         return [
+            ModalToggle::make('Export Exam Registrations')
+                ->modal('exportExamRegistrations')
+                ->modalTitle('Export Exam Registrations')
+                ->method('exportExams'),
+
             DropDown::make('Change Period')
                 ->icon('bs.arrow-down')
                 ->list($layouts->toArray())
@@ -150,6 +159,9 @@ class ExamRegistrationListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::modal('exportExamRegistrations', ExportExamRegistrationForm::class)
+                ->rawClick()
+                ->open(false),
             Layout::rows([
                 Group::make([
                     Relation::make('institution_id')
@@ -234,5 +246,43 @@ class ExamRegistrationListScreen extends Screen
         $url = route('platform.registration.exam.registrations.list', $filterParams);
 
         return redirect()->to($url);
+    }
+
+    public function exportExams(Request $request)
+    {
+        $examRegistrationPeriodId = $request->input('exam_registration_period_id');
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+        $examStatus = $request->input('exam_status');
+
+        $students = Student::
+            select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                'd.district_name as district',
+                'c.nicename as country',
+                's.nsin as nsin',
+                's.telephone',
+                'sr.trial',
+                'sr.course_codes',
+                'sr.no_of_papers'
+            ])
+            ->from('students AS s')
+            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
+            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
+            ->join('registration_periods as rp', 'rp.id', '=', 'r.registration_period_id')
+            ->leftJoin('countries AS c', 'c.id', '=', 's.country_id')
+            ->leftJoin('districts as d', 'd.id', '=', 's.district_id')
+            ->where('r.institution_id', $institutionId)
+            ->where('r.course_id', $courseId)
+            ->where('rp.flag', 1)
+            ->where('sr.sr_flag', $examStatus)
+            ->get();
+
+        return Excel::download(new ExamRegistrationExport($students), 'exam_registrations.xlsx');
     }
 }

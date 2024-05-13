@@ -149,9 +149,11 @@ class NSINRegistrationsListScreen extends Screen
      */
     public function layout(): iterable
     {
+        
         return [
             Layout::modal('exportNSINRegistrations', ExportNSINRegistrationForm::class)
-                ->rawClick(),
+                ->rawClick()
+                ->open(false),
             Layout::rows([
                 Group::make([
                     Relation::make('institution_id')
