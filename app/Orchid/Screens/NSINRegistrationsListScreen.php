@@ -2,17 +2,21 @@
 
 namespace App\Orchid\Screens;
 
+use App\Exports\NSINRegistrationExport;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\NsinRegistrationPeriod;
 use App\Models\NsinStudentRegistration;
 use App\Models\RegistrationPeriod;
 use App\Models\Student;
+use App\Orchid\Layouts\ExportNSINRegistrationForm;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Fields\Group;
 use Orchid\Screen\Fields\Relation;
 use Orchid\Screen\Screen;
@@ -36,11 +40,11 @@ class NSINRegistrationsListScreen extends Screen
 
         $queryPeriod = $request->query('period');
 
-        if(is_null($queryPeriod)) {
+        if (is_null($queryPeriod)) {
             $this->activePeriod = NsinRegistrationPeriod::whereFlag(1, true)->first()->id;
         }
 
-        if(!is_null($queryPeriod)) {
+        if (!is_null($queryPeriod)) {
             $this->activePeriod = $queryPeriod;
         }
 
@@ -48,25 +52,26 @@ class NSINRegistrationsListScreen extends Screen
 
         $query = NsinRegistrationPeriod::select(
             'i.id as institution_id',
-            'i.institution_name', 
+            'i.institution_name',
             'c.id as course_id',
-            'c.course_name', 
-            'y.year', 
-            'rp.month', 
-            'rp.id as rp_id', 
-            'r.id as r_id')
+            'c.course_name',
+            'y.year',
+            'rp.month',
+            'rp.id as rp_id',
+            'r.id as r_id'
+        )
             ->from('nsin_registration_periods as rp')
-            ->join('nsin_registrations AS r', function ($join)  {
-                $join->on('rp.month','=','r.month');
-                $join->on('rp.year_id','=','r.year_id');
+            ->join('nsin_registrations AS r', function ($join) {
+                $join->on('rp.month', '=', 'r.month');
+                $join->on('rp.year_id', '=', 'r.year_id');
             })
-            ->join('nsin_student_registrations AS sr', 'r.id', '=','sr.nsin_registration_id')
-            ->join('institutions AS i', 'r.institution_id', '=','i.id')
-            ->join('courses AS c', 'r.course_id', '=','c.id')
-            ->join('years AS y', 'rp.year_id', '=','y.id')
+            ->join('nsin_student_registrations AS sr', 'r.id', '=', 'sr.nsin_registration_id')
+            ->join('institutions AS i', 'r.institution_id', '=', 'i.id')
+            ->join('courses AS c', 'r.course_id', '=', 'c.id')
+            ->join('years AS y', 'rp.year_id', '=', 'y.id')
             ->where('rp.id', $this->activePeriod);
-        
-        if(auth()->user()->inRole('institution')) {
+
+        if (auth()->user()->inRole('institution')) {
             $query->where('i.id', auth()->user()->institution_id);
         }
 
@@ -91,14 +96,14 @@ class NSINRegistrationsListScreen extends Screen
      */
     public function name(): ?string
     {
-        if(!is_null($this->activePeriod)) {
+        if (!is_null($this->activePeriod)) {
             $period = NsinRegistrationPeriod::select('nsin_registration_periods.id', 'years.year', 'month')
-                    ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
-                    ->orderBy('year', 'desc')
-                    ->where('nsin_registration_periods.id', $this->activePeriod)
-                    ->first();
+                ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
+                ->orderBy('year', 'desc')
+                ->where('nsin_registration_periods.id', $this->activePeriod)
+                ->first();
 
-            return 'NSIN Registrations for ' . $period->month . ' '. $period->year;
+            return 'NSIN Registrations for ' . $period->month . ' ' . $period->year;
         }
 
         return 'NSIN Registrations';
@@ -113,18 +118,24 @@ class NSINRegistrationsListScreen extends Screen
     {
         // Get all NSIN Registration Periods
         $periods = NsinRegistrationPeriod::select('nsin_registration_periods.id', 'years.year', 'month')
-                    ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
-                    ->orderBy('year', 'desc')
-                    ->get();
+            ->join('years', 'nsin_registration_periods.year_id', '=', 'years.id')
+            ->orderBy('year', 'desc')
+            ->get();
 
         $layouts = $periods->map(function ($period) {
             return Link::make($period->month . ' - ' . $period->year)
-            ->route('platform.registration.nsin.registrations.list', [
-                'period' => $period->id,
-            ]);
+                ->route('platform.registration.nsin.registrations.list', [
+                    'period' => $period->id,
+                ]);
         });
 
         return [
+
+            ModalToggle::make('Export NSINs')
+                ->modal('exportNSINRegistrations')
+                ->modalTitle('Export NSIN Registrations')
+                ->method('exportNSINs'),
+
             DropDown::make('Change Period')
                 ->icon('bs.arrow-down')
                 ->list($layouts->toArray())
@@ -139,6 +150,8 @@ class NSINRegistrationsListScreen extends Screen
     public function layout(): iterable
     {
         return [
+            Layout::modal('exportNSINRegistrations', ExportNSINRegistrationForm::class)
+                ->rawClick(),
             Layout::rows([
                 Group::make([
                     Relation::make('institution_id')
@@ -194,14 +207,14 @@ class NSINRegistrationsListScreen extends Screen
                         ->count('id');
                 }),
                 TD::make('actions', 'Actions')
-                ->render(fn ($data) => Link::make('Details')
-                ->class('btn btn-primary btn-sm link-primary')
-                ->route('platform.registration.nsin.registrations.details', [
-                    'institution_id' => $data->institution_id,
-                    'course_id' => $data->course_id,
-                    'registration_id' => $data->r_id,
-                    'registration_period_id' => $data->rp_id,
-                ]))
+                    ->render(fn($data) => Link::make('Details')
+                        ->class('btn btn-primary btn-sm link-primary')
+                        ->route('platform.registration.nsin.registrations.details', [
+                            'institution_id' => $data->institution_id,
+                            'course_id' => $data->course_id,
+                            'registration_id' => $data->r_id,
+                            'registration_period_id' => $data->rp_id,
+                        ]))
             ])
         ];
     }
@@ -219,5 +232,44 @@ class NSINRegistrationsListScreen extends Screen
         $url = route('platform.registration.nsin.registrations.list', $filterParams);
 
         return redirect()->to($url);
+    }
+
+    public function exportNSINs(Request $request)
+    {
+        // dd($request->all());
+
+        $nsinRegistrationPeriodId = $request->input('nsin_registration_period_id');
+        $institutionId = $request->input('institution_id');
+        $courseId = $request->input('course_id');
+        $nsinStatus = $request->input('nsin_status');
+
+        $students = Student::
+            select([
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                's.district_id',
+                's.country_id',
+                's.nsin as nsin',
+                's.telephone',
+            ])
+            ->from('students AS s')
+            ->join('nsin_student_registrations as nsr', 'nsr.student_id', '=', 's.id')
+            ->join('nsin_registrations as nr', 'nr.id', '=', 'nsr.nsin_registration_id')
+            ->join('nsin_registration_periods as nrp', function ($join) {
+                $join->on('nr.year_id', '=', 'nrp.year_id')
+                    ->on('nr.month', '=', 'nrp.month');
+            })
+            ->where('nr.institution_id', $institutionId)
+            ->where('nr.course_id', $courseId)
+            ->where('nrp.flag', 1)
+            ->where('nsr.verify', $nsinStatus)
+            ->get();
+
+        return Excel::download(new NSINRegistrationExport($students), 'nsin_registrations.xlsx');
+
     }
 }

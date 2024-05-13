@@ -14,12 +14,15 @@ use App\Models\SurchargeFee;
 use App\Models\Transaction;
 use App\Models\TransactionLog;
 use App\Orchid\Layouts\ExamRegistrationTable;
+use App\Orchid\Layouts\ExportExamRegistrationsForm;
 use DB;
 use Exception;
 use Illuminate\Http\Request;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Actions\DropDown;
+use Orchid\Screen\Actions\ModalToggle;
 use Orchid\Screen\Screen;
+use Orchid\Support\Facades\Layout;
 use RealRashid\SweetAlert\Facades\Alert;
 
 class ExamRegistrationDetailScreen extends Screen
@@ -104,11 +107,11 @@ class ExamRegistrationDetailScreen extends Screen
                         ->canSee(auth()->user()->inRole('administrator'))
                         ->method('rollback'),
 
-                    Button::make('Delete Registrations')
-                        ->icon('bs.trash3')
-                        ->confirm(__('Once you confirm, Selected exam registrations will be deleted for the current period'))
-                        ->method('delete')
-                        ->class('btn link-danger'),
+                    ModalToggle::make('Export Registrations')
+                        ->modal('exportRegistrationsModal')
+                        ->modalTitle('Export Exam Registrations')
+                        ->icon('bs.archive')
+                        ->method('export'),
 
                 ])
         ];
@@ -123,7 +126,9 @@ class ExamRegistrationDetailScreen extends Screen
     {
         $table = (new ExamRegistrationTable);
         return [
-            $table
+            $table,
+            Layout::modal('exportRegistrationsModal', ExportExamRegistrationsForm::class)
+                ->applyButton('Export Registrations')
         ];
     }
 

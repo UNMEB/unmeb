@@ -45,6 +45,8 @@ class NewExamApplicationScreen extends Screen
         session()->put("year_of_study", $request->get('year_of_study'));
         session()->put("trial", $request->get('trial'));
 
+        $this->courseId = session('course_id');
+
         $query = Student::withoutGlobalScopes()
             ->select(([
                 's.*'
@@ -95,6 +97,10 @@ class NewExamApplicationScreen extends Screen
      */
     public function name(): ?string
     {
+        if ($this->courseId) {
+            $course = Course::find($this->courseId);
+            return 'New Exam Application for ' . $course->course_name;
+        }
         return 'New Exam Applications';
     }
 

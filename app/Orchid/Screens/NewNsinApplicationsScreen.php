@@ -60,7 +60,7 @@ class NewNsinApplicationsScreen extends Screen
                     ->on('nr.month', '=', 'nrp.month');
             })
             ->whereColumn('nsr.student_id', 's.id')
-            ->where('i.id', session('institution_id'))
+            ->where('nr.institution_id', session('institution_id'))
             ->where('nrp.flag', 1)
             ->pluck('s.id')
             ->toArray();
