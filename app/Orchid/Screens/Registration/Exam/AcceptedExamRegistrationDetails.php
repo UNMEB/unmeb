@@ -25,10 +25,10 @@ class AcceptedExamRegistrationDetails extends Screen
 
     public function __construct(Request $request)
     {
-        $data = $request->all();
-        $this->institutionId = $data['institution_id'] ?? null;
-        $this->courseId = $data['course_id'] ?? null;
-        $this->registrationId = $data['registration_id'] ?? null;
+        // $data = $request->all();
+        // $this->institutionId = $data['institution_id'] ?? null;
+        // $this->courseId = $data['course_id'] ?? null;
+        // $this->registrationId = $data['registration_id'] ?? null;
     }
 
     /**

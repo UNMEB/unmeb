@@ -1,11 +1,15 @@
 $(function () {
+
+    console.log('WORKING')
     const multiselect = function () {
         let $elms = $(".multiselect");
 
-        // Function to handle selecting all checkboxes in the table
         const selectAll = function () {
             const isChecked = $(this).prop("checked");
-            $elms.prop("checked", isChecked);
+            console.log('isChecked:', isChecked);
+            const column = $(this).data("column");
+            console.log('column:', column);
+            $(`.multiselect[data-column="${column}"]`).prop("checked", isChecked);
         };
 
         // Function to handle individual checkbox selection

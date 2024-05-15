@@ -5,6 +5,7 @@ namespace App\Orchid\Screens;
 use App\Models\Research;
 use App\Models\Student;
 use App\Models\StudentResearch;
+use App\Orchid\Layouts\StudentResearchUploadForm;
 use Illuminate\Http\Request;
 use Orchid\Attachment\File;
 use Orchid\Screen\Actions\Link;
@@ -72,22 +73,7 @@ class StudentResearchListScreen extends Screen
     {
         return [
 
-            Layout::modal('uploadStudentResearch', Layout::rows([
-                Relation::make('student.student_id')
-                    ->fromModel(Student::class, 'id')
-                    ->title('Select students to register for Exams')
-                    ->displayAppend('studentWithNin')
-                    ->searchColumns('surname', 'othername', 'firstname')
-                    ->placeholder('Select Student')
-                    ->chunk(100),
-
-                TextArea::make('student.research_title')->title('Research Title')->placeholder('Enter the title of the research'),
-                Quill::make('student.research_abstract')->title('Research Abstract'),
-
-                Input::make('student.file')
-                    ->title('Upload Research Document')
-                    ->type('file')
-            ]))
+            Layout::modal('uploadStudentResearch', StudentResearchUploadForm::class)
                 ->size(Modal::SIZE_LG),
 
             Layout::table('results', [

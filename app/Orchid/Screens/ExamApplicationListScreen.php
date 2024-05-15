@@ -74,6 +74,7 @@ class ExamApplicationListScreen extends Screen
             $query->where('r.institution_id', auth()->user()->institution_id);
         }
 
+
         return [
             'applications' => $query->paginate(10),
         ];
@@ -164,9 +165,8 @@ class ExamApplicationListScreen extends Screen
                         ->chunk(20),
 
                     Relation::make('course_id')
-                        ->title('Select Institution')
+                        ->title('Select Course')
                         ->fromModel(Course::class, 'course_name')
-                        ->canSee(!auth()->user()->inRole('institution'))
                         ->chunk(20),
                 ]),
 

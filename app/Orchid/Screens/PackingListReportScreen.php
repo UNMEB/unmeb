@@ -6,7 +6,9 @@ use App\Exports\PackingListExport;
 use App\Models\Course;
 use App\Models\Institution;
 use App\Models\RegistrationPeriod;
+use App\Models\Student;
 use App\Models\StudentPaperRegistration;
+use App\Models\StudentRegistration;
 use DOMDocument;
 use Exception;
 use Illuminate\Http\Request;
@@ -36,34 +38,29 @@ class PackingListReportScreen extends Screen
     public function query(): iterable
     {
 
-        return [
+        $query = StudentRegistration::select(
+            'institutions.code AS institution_code',
+            'institutions.short_name AS institution_center',
+            'institutions.institution_name',
+            'courses.course_code AS course_code',
+            'papers.abbrev'
+        )
+            ->join('registrations', 'registrations.id', '=', 'student_registrations.registration_id')
+            ->join('registration_periods', 'registration_periods.id', '=', 'registrations.registration_period_id')
+            ->join('papers', function ($join) {
+                $join->on(DB::raw('JSON_CONTAINS(student_registrations.course_codes, CONCAT(\'"\', papers.code, \'"\'))'), '>', DB::raw('0'));
+            })
+            ->join('institutions', 'institutions.id', '=', 'registrations.institution_id')
+            ->join('courses', 'courses.id', '=', 'registrations.course_id')
+            ->where('student_registrations.course_codes', '!=', '')
+            ->where('registration_periods.flag', '=', 1)
+            ->limit(10);
 
-            'report' => StudentPaperRegistration::select(
-                'i.code AS Institution',
-                'i.short_name AS Center',
-                'c.course_code AS Course',
-                'p.abbrev AS Paper',
-                'r.year_of_study AS Semester',
-                'sr.trial AS Attempt',
-                DB::raw('COUNT(sr.id) AS students')
-            )
-                ->from('student_paper_registration As spr')
-                ->join('course_paper AS cp', 'cp.id', '=', 'spr.course_paper_id')
-                ->join('courses AS c', 'c.id', '=', 'cp.course_id')
-                ->join('papers as p', 'p.id', '=', 'cp.paper_id')
-                ->join('student_registrations AS sr', 'sr.id', '=', 'spr.student_registration_id')
-                ->join('registrations AS r', 'r.id', '=', 'sr.registration_id')
-                ->join('registration_periods AS rp', 'rp.id', '=', 'r.registration_period_id')
-                ->join('institutions AS i', 'i.id', '=', 'r.institution_id')
-                ->where('rp.flag', 1)
-                ->groupBy('i.code', 'i.short_name', 'c.course_code', 'p.abbrev', 'r.year_of_study', 'sr.trial')
-                ->orderBy('i.code')
-                ->orderBy('i.short_name')
-                ->orderBy('c.course_code')
-                ->orderBy('p.abbrev')
-                ->orderBy('r.year_of_study')
-                ->orderBy('sr.trial')
-                ->get()
+
+        dd($query->get()->toJson());
+        return [
+            'report' =>
+                $query->get()
         ];
     }
 

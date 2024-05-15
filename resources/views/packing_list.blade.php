@@ -22,13 +22,15 @@
     <script type="text/javascript" src="{{ asset('tableExport.min.js')}}"></script>
 
     <script>
-        jQuery(document).ready(function() {
+        jQuery(document).ready(function () {
+
             jQuery("#pivotContainer").pivotUI(<?php echo json_encode($report); ?>, {
                 rows: ["Institution", "Center"],
                 cols: ["Course", "Paper"],
-                aggregator: null,
+                vals: ["students"],
+                aggregatorName: "Sum",
                 rendererName: "Heatmap",
-                showUI: false
+                showUI: false,
             });
 
             // Wrap the sortable initialization in a callback function
@@ -37,7 +39,7 @@
             });
 
             // On download click use sheetjs to convert html to csv
-            jQuery('#download').on('click', function(e) {
+            jQuery('#download').on('click', function (e) {
                 e.preventDefault();
 
                 // Get the HTML table element

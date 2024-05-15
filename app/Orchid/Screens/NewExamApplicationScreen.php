@@ -48,40 +48,23 @@ class NewExamApplicationScreen extends Screen
         $this->courseId = session('course_id');
 
         $query = Student::withoutGlobalScopes()
-            ->select(([
-                's.*'
-            ]))
+            ->select('s.*')
             ->from('students as s')
-            ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
-            ->join('registrations as r', 'r.id', '=', 'sr.registration_id')
             ->whereNotNull('s.nsin')
-            ->whereNotIn('s.id', function ($query) {
-                $query->select('student_id')
-                    ->from('student_registrations')
-                    ->join('registrations', 'registrations.id', '=', 'student_registrations.registration_id')
-                    ->join('registration_periods', 'registration_periods.id', '=', 'registrations.registration_period_id')
-                    ->where('registration_periods.flag', 1)
-                    ->where('student_registrations.trial', session('trial'))
-                    ->where('registrations.year_of_study', session('year_of_study'))
-                    ->where('registrations.institution_id', session('institution_id'));
-            })
-            ->whereNotIn('s.id', session('selected_student_ids', []))
-            ->where('r.course_id', session('course_id'));
+            ->where('s.institution_id', session('institution_id'));
 
         // Get current course code
-        // $course = Course::find(session('course_id'));
-        // if ($course) {
-        //     $course_code = $course->course_code;
-        //     $query->where('s.nsin', 'LIKE', '%/' . $course_code . '/%');
-        // }
-
-        if (auth()->user()->inRole('institution')) {
-            $query->where('r.institution_id', auth()->user()->institution_id);
+        $course = Course::find(session('course_id'));
+        if ($course) {
+            $course_code = $course->course_code;
+            $query->where(function ($query) use ($course_code) {
+                $query->where('s.nsin', 'LIKE', '%/' . $course_code . '/%')
+                    ->orWhere('s.nsin', 'LIKE', '%/' . $course_code . 'D/%');
+            });
         }
 
+        $query->whereNotIn('s.id', session('selected_student_ids', []));
         $query->orderBy('s.nsin', 'asc');
-
-        // dd($query->toRawSql());
 
         return [
             'applications' => $query->paginate(20)

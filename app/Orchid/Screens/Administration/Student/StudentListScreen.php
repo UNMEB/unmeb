@@ -54,11 +54,6 @@ class StudentListScreen extends Screen
 
     public $filters = [];
 
-    public function __construct(Request $request)
-    {
-
-    }
-
     /**
      * Fetch data to be displayed on the screen.
      *

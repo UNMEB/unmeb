@@ -31,27 +31,19 @@ class ApproveExamRegistrationDetails extends Screen
     public $courseId;
     public $registrationId;
 
-    public function __construct(Request $request)
-    {
-        session()->forget(['institution_id', 'course_id', 'nsin_registration_id']);
-
-        $data = $request->all();
-        $this->institutionId = $data['institution_id'] ?? null;
-        $this->courseId = $data['course_id'] ?? null;
-        $this->registrationId = $data['registration_id'] ?? null;
-
-        session()->put('institution_id', $this->institutionId);
-        session()->put('course_id', $this->courseId);
-        session()->put('registration_id', $this->registrationId);
-    }
-
     /**
      * Fetch data to be displayed on the screen.
      *
      * @return array
      */
-    public function query(): iterable
+    public function query(Request $request): iterable
     {
+
+        session()->put('institution_id', $request->get('institution_id'));
+        session()->put('course_id', $request->get('course_id'));
+        session()->put('registration_id', $request->get('registration_id'));
+        session()->put('trial', $request->get('trial'));
+
         $students = Student::withoutGlobalScopes()
             ->filters()
             ->select(
@@ -60,16 +52,15 @@ class ApproveExamRegistrationDetails extends Screen
                 'courses.course_name',
                 'registrations.id AS registration_id',
                 'students.*',
-                'student_registrations.sr_flag'
+                'student_registrations.sr_flag',
             )
             ->join('student_registrations', 'students.id', '=', 'student_registrations.student_id')
             ->join('registrations', 'student_registrations.registration_id', '=', 'registrations.id')
             ->join('institutions', 'registrations.institution_id', '=', 'institutions.id')
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
-            ->where('registrations.id', $this->registrationId)
-            ->where('courses.id', $this->courseId)
-            ->where('institutions.id', $this->institutionId);
-
+            ->where('registrations.id', session('registration_id'))
+            ->where('courses.id', session('course_id'))
+            ->where('institutions.id', session('institution_id'));
 
         return [
             'students' => $students->paginate(100),
@@ -183,79 +174,64 @@ class ApproveExamRegistrationDetails extends Screen
 
     public function submit(Request $request)
     {
-        // Define validation rules
-        $rules = [
-            'approve_students.*' => [
-                'in:0,1'
-            ],
-            'reject_students.*' => [
-                'required_if:approve_students.*,0'
-            ],
-            'reject_reasons.*' => [
-                'required_if:reject_students.*,1',
-            ],
-        ];
-
-        $messages = [
-            'reject_reasons.*.required_if' => 'The rejection reason is required when the student is rejected.',
-        ];
-
-        // Validate the request
-        $validator = Validator::make($request->all(), $rules, $messages);
-
-        // Check if validation fails
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         // Filter out values where both approval and rejection are 0
-        $studentIdsToApprove = collect($request->input('approve_students'))->filter(function ($value) {
-            return $value == 1;
-        })->keys();
+        $studentIdsToApprove = $request->input('approve-students');
 
-        $studentIdsToReject = collect($request->input('reject_students'))->filter(function ($value) {
-            return $value == 1;
-        })->keys();
+        if ($studentIdsToApprove != null) {
+            // Handle Student Approval
+            foreach ($studentIdsToApprove as $studentId) {
+                $data = (object) [
+                    'institution_id' => $request->session()->get('institution_id'),
+                    'course_id' => $request->session()->get('course_id'),
+                    'registration_id' => $request->session()->get('registration_id'),
+                    'action' => 'approve',
+                    'student_id' => $studentId,
+                    'trial' => $request->session()->get('trial')
+                ];
 
-        // Handle Student Approval
-        foreach ($studentIdsToApprove as $studentId) {
-            $this->processRegistration($studentId, 'approve');
+                $this->processRegistration($data);
+            }
         }
 
-        // Handle Student Rejection
-        foreach ($studentIdsToReject as $studentId) {
-            $rejectionReason = $request->input('reject_reasons')[$studentId];
-            $this->processRegistration($studentId, 'reject', $rejectionReason);
+        $studentIdsToReject = $request->input('reject-students');
+
+        if ($studentIdsToReject != null) {
+            // Handle Student Rejection
+            foreach ($studentIdsToReject as $studentId) {
+                $rejectionReason = $request->input('reject_reasons')[$studentId];
+
+                $data = (object) [
+                    'institution_id' => $request->session()->get('institution_id'),
+                    'course_id' => $request->session()->get('course_id'),
+                    'registration_id' => $request->session()->get('registration_id'),
+                    'action' => 'reject',
+                    'student_id' => $studentId,
+                    'reason' => $rejectionReason,
+                    'trial' => $request->session()->get('trial')
+                ];
+
+                $this->processRegistration($data);
+            }
         }
+
+        \RealRashid\SweetAlert\Facades\Alert::success('Action Complete', 'Students successfully approved for Exams');
     }
 
-    public function processRegistration($studentId, $action, $rejectionReason = null)
+    public function processRegistration($data)
     {
-        $institutionId = session('institution_id');
-        $courseId = session('course_id');
-        $registrationId = session('registration_id');
-
-
-        $studentRegistration = StudentRegistration::where('registration_id', $registrationId)
-            ->where('student_id', $studentId)->first();
+        $studentRegistration = StudentRegistration::query()
+            ->where('registration_id', $data->registration_id)
+            ->where('student_id', $data->student_id)
+            ->where('trial', $data->trial)
+            ->first();
 
         if ($studentRegistration != null) {
-            if ($action == 'approve') {
+            if ($data->action == 'approve') {
                 $studentRegistration->sr_flag = 1;
                 $studentRegistration->save();
-
-                // Increment the registration
-                $registration = Registration::find($registrationId);
-
-                if ($registration != null) {
-                    $registration->approved += 1;
-                    $registration->save();
-                }
             } else {
                 $studentRegistration->sr_flag = 2;
-                $studentRegistration->remarks = $rejectionReason;
+                $studentRegistration->remarks = $data->reason;
                 $studentRegistration->save();
             }
         }

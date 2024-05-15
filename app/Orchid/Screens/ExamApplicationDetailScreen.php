@@ -35,27 +35,28 @@ class ExamApplicationDetailScreen extends Screen
         session()->put('institution_id', $institution_id);
         session()->put('course_id', $course_id);
 
-        $query = RegistrationPeriod::select(
-            's.id as id',
-            's.surname',
-            's.firstname',
-            's.othername',
-            's.gender',
-            's.dob',
-            's.district_id',
-            's.country_id',
-            's.nsin as nsin',
-            's.telephone',
-            's.passport',
-            's.passport_number',
-            's.lin',
-            's.email',
-            'sr.trial',
-            'sr.course_codes',
-            'sr.no_of_papers',
-            'sr.created_at',
-            'sr.updated_at'
-        )
+        $query = Student::withoutGlobalScopes()
+            ->select(
+                's.id as id',
+                's.surname',
+                's.firstname',
+                's.othername',
+                's.gender',
+                's.dob',
+                's.district_id',
+                's.country_id',
+                's.nsin as nsin',
+                's.telephone',
+                's.passport',
+                's.passport_number',
+                's.lin',
+                's.email',
+                'sr.trial',
+                'sr.course_codes',
+                'sr.no_of_papers',
+                'sr.created_at',
+                'sr.updated_at'
+            )
             ->from('students as s')
             ->join('student_registrations as sr', 'sr.student_id', '=', 's.id')
             ->join('registrations as r', 'sr.registration_id', '=', 'r.id')
@@ -166,6 +167,7 @@ class ExamApplicationDetailScreen extends Screen
             ->where('r.course_id', $courseId)
             ->where('r.id', $registrationId)
             ->get();
+
 
         return Excel::download(new ExamApplicationExport($students), 'exam_applications.xlsx');
 

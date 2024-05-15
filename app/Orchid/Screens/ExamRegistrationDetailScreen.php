@@ -126,8 +126,17 @@ class ExamRegistrationDetailScreen extends Screen
      */
     public function layout(): iterable
     {
+
+
+
         $table = (new ExamRegistrationTable);
         return [
+            Layout::view('table_summary', [
+                'total_students' => 0,
+                'total_pending' => 0,
+                'total_approved' => 0,
+                'total_rejected' => 0,
+            ]),
             $table,
             Layout::modal('exportRegistrationsModal', ExportExamRegistrationsForm::class)
                 ->applyButton('Export Registrations')
@@ -173,24 +182,24 @@ class ExamRegistrationDetailScreen extends Screen
                     ->where('registration_id', $registration->id)
                     ->first();
 
-                $trial = $studentRegistration->trial;
+                if ($studentRegistration) {
+                    $trial = $studentRegistration->trial;
+                    $transactionAmount = 0;
 
-                $transactionAmount = 0;
+                    if ($trial == 'First') {
+                        $transactionAmount = $normalCharge->course_fee;
+                    } elseif ($trial == 'Second' || $trial == 'Third') {
+                        $papers = $studentRegistration->no_of_papers;
+                        $transactionAmount = $costPerPaper * $papers;
+                    }
 
-                if ($trial == 'First') {
-                    $transactionAmount = $normalCharge->course_fee;
-                } else if ($trial == 'Second' || $trial == 'Third') {
-                    $papers = $studentRegistration->no_of_papers;
-                    $transactionAmount = $costPerPaper * $papers;
+                    $totalTransactionAmount += $transactionAmount;
+
+                    StudentPaperRegistration::where('student_registration_id', $studentRegistration->id)
+                        ->delete();
+
+                    $studentRegistration->delete();
                 }
-
-                $totalTransactionAmount += $transactionAmount;
-
-                StudentPaperRegistration::where('student_registration_id', $studentRegistration->id)
-                    ->delete();
-
-                $studentRegistration->delete();
-
             }
 
             $examTransaction = new Transaction([

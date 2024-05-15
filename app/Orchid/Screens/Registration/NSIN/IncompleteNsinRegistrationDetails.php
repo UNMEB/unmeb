@@ -24,9 +24,9 @@ class IncompleteNsinRegistrationDetails extends Screen
     public $nsinRegistrationId;
     public function __construct(Request $request)
     {
-        $this->institutionId = request()->get('institution_id');
-        $this->courseId = request()->get('course_id');
-        $this->nsinRegistrationId = request()->get('nsin_registration_id');
+        //     $this->institutionId = request()->get('institution_id');
+        //     $this->courseId = request()->get('course_id');
+        //     $this->nsinRegistrationId = request()->get('nsin_registration_id');
     }
 
     /**
@@ -71,18 +71,18 @@ class IncompleteNsinRegistrationDetails extends Screen
      *
      * @return \Orchid\Screen\Action[]
      */
-    public function commandBar(): iterable
+    public function commandBar(): array
     {
         return [
             Button::make('Export Data')
-            ->icon('bs.download')
-            ->method('download', [
-                'institution_id' => $this->institutionId,
-                'course_id' => $this->courseId,
-                'nsin_registration_id' => $this->nsinRegistrationId
-            ])
-            ->rawClick()
-            ->class('btn btn-primary')
+                ->icon('bs.download')
+                ->method('download', [
+                    'institution_id' => $this->institutionId,
+                    'course_id' => $this->courseId,
+                    'nsin_registration_id' => $this->nsinRegistrationId
+                ])
+                ->rawClick()
+                ->class('btn btn-primary')
         ];
     }
 
@@ -97,22 +97,22 @@ class IncompleteNsinRegistrationDetails extends Screen
 
             Layout::rows([
                 Group::make([
-                    
+
                     Input::make('name')
-                    ->title('Filter By Name'),
+                        ->title('Filter By Name'),
 
                     Select::make('district_id')
-                    ->title('Filter By District')
-                    ->fromModel(District::class, 'district_name')
-                    ->empty('Non Selected'),
+                        ->title('Filter By District')
+                        ->fromModel(District::class, 'district_name')
+                        ->empty('Non Selected'),
 
                     Select::make('gender')
-                    ->title('Filter By Gender')
-                    ->options([
-                        'Male' => 'Male',
-                        'Female' => 'Female'
-                    ])
-                    ->empty('Non Selected')
+                        ->title('Filter By Gender')
+                        ->options([
+                            'Male' => 'Male',
+                            'Female' => 'Female'
+                        ])
+                        ->empty('Non Selected')
                 ])
             ]),
 
@@ -120,11 +120,11 @@ class IncompleteNsinRegistrationDetails extends Screen
 
                 TD::make('id', 'ID'),
                 // Show passport picture
-                TD::make('avatar', 'Passport')->render(fn (Student $student) => $student->avatar),
+                TD::make('avatar', 'Passport')->render(fn(Student $student) => $student->avatar),
                 TD::make('fullName', 'Name'),
                 TD::make('gender', 'Gender'),
                 TD::make('dob', 'Date of Birth'),
-                TD::make('district_id', 'District')->render(fn (Student $student) => $student->district->district_name),
+                TD::make('district_id', 'District')->render(fn(Student $student) => $student->district->district_name),
                 TD::make('country', 'Country'),
                 TD::make('location', 'Location'),
                 TD::make('NSIN', 'NSIN'),
@@ -142,10 +142,14 @@ class IncompleteNsinRegistrationDetails extends Screen
         $courseId = request()->get('course_id');
         $nsinRegistrationId = request()->get('nsin_registration_id');
 
-        return Excel::download(new IncompleteNsinRegistrationsExport(
-            $institutionId,
-            $courseId,
-            $nsinRegistrationId
-        ), 'incomplete_nsin_registrations.csv', ExcelExcel::CSV);
+        return Excel::download(
+            new IncompleteNsinRegistrationsExport(
+                $institutionId,
+                $courseId,
+                $nsinRegistrationId
+            ),
+            'incomplete_nsin_registrations.csv',
+            ExcelExcel::CSV
+        );
     }
 }

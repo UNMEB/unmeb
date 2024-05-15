@@ -44,12 +44,6 @@ class Registration extends Model
         return $query->where('completed', 0);
     }
 
-    // protected static function booted()
-    // {
-    //     $user = auth()->user() ?? null;
-    //     static::addGlobalScope(new InstitutionScope($user));
-    // }
-
     /**
      * @return \Spatie\Activitylog\LogOptions
      */

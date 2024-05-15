@@ -31,12 +31,12 @@ class AddStudentAssessmentFormScreen extends Screen
 
     public function __construct(Request $request)
     {
-        $this->yearOfStudy = request()->get('year_of_study');
-        $this->institutionId = request()->get('institution_id');
-        $this->courseId = request()->get('course_id');
-        $this->paperId = request()->get('paper_id');
-        $this->paperType = request()->get('paper_type');
-        $this->registrationPeriodId = request()->get('exam_registration_period_id');
+        //     $this->yearOfStudy = request()->get('year_of_study');
+        //     $this->institutionId = request()->get('institution_id');
+        //     $this->courseId = request()->get('course_id');
+        //     $this->paperId = request()->get('paper_id');
+        //     $this->paperType = request()->get('paper_type');
+        //     $this->registrationPeriodId = request()->get('exam_registration_period_id');
     }
 
 
@@ -71,7 +71,7 @@ class AddStudentAssessmentFormScreen extends Screen
                     ->where('paper_id', $this->paperId)
                     ->where('student_id', $student->student_id)
                     ->first();
-                if($continuosAssessment) {
+                if ($continuosAssessment) {
                     if ($this->paperType == 'Theory') {
                         return (object) [
                             'id' => $student->student_id,
@@ -82,29 +82,30 @@ class AddStudentAssessmentFormScreen extends Screen
                             'second_assignment_marks' => optional($continuosAssessment->theory_marks['second_assignment_marks']) ?? null,
                         ];
                     } else {
-                        return (object)[
+                        return (object) [
                             'id' => $student->student_id,
                             'name' => $student->full_name,
                             'logbook_assessment_marks' => optional($continuosAssessment->practical_marks['logbook_assessment_marks']) ?? null,
                             'clinical_assessment_marks' => optional($continuosAssessment->practical_marks['clinical_assessment_marks']) ?? null,
                             'practical_assessment_marks' => optional($continuosAssessment->practical_marks['practical_assessment_marks']) ?? null,
-    
-                        ];;
+
+                        ];
+                        ;
                     }
                 } else {
                     if ($this->paperType == 'Theory') {
                         return (object) [
-                            'id'=> $student->student_id,
-                            'name'=> $student->full_name,
+                            'id' => $student->student_id,
+                            'name' => $student->full_name,
                             'first_assignment_marks' => null,
                             'second_assignment_marks' => null,
                             'first_test_marks' => null,
                             'second_test_marks' => null,
                         ];
                     }
-                    return (object)[
-                        'id'=> $student->student_id,
-                        'name'=> $student->full_name,
+                    return (object) [
+                        'id' => $student->student_id,
+                        'name' => $student->full_name,
                         'logbook_assessment_marks' => null,
                         'clinical_assessment_marks' => null,
                         'practical_assessment_marks' => null,
@@ -114,7 +115,7 @@ class AddStudentAssessmentFormScreen extends Screen
 
         return [
             'students' => collect($students),
-            'paper_type' => $this->paperType 
+            'paper_type' => $this->paperType
         ];
     }
 
@@ -139,7 +140,7 @@ class AddStudentAssessmentFormScreen extends Screen
         $paper = Paper::find($this->paperId)->paper_name;
 
         return "Enter Continuous Assessment marks for $institution";
-        
+
     }
 
     /**
@@ -172,7 +173,7 @@ class AddStudentAssessmentFormScreen extends Screen
         $paperId = $request->get('paper_id');
         $paperType = $request->get('paper_type');
         $marks = $request->get('marks');
-        
+
         foreach ($marks as $student => $mark) {
             // // Check for an existing 
             $assessment = ContinuousAssessment::firstOrNew([

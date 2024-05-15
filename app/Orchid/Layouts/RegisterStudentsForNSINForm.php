@@ -14,10 +14,6 @@ class RegisterStudentsForNSINForm extends Listener
 
     public $students;
 
-    public function __construct(Request $request)
-    {
-    }
-
     /**
      * List of field names for which values will be listened.
      *

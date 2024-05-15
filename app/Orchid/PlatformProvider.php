@@ -153,9 +153,14 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make(__('Manage Finances'))
                 ->icon('bs.book')
                 ->badge(function () {
-                    $pendingTransactionCount = Transaction::where('status', 'pending')->count();
-                    if ($pendingTransactionCount > 0) {
-                        return $pendingTransactionCount;
+                    $pendingTransactionCount = Transaction::where('status', 'pending');
+
+                    if (auth()->user()->inRole('institution')) {
+                        $pendingTransactionCount->where('institution_id', auth()->user()->institution_id);
+                    }
+
+                    if ($pendingTransactionCount->count() > 0) {
+                        return $pendingTransactionCount->count();
                     }
 
                     return null;
@@ -175,9 +180,14 @@ class PlatformProvider extends OrchidServiceProvider
                     Menu::make('Pending Transactions')
                         ->route('platform.systems.finance.pending')
                         ->badge(function () {
-                            $pendingTransactionCount = Transaction::where('status', 'pending')->count();
-                            if ($pendingTransactionCount > 0) {
-                                return $pendingTransactionCount;
+                            $pendingTransactionCount = Transaction::where('status', 'pending');
+
+                            if (auth()->user()->inRole('institution')) {
+                                $pendingTransactionCount->where('institution_id', auth()->user()->institution_id);
+                            }
+
+                            if ($pendingTransactionCount->count() > 0) {
+                                return $pendingTransactionCount->count();
                             }
 
                             return null;
@@ -215,11 +225,6 @@ class PlatformProvider extends OrchidServiceProvider
             Menu::make('Student Research')
                 ->icon('bs.archive')
                 ->route('platform.student_research'),
-
-            // Menu::make('Comments')
-            //     ->icon('fa.comments')
-            //     ->route('platform.comments.list')
-            //     ->permission('platform.comments.list'),
 
             Menu::make('Support Request')
                 ->icon('fa.comments')
