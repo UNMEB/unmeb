@@ -22,6 +22,8 @@ class InstitutionUnAssignCoursesListScreen extends Screen
      */
     public function query(Institution $institution): iterable
     {
+        session()->remove("institution_id");
+
         session()->put("institution_id", $institution->id);
 
         $assignedCourses = $institution->courses()->paginate();

@@ -140,6 +140,8 @@ class CourseUnAssignPapersListScreen extends Screen
                 }
             }
 
+            session()->remove("course_id");
+
             \RealRashid\SweetAlert\Facades\Alert::success(__('Paper has been unassigned'));
 
             return back();

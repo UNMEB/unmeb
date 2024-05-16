@@ -31,6 +31,9 @@ class NSINApplicationListDetails extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->remove('course_id');
+        session()->remove('institution_id');
+        session()->remove('nsin_registration_id');
 
         $this->filters = $request->get("filter");
         $institutionId = $request->get('institution_id');

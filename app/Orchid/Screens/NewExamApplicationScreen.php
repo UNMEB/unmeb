@@ -38,6 +38,13 @@ class NewExamApplicationScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->remove("exam_registration_period_id");
+        session()->remove("institution_id");
+        session()->remove("course_id");
+        session()->remove("paper_ids");
+        session()->remove("year_of_study");
+        session()->remove("trial");
+
         session()->put("exam_registration_period_id", $request->get('exam_registration_period_id'));
         session()->put("institution_id", $request->get('institution_id'));
         session()->put("course_id", $request->get('course_id'));
@@ -65,6 +72,8 @@ class NewExamApplicationScreen extends Screen
 
         $query->whereNotIn('s.id', session('selected_student_ids', []));
         $query->orderBy('s.nsin', 'asc');
+
+        // dd($query->toRawSql());
 
         return [
             'applications' => $query->paginate(20)
@@ -293,12 +302,19 @@ class NewExamApplicationScreen extends Screen
 
             DB::commit();
 
+            session()->remove("exam_registration_period_id");
+            session()->remove("institution_id");
+            session()->remove("course_id");
+            session()->remove("paper_ids");
+            session()->remove("year_of_study");
+            session()->remove("trial");
+
             \RealRashid\SweetAlert\Facades\Alert::success('Action Completed', "<table class='table table-condensed table-striped table-hover' style='text-align: left; font-size:12px;'><tbody><tr><th style='text-align: left; font-size:12px;'>Students registered</th><td>$numberOfStudents</td></tr><tr><th style='text-align: left; font-size:12px;'>Exam Registration</th><td>$amountForExam</td></tr><tr><th style='text-align: left; font-size:12px;'>Total Deduction</th><td>$amountForExam</td></tr><tr><th style='text-align: left; font-size:12px;'>Remaining Balance</th><td>$remainingBalanceFormatted</td></tr></tbody></table>")->persistent(true)->toHtml();
 
         } catch (\Throwable $th) {
-            throw $th;
+            // throw $th;
 
-            // \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to complete Exam registration for selected students. Failed with error ' . $th->getMessage());
+            \RealRashid\SweetAlert\Facades\Alert::error('Action Failed', 'Unable to complete Exam registration for selected students. Failed with error ' . $th->getMessage());
         }
     }
 

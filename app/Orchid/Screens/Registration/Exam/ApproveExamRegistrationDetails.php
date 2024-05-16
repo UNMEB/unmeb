@@ -38,6 +38,10 @@ class ApproveExamRegistrationDetails extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->remove('institution_id');
+        session()->remove('course_id');
+        session()->remove('registration_id');
+        session()->remove('trial');
 
         session()->put('institution_id', $request->get('institution_id'));
         session()->put('course_id', $request->get('course_id'));
@@ -60,7 +64,8 @@ class ApproveExamRegistrationDetails extends Screen
             ->join('courses', 'registrations.course_id', '=', 'courses.id')
             ->where('registrations.id', session('registration_id'))
             ->where('courses.id', session('course_id'))
-            ->where('institutions.id', session('institution_id'));
+            ->where('institutions.id', session('institution_id'))
+            ->where('student_registrations.sr_flag', 0);
 
         return [
             'students' => $students->paginate(100),

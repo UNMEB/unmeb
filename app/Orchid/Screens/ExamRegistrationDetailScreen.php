@@ -34,6 +34,10 @@ class ExamRegistrationDetailScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->remove('registration_id');
+        session()->remove('institution_id');
+        session()->remove('course_id');
+
         $registration_period_id = $request->get('registration_period_id');
         $registration_id = $request->get('registration_id');
         $institution_id = $request->get('institution_id');

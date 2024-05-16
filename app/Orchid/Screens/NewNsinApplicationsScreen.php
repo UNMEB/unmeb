@@ -44,6 +44,10 @@ class NewNsinApplicationsScreen extends Screen
      */
     public function query(Request $request): iterable
     {
+        session()->rmeove('institution_id');
+        session()->rmeove('course_id');
+        session()->rmeove('nsin_registration_period_id');
+
         session()->put('institution_id', $request->get('institution_id'));
         session()->put('course_id', $request->get('course_id'));
         session()->put('nsin_registration_period_id', $request->get('nsin_registration_period_id'));

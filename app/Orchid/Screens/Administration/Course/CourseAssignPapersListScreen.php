@@ -33,6 +33,7 @@ class CourseAssignPapersListScreen extends Screen
      */
     public function query(Course $course): iterable
     {
+        session()->remove("course_id");
 
         session()->put("course_id", $course->id);
 
